@@ -294,5 +294,19 @@ footer{border-top:3px solid var(--bronze);background:linear-gradient(180deg,#171
   .col-2{grid-column:span 1}
   .shots{grid-template-columns:repeat(2,1fr)}
   .ev-grid{grid-template-columns:1fr}
+  /* roster mobile */
+  table.roster.roster-full th{font-size:14px;padding:8px 6px}
+  table.roster.roster-full td{padding:10px 6px}
+  table.roster.roster-full .ign,
+  table.roster.roster-full .ign a{font-size:17px}
+  .roster-full .rank{font-size:14px;gap:6px}
+  .roster-full .rank-icon{width:20px;height:20px}
+  .roster-full .chev{border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid var(--gold-dim)}
+  .xp-cell{font-size:16px}
+  .roster-controls{gap:8px}
+  .roster-search,.roster-filter{font-size:16px;padding:10px 12px}
+  .roster-filter{min-width:120px}
+  .roster-pagination{font-size:15px}
+  .roster-pagination button{font-size:15px;padding:8px 12px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
