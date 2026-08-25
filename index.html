@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Multi-Misfits — OSRS Clan</title>
+<meta name="description" content="No-drama OSRS clan for bossers, skillers & Misfits. Weekly masses, events, and an active Discord." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Jersey+15&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<!-- reusable crest -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="crest" viewBox="0 0 80 94">
+    <path d="M40 2 L76 14 V46 C76 70 58 84 40 92 C22 84 4 70 4 46 V14 Z"
+          fill="#241d12" stroke="#000" stroke-width="3"/>
+    <path d="M40 2 L76 14 V46 C76 70 58 84 40 92 C22 84 4 70 4 46 V14 Z"
+          fill="none" stroke="#6b5836" stroke-width="2" transform="scale(.9)" transform-origin="40 47"/>
+    <text x="40" y="56" text-anchor="middle" font-family="Cinzel, serif" font-weight="900" font-size="34" fill="#ffcb2f" stroke="#000" stroke-width="1">MM</text>
+  </symbol>
+</svg>
+
+<!-- Discord glyph symbol -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="discord" viewBox="0 0 71 55"><path d="M60 4.6A58 58 0 0 0 45.5.1a41 41 0 0 0-2 4.2 54 54 0 0 0-16 0 41 41 0 0 0-2-4.2A58 58 0 0 0 11 4.6 60 60 0 0 0 .6 45.3a58 58 0 0 0 17.7 9 44 44 0 0 0 3.8-6.2 38 38 0 0 1-6-2.9l1.5-1.1a41 41 0 0 0 35 0l1.5 1.1a38 38 0 0 1-6 2.9 44 44 0 0 0 3.8 6.2 58 58 0 0 0 17.7-9A60 60 0 0 0 60 4.6ZM23.7 36.5c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.5 3.3 6.4 7.2c0 4-2.8 7.2-6.4 7.2Zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.5 3.3 6.4 7.2c0 4-2.8 7.2-6.4 7.2Z"/></symbol>
+</svg>
+
+<header>
+  <div class="bar">
+    <a class="brand" href="/">
+      <svg class="crest"><use href="#crest"/></svg>
+      <span><b>MULTI-MISFITS</b><small>OSRS CLAN</small></span>
+    </a>
+
+    <nav class="main" id="nav">
+      <a href="/">Home</a>
+      <a href="/about.html">About</a>
+      <a href="#news">News</a>
+      <a href="/guides.html">Guides</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/roster.html">Roster</a>
+    </nav>
+
+    <button class="hamburger" id="burger" aria-label="Menu">≡</button>
+
+    <div class="actions">
+      <button class="btn icon-coin soon" data-soon="Grand Exchange tool — coming soon">Grand Exchange<span class="tag">Soon</span></button>
+      <button class="btn soon" data-soon="Leaderboards — coming soon">Leaderboard<span class="tag">Soon</span></button>
+      <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true"><use href="#discord"/></svg>JOIN</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <svg class="crest-lg"><use href="#crest"/></svg>
+  <h1>MULTI-MISFITS</h1>
+  <div class="tagline">PvM · Skilling · Chaos — since 2019</div>
+  <p class="desc">A no-drama Old School clan for bossers, skillers, and the occasional degenerate. Weekly masses, community events, and a Discord that never sleeps. New or returning — there's a spot for you.</p>
+  <div class="cta">
+    <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true" style="width:18px;height:14px;vertical-align:-1px;margin-right:8px"><use href="#discord"/></svg>JOIN THE CLAN</a>
+    <a class="btn ghost" href="#roster">Explore the clan</a>
+  </div>
+</section>
+
+<main>
+  <div class="grid">
+
+    <!-- NEWS (sample until Discord hookup) -->
+    <section class="panel col-2" id="news">
+      <div class="head"><h2><span class="rune"></span>Latest News <span class="badge" id="news-badge">⟳ from #announcements (sample)</span></h2><a class="more" href="#news">View all →</a></div>
+      <div class="body" id="news-body">
+        <div class="news-item">
+          <div class="pin promo">RANK<br>UP</div>
+          <div>
+            <h3>Zaros_Andy promoted to General</h3>
+            <time>18 Aug 2026</time>
+            <p>Six months of leading Wednesday CoX masses and never missing a bingo tile. Well earned.</p>
+          </div>
+        </div>
+        <div class="news-item">
+          <div class="pin">NEW</div>
+          <div>
+            <h3>Recruitment is open — bring a friend</h3>
+            <time>14 Aug 2026</time>
+            <p>We're pushing to 200 members before the summer event. Referral shoutouts every Friday.</p>
+          </div>
+        </div>
+        <div class="news-item">
+          <div class="pin promo">RANK<br>UP</div>
+          <div>
+            <h3>Three new Corporals this week</h3>
+            <time>11 Aug 2026</time>
+            <p>Welcome to the core, misfits. Check the roster for the full list.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVENTS (sample until Discord Scheduled Events hookup) -->
+    <section class="panel">
+      <div class="head"><h2><span class="rune"></span>Upcoming Events <span class="badge">sample</span></h2><a class="more" href="#">Calendar →</a></div>
+      <div class="body">
+        <div class="event">
+          <div class="date"><div class="d">24</div><div class="m">AUG</div></div>
+          <div><h3>Chambers of Xeric — Mass</h3><div class="when">8:00 PM GMT · voice required</div></div>
+        </div>
+        <div class="event">
+          <div class="date"><div class="d">27</div><div class="m">AUG</div></div>
+          <div><h3>Skill of the Week: Runecraft</h3><div class="when">All week · top 3 win bond</div></div>
+        </div>
+        <div class="event">
+          <div class="date"><div class="d">31</div><div class="m">AUG</div></div>
+          <div><h3>Clan Movie Night + Drops Recap</h3><div class="when">9:00 PM GMT</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACHIEVEMENTS (sample until Dink #chest hookup) -->
+    <section class="panel">
+      <div class="head"><h2><span class="rune"></span>Recent Achievements <span class="badge">from 💰 chest (sample)</span></h2><a class="more" href="#">See all →</a></div>
+      <div class="body">
+        <div class="ach"><div class="medal">🐦</div><div><div class="who">Fe Misfit</div><div class="what">Olmlet pet — 412 KC</div></div></div>
+        <div class="ach"><div class="medal">⭐</div><div><div class="who">BankStanding</div><div class="what">Maxed — 2277 total</div></div></div>
+        <div class="ach"><div class="medal">🩸</div><div><div class="who">Twisted Andy</div><div class="what">First TBow drop in the clan</div></div></div>
+        <div class="ach"><div class="medal">🏆</div><div><div class="who">SkillerNoPk</div><div class="what">200M Fishing XP</div></div></div>
+      </div>
+    </section>
+
+    <!-- ROSTER (LIVE from WOM) -->
+    <section class="panel" id="roster">
+      <div class="head"><h2><span class="rune"></span>Clan Roster <span class="badge" id="roster-count">⟳ loading · WOM</span></h2><a class="more" href="#">Full roster →</a></div>
+      <div class="body">
+        <table class="roster">
+          <thead><tr><th>Player</th><th>Rank</th></tr></thead>
+          <tbody id="roster-body">
+            <tr><td colspan="2" class="roster-msg">Loading roster…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MEDIA -->
+    <section class="panel col-2" id="media">
+      <div class="head"><h2><span class="rune"></span>Screenshots &amp; Clips</h2><a class="more" href="#media">Gallery →</a></div>
+      <div class="body">
+        <div class="shots">
+          <a class="shot" href="assets/gallery/shot1.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot1.webp" alt="Multi-Misfits raid" loading="lazy"></a>
+          <a class="shot" href="assets/gallery/shot2.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot2.webp" alt="Multi-Misfits boss kill" loading="lazy"></a>
+          <a class="shot" href="assets/gallery/shot3.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot3.webp" alt="Multi-Misfits drop" loading="lazy"></a>
+          <a class="shot" href="assets/gallery/shot4.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot4.webp" alt="Multi-Misfits clan mass" loading="lazy"></a>
+          <a class="shot" href="assets/gallery/shot5.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot5.webp" alt="Multi-Misfits loot" loading="lazy"></a>
+          <a class="shot" href="assets/gallery/shot6.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot6.webp" alt="Multi-Misfits Tombs of Amascut" loading="lazy"></a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="foot-cta">
+    <h2>Ready to stop soloing?</h2>
+    <p>Recruiting happens in Discord — hop in, say hi, and a rank will sort you out. That's it.</p>
+    <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true" style="width:18px;height:14px;vertical-align:-1px;margin-right:8px"><use href="#discord"/></svg>JOIN THE CLAN</a>
+  </div>
+  <div class="foot-links">
+    <a href="/">Home</a><a href="/about.html">About</a><a href="#news">News</a><a href="/guides.html">Guides</a>
+    <a href="/faq.html">FAQ</a><a href="/roster.html">Roster</a><a data-discord href="#">Discord</a>
+  </div>
+  <div class="disclaimer">
+    Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
+    RuneScape and Old School RuneScape are trademarks of Jagex Ltd. · Roster is live from Wise Old Man; news, events &amp; media are samples pending Discord hookup.
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>About — Multi-Misfits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Jersey+15&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="crest" viewBox="0 0 80 94">
+    <path d="M40 2 L76 14 V46 C76 70 58 84 40 92 C22 84 4 70 4 46 V14 Z"
+          fill="#241d12" stroke="#000" stroke-width="3"/>
+    <path d="M40 2 L76 14 V46 C76 70 58 84 40 92 C22 84 4 70 4 46 V14 Z"
+          fill="none" stroke="#6b5836" stroke-width="2" transform="scale(.9)" transform-origin="40 47"/>
+    <text x="40" y="56" text-anchor="middle" font-family="Cinzel, serif" font-weight="900" font-size="34" fill="#ffcb2f" stroke="#000" stroke-width="1">MM</text>
+  </symbol>
+</svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="discord" viewBox="0 0 71 55"><path d="M60 4.6A58 58 0 0 0 45.5.1a41 41 0 0 0-2 4.2 54 54 0 0 0-16 0 41 41 0 0 0-2-4.2A58 58 0 0 0 11 4.6 60 60 0 0 0 .6 45.3a58 58 0 0 0 17.7 9 44 44 0 0 0 3.8-6.2 38 38 0 0 1-6-2.9l1.5-1.1a41 41 0 0 0 35 0l1.5 1.1a38 38 0 0 1-6 2.9 44 44 0 0 0 3.8 6.2 58 58 0 0 0 17.7-9A60 60 0 0 0 60 4.6ZM23.7 36.5c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.5 3.3 6.4 7.2c0 4-2.8 7.2-6.4 7.2Zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.5 3.3 6.4 7.2c0 4-2.8 7.2-6.4 7.2Z"/></symbol>
+</svg>
+
+<header>
+  <div class="bar">
+    <a class="brand" href="/">
+      <svg class="crest"><use href="#crest"/></svg>
+      <span><b>MULTI-MISFITS</b><small>OSRS CLAN</small></span>
+    </a>
+
+    <nav class="main" id="nav">
+      <a href="/">Home</a>
+      <a href="/about.html">About</a>
+      <a href="#news">News</a>
+      <a href="/guides.html">Guides</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/roster.html">Roster</a>
+    </nav>
+
+    <button class="hamburger" id="burger" aria-label="Menu">≡</button>
+
+    <div class="actions">
+      <button class="btn icon-coin soon" data-soon="Grand Exchange tool — coming soon">Grand Exchange<span class="tag">Soon</span></button>
+      <button class="btn soon" data-soon="Leaderboards — coming soon">Leaderboard<span class="tag">Soon</span></button>
+      <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true"><use href="#discord"/></svg>JOIN</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">About</h1><div class="tagline">Who the Misfits are</div></section>
+  <div class="grid"><section class="panel col-2"><div class="head"><h2><span class="rune"></span>About Multi-Misfits</h2></div>
+  <div class="body">
+    <p>Multi-Misfits is a no-drama Old School RuneScape clan for bossers, skillers, and the occasional degenerate. We run weekly masses, community events and competitions, and keep an active Discord going around the clock. New players and returning veterans are equally welcome — there's a spot for everyone.</p>
+    <p style="color:var(--muted)"><em>Draft copy — send me the wording you want here and I'll drop it in.</em></p>
+  </div></section></div>
+
+</main>
+
+<footer>
+  <div class="foot-cta">
+    <h2>Ready to stop soloing?</h2>
+    <p>Recruiting happens in Discord — hop in, say hi, and a rank will sort you out. That's it.</p>
+    <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true" style="width:18px;height:14px;vertical-align:-1px;margin-right:8px"><use href="#discord"/></svg>JOIN THE CLAN</a>
+  </div>
+  <div class="foot-links">
+    <a href="/">Home</a><a href="/about.html">About</a><a href="#news">News</a><a href="/guides.html">Guides</a>
+    <a href="/faq.html">FAQ</a><a href="/roster.html">Roster</a><a data-discord href="#">Discord</a>
+  </div>
+  <div class="disclaimer">
+    Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
+    RuneScape and Old School RuneScape are trademarks of Jagex Ltd. · Roster is live from Wise Old Man; news, events &amp; media are samples pending Discord hookup.
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+</body>
+</html>
