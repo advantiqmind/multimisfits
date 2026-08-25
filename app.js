@@ -335,6 +335,27 @@ async function loadNews() {
   }
 }
 
+/* ---- achievements ---- */
+function achItem(item) {
+  return `<div class="ach"><div class="medal">${esc(item.medal)}</div><div><div class="who">${esc(item.player)}</div><div class="what">${esc(item.what)}</div></div></div>`;
+}
+
+async function loadAchievements() {
+  const body = document.getElementById("ach-body");
+  if (!body) return;
+  try {
+    const r = await fetch("/api/achievements", { headers: { accept: "application/json" } });
+    if (!r.ok) throw new Error("bad status");
+    const data = await r.json();
+    if (!data || !data.configured || !Array.isArray(data.items) || !data.items.length) return;
+    body.innerHTML = data.items.map(achItem).join("");
+    const badge = document.getElementById("ach-badge");
+    if (badge) badge.textContent = "⟳ from chest";
+  } catch (e) {
+    /* keep sample */
+  }
+}
+
 /* ---- events ---- */
 const EVENTS_FALLBACK = [
   {
@@ -518,4 +539,5 @@ document.addEventListener("DOMContentLoaded", () => {
   loadRoster();
   loadNews();
   loadEvents();
+  loadAchievements();
 });
