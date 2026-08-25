@@ -1,16 +1,16 @@
 /* Multi-Misfits — front-end behaviour
    - wires the Join / Discord links from one place (CONFIG)
    - mobile nav + "coming soon" toasts
-   - pulls the live roster from /api/wom, with a graceful fallback */
+   - pulls the live roster from /api/wom, with a graceful fallback
+   - full roster page: search, rank filter, sortable columns, pagination */
 
 const CONFIG = {
   discordInvite: "https://discord.gg/kT4vEGnjgU",
   rosterPreviewCount: 8,
 };
 
-// Ranks we have icons for (assets/ranks/<role>.png). Others fall back to a chevron.
 const ICON_ROLES = new Set([
-  "owner", "deputy_owner", "administrator", "colonel", "lieutenant", "marshal", "ninja",
+  "owner", "deputy_owner", "administrator", "captain", "colonel", "lieutenant", "marshal", "ninja",
   "paladin", "knight", "expert", "inquisitor", "striker", "duellist", "beast", "squire",
 ]);
 function rankMark(role) {
@@ -19,14 +19,13 @@ function rankMark(role) {
     : `<span class="chev"></span>`;
 }
 
-// Shown only if the live fetch fails (offline preview, WOM down, etc.)
 const ROSTER_FALLBACK = [
-  { name: "mr flsh", username: "mr flsh", role: "owner", rankLabel: "Owner" },
-  { name: "koi ox", username: "koi ox", role: "deputy_owner", rankLabel: "Deputy Owner" },
-  { name: "StWidu93", username: "stwidu93", role: "deputy_owner", rankLabel: "Deputy Owner" },
-  { name: "Bwita", username: "bwita", role: "colonel", rankLabel: "Colonel" },
-  { name: "Artolux", username: "artolux", role: "captain", rankLabel: "Captain" },
-  { name: "Vilence", username: "vilence", role: "inquisitor", rankLabel: "Inquisitor" },
+  { name: "mr flsh", username: "mr flsh", role: "owner", rankLabel: "Owner", priority: 120, exp: 0 },
+  { name: "koi ox", username: "koi ox", role: "deputy_owner", rankLabel: "Deputy Owner", priority: 110, exp: 0 },
+  { name: "StWidu93", username: "stwidu93", role: "deputy_owner", rankLabel: "Deputy Owner", priority: 110, exp: 0 },
+  { name: "Bwita", username: "bwita", role: "colonel", rankLabel: "Colonel", priority: 95, exp: 0 },
+  { name: "Artolux", username: "artolux", role: "captain", rankLabel: "Captain", priority: 90, exp: 0 },
+  { name: "Vilence", username: "vilence", role: "inquisitor", rankLabel: "Inquisitor", priority: 50, exp: 0 },
 ];
 
 function esc(s) {
@@ -34,6 +33,32 @@ function esc(s) {
     { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
   ));
 }
+
+function capitalizeName(name) {
+  if (!name) return "";
+  const first = name.charAt(0);
+  if (first >= "0" && first <= "9") return name;
+  return first.toUpperCase() + name.slice(1);
+}
+
+function formatXP(xp) {
+  if (typeof xp !== "number" || xp <= 0) return "—";
+  if (xp >= 1e9) return (xp / 1e9).toFixed(1) + "B";
+  if (xp >= 1e6) return (xp / 1e6).toFixed(1) + "M";
+  if (xp >= 1e3) return Math.round(xp / 1e3) + "K";
+  return xp.toLocaleString();
+}
+
+/* ---- roster state (full page only) ---- */
+const ROSTER_PAGE_SIZE = 20;
+const rosterState = {
+  all: [],
+  search: "",
+  filter: "",
+  sort: "rank",
+  sortDesc: true,
+  page: 1,
+};
 
 function wireDiscordLinks() {
   document.querySelectorAll("[data-discord]").forEach((el) => {
@@ -65,39 +90,199 @@ function wireToasts() {
   });
 }
 
-function rosterRow(m) {
+function rosterRow(m, showXP) {
   const cls = "rank rank--" + esc(m.role || "member");
+  const displayName = capitalizeName(m.name);
   const profile = m.username
     ? `https://wiseoldman.net/players/${encodeURIComponent(m.username)}`
     : null;
   const nameHtml = profile
-    ? `<a href="${profile}" target="_blank" rel="noopener">${esc(m.name)}</a>`
-    : esc(m.name);
-  return (
-    `<tr><td class="ign">${nameHtml}</td>` +
-    `<td><span class="${cls}">${rankMark(m.role)}${esc(m.rankLabel)}</span></td></tr>`
-  );
+    ? `<a href="${profile}" target="_blank" rel="noopener">${esc(displayName)}</a>`
+    : esc(displayName);
+  let html = `<tr><td class="ign">${nameHtml}</td>` +
+    `<td><span class="${cls}">${rankMark(m.role)}${esc(m.rankLabel)}</span></td>`;
+  if (showXP) {
+    html += `<td class="xp-cell">${formatXP(m.exp)}</td>`;
+  }
+  html += "</tr>";
+  return html;
 }
 
 function renderRoster(members, { cached } = {}) {
   const body = document.getElementById("roster-body");
   if (!body) return;
   const full = body.dataset.full === "1";
-  const list = full ? members : members.slice(0, CONFIG.rosterPreviewCount);
-  body.innerHTML = list.map(rosterRow).join("");
+
+  if (full) {
+    rosterState.all = members;
+    const controls = document.getElementById("roster-controls");
+    if (controls) controls.style.display = "";
+    populateRankFilter(members);
+    renderFullRoster();
+    return;
+  }
+
+  const list = members.slice(0, CONFIG.rosterPreviewCount);
+  body.innerHTML = list.map((m) => rosterRow(m, false)).join("");
   const badge = document.getElementById("roster-count");
   if (badge) {
-    const total = members.length;
     badge.textContent = cached
-      ? `⟳ ${total}+ members · WOM (cached)`
-      : `⟳ ${total} members · WOM`;
+      ? `⟳ ${members.length}+ members · WOM (cached)`
+      : `⟳ ${members.length} members · WOM`;
   }
+}
+
+function getFilteredRoster() {
+  let list = rosterState.all.slice();
+
+  if (rosterState.search) {
+    const q = rosterState.search.toLowerCase();
+    list = list.filter((m) => m.name.toLowerCase().includes(q));
+  }
+
+  if (rosterState.filter) {
+    list = list.filter((m) => m.role === rosterState.filter);
+  }
+
+  list.sort((a, b) => {
+    let cmp = 0;
+    switch (rosterState.sort) {
+      case "name":
+        cmp = a.name.localeCompare(b.name);
+        break;
+      case "xp":
+        cmp = (a.exp || 0) - (b.exp || 0);
+        break;
+      case "rank":
+      default:
+        cmp = (a.priority || 0) - (b.priority || 0);
+        if (cmp === 0) cmp = (a.exp || 0) - (b.exp || 0);
+        if (cmp === 0) cmp = a.name.localeCompare(b.name);
+        break;
+    }
+    return rosterState.sortDesc ? -cmp : cmp;
+  });
+
+  return list;
+}
+
+function renderFullRoster() {
+  const body = document.getElementById("roster-body");
+  if (!body) return;
+
+  const filtered = getFilteredRoster();
+  const totalPages = Math.ceil(filtered.length / ROSTER_PAGE_SIZE) || 1;
+  if (rosterState.page > totalPages) rosterState.page = totalPages;
+  if (rosterState.page < 1) rosterState.page = 1;
+
+  const start = (rosterState.page - 1) * ROSTER_PAGE_SIZE;
+  const page = filtered.slice(start, start + ROSTER_PAGE_SIZE);
+
+  body.innerHTML = page.length
+    ? page.map((m) => rosterRow(m, true)).join("")
+    : '<tr><td colspan="3" class="roster-msg">No players found</td></tr>';
+
+  const badge = document.getElementById("roster-count");
+  if (badge) {
+    const showing = filtered.length !== rosterState.all.length
+      ? `${filtered.length} of ${rosterState.all.length}`
+      : `${rosterState.all.length}`;
+    badge.textContent = `⟳ ${showing} members · WOM`;
+  }
+
+  document.querySelectorAll("th.sortable").forEach((th) => {
+    th.classList.remove("sort-asc", "sort-desc");
+    if (th.dataset.sort === rosterState.sort) {
+      th.classList.add(rosterState.sortDesc ? "sort-desc" : "sort-asc");
+    }
+  });
+
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const container = document.getElementById("roster-pagination");
+  if (!container) return;
+
+  if (totalPages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const p = rosterState.page;
+  container.innerHTML =
+    `<button ${p <= 1 ? "disabled" : ""} data-page="1">«</button>` +
+    `<button ${p <= 1 ? "disabled" : ""} data-page="${p - 1}">‹ Prev</button>` +
+    `<span class="page-info">Page ${p} of ${totalPages}</span>` +
+    `<button ${p >= totalPages ? "disabled" : ""} data-page="${p + 1}">Next ›</button>` +
+    `<button ${p >= totalPages ? "disabled" : ""} data-page="${totalPages}">»</button>`;
+
+  container.querySelectorAll("button[data-page]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      rosterState.page = parseInt(btn.dataset.page);
+      renderFullRoster();
+    });
+  });
+}
+
+function populateRankFilter(members) {
+  const select = document.getElementById("roster-filter");
+  if (!select) return;
+
+  const seen = new Set();
+  const ranks = [];
+  members.forEach((m) => {
+    if (!seen.has(m.role)) {
+      seen.add(m.role);
+      ranks.push({ role: m.role, label: m.rankLabel, priority: m.priority || 0 });
+    }
+  });
+  ranks.sort((a, b) => b.priority - a.priority);
+
+  select.innerHTML = '<option value="">All Ranks</option>' +
+    ranks.map((r) => `<option value="${esc(r.role)}">${esc(r.label)}</option>`).join("");
+}
+
+function wireRosterControls() {
+  const search = document.getElementById("roster-search");
+  const filter = document.getElementById("roster-filter");
+
+  if (search) {
+    search.addEventListener("input", () => {
+      rosterState.search = search.value.trim();
+      rosterState.page = 1;
+      renderFullRoster();
+    });
+  }
+
+  if (filter) {
+    filter.addEventListener("change", () => {
+      rosterState.filter = filter.value;
+      rosterState.page = 1;
+      renderFullRoster();
+    });
+  }
+
+  document.querySelectorAll("th.sortable").forEach((th) => {
+    th.addEventListener("click", () => {
+      const sort = th.dataset.sort;
+      if (rosterState.sort === sort) {
+        rosterState.sortDesc = !rosterState.sortDesc;
+      } else {
+        rosterState.sort = sort;
+        rosterState.sortDesc = sort === "rank" || sort === "xp";
+      }
+      rosterState.page = 1;
+      renderFullRoster();
+    });
+  });
 }
 
 async function loadRoster() {
   const body = document.getElementById("roster-body");
   if (!body) return;
-  body.innerHTML = `<tr><td colspan="2" class="roster-msg">Loading roster…</td></tr>`;
+  const cols = body.dataset.full === "1" ? 3 : 2;
+  body.innerHTML = `<tr><td colspan="${cols}" class="roster-msg">Loading roster…</td></tr>`;
   try {
     const r = await fetch("/api/wom", { headers: { accept: "application/json" } });
     if (!r.ok) throw new Error("bad status " + r.status);
@@ -105,7 +290,6 @@ async function loadRoster() {
     if (!data || !Array.isArray(data.members) || !data.members.length) throw new Error("empty");
     renderRoster(data.members, { cached: false });
   } catch (e) {
-    // graceful degrade: show the bundled snapshot rather than an empty panel
     renderRoster(ROSTER_FALLBACK, { cached: true });
   }
 }
@@ -141,7 +325,6 @@ async function loadNews() {
     const r = await fetch("/api/news", { headers: { accept: "application/json" } });
     if (!r.ok) throw new Error("bad status");
     const data = await r.json();
-    // not configured yet, or nothing to show -> keep the sample content in place
     if (!data || !data.configured || !Array.isArray(data.items) || !data.items.length) return;
     body.innerHTML = data.items.map(newsCard).join("");
     const badge = document.getElementById("news-badge");
@@ -155,6 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
   wireDiscordLinks();
   wireNav();
   wireToasts();
+  wireRosterControls();
   loadRoster();
   loadNews();
 });

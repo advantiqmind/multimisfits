@@ -57,8 +57,19 @@
   <div class="grid"><section class="panel col-2" id="roster">
     <div class="head"><h2><span class="rune"></span>Full Roster <span class="badge" id="roster-count">⟳ loading · WOM</span></h2><a class="more" href="https://wiseoldman.net/groups/26075" target="_blank" rel="noopener">On WOM →</a></div>
     <div class="body">
-      <table class="roster"><thead><tr><th>Player</th><th>Rank</th></tr></thead>
-      <tbody id="roster-body" data-full="1"><tr><td colspan="2" class="roster-msg">Loading roster…</td></tr></tbody></table>
+      <div class="roster-controls" id="roster-controls" style="display:none">
+        <input type="text" id="roster-search" class="roster-search" placeholder="Search player…">
+        <select id="roster-filter" class="roster-filter">
+          <option value="">All Ranks</option>
+        </select>
+      </div>
+      <table class="roster roster-full"><thead><tr>
+        <th class="sortable" data-sort="name">Player</th>
+        <th class="sortable sort-desc" data-sort="rank">Rank</th>
+        <th class="sortable" data-sort="xp">Total XP</th>
+      </tr></thead>
+      <tbody id="roster-body" data-full="1"><tr><td colspan="3" class="roster-msg">Loading roster…</td></tr></tbody></table>
+      <div class="roster-pagination" id="roster-pagination"></div>
     </div>
   </section></div>
 
