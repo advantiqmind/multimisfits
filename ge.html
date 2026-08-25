@@ -10,7 +10,8 @@
 <link rel="stylesheet" href="style.css">
 <script src="app.js" defer></script>
 <style>
-.ge-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.ge-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 0}
+.ge-tabs{display:flex;gap:8px;flex-wrap:wrap}
 .ge-tab{
   font-family:"Jersey 15",monospace;font-size:20px;line-height:1;cursor:pointer;
   color:var(--gold);border:2px solid #000;border-radius:5px;padding:11px 20px;
@@ -25,13 +26,14 @@
   box-shadow:inset 0 1px 0 #fff3c4, 0 0 0 1px #000, 0 0 14px rgba(255,203,47,.35);
   text-shadow:0 1px 0 rgba(255,255,255,.4);
 }
-.ge-frame{width:100%;border:2px solid #000;border-radius:6px;background:var(--void);min-height:600px}
-.ge-credit{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted);margin-top:10px;text-align:right}
+.ge-credit{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted)}
 .ge-credit a{color:var(--gold-dim)}
 .ge-credit a:hover{color:var(--gold)}
+.ge-frame{width:100%;border:none;border-radius:4px;background:transparent;height:calc(100vh - 120px)}
 @media (max-width:860px){
-  .ge-frame{min-height:500px}
+  .ge-frame{height:calc(100vh - 110px)}
   .ge-tab{font-size:17px;padding:9px 14px}
+  .ge-bar{padding:6px 0}
 }
 </style>
 </head>
@@ -77,36 +79,16 @@
   </div>
 </header>
 
-<main>
-<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">Grand Exchange</h1><div class="tagline">Price checker & practice simulator</div></section>
-
-<div class="grid"><section class="panel col-2"><div class="head"><h2><span class="rune"></span>Grand Exchange</h2><a class="more" href="https://1box.online/tools/osrs-ge/" target="_blank" rel="noopener">Open on 1Box →</a></div>
-<div class="body">
-  <div class="ge-tabs">
-    <button class="ge-tab active" data-ge="live">GE Lookup</button>
-    <button class="ge-tab" data-ge="practice">Practice Simulator</button>
+<main style="padding-top:8px;padding-bottom:8px">
+  <div class="ge-bar">
+    <div class="ge-tabs">
+      <button class="ge-tab active" data-ge="live">GE Lookup</button>
+      <button class="ge-tab" data-ge="practice">Practice Simulator</button>
+    </div>
+    <div class="ge-credit">Powered by <a href="https://1box.online/tools/osrs-ge/" target="_blank" rel="noopener">1Box.online</a></div>
   </div>
   <iframe id="ge-frame" class="ge-frame" src="https://1box.online/tools/osrs-ge/" title="Grand Exchange Tool" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy"></iframe>
-  <div class="ge-credit">Powered by <a href="https://1box.online" target="_blank" rel="noopener">1Box.online</a></div>
-</div></section></div>
-
 </main>
-
-<footer>
-  <div class="foot-cta">
-    <h2>Ready to stop soloing?</h2>
-    <p>Recruiting happens in Discord — hop in, say hi, and a rank will sort you out. That's it.</p>
-    <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true" style="width:18px;height:14px;vertical-align:-1px;margin-right:8px"><use href="#discord"/></svg>JOIN THE CLAN</a>
-  </div>
-  <div class="foot-links">
-    <a href="/">Home</a><a href="/events.html">Events</a><a href="#news">News</a><a href="/guides.html">Guides</a>
-    <a href="/faq.html">FAQ</a><a href="/roster.html">Roster</a><a href="/ge.html">Grand Exchange</a><a data-discord href="#">Discord</a>
-  </div>
-  <div class="disclaimer">
-    Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
-    RuneScape and Old School RuneScape are trademarks of Jagex Ltd. · Roster is live from Wise Old Man; news, events &amp; media are samples pending Discord hookup.
-  </div>
-</footer>
 
 <div id="toast"></div>
 
