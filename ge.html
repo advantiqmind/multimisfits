@@ -3,13 +3,37 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>FAQ — Multi-Misfits</title>
+<title>Grand Exchange — Multi-Misfits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Jersey+15&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="app.js" defer></script>
-
+<style>
+.ge-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.ge-tab{
+  font-family:"Jersey 15",monospace;font-size:20px;line-height:1;cursor:pointer;
+  color:var(--gold);border:2px solid #000;border-radius:5px;padding:11px 20px;
+  background:linear-gradient(180deg,#5a4a2f,#3a2f1e);
+  box-shadow:inset 0 1px 0 var(--bronze-lite), inset 0 -2px 4px rgba(0,0,0,.4);
+  text-shadow:1px 1px 0 #000;white-space:nowrap;transition:transform .12s ease, filter .12s ease;
+}
+.ge-tab:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.ge-tab.active{
+  color:#1a1305;font-weight:bold;
+  background:linear-gradient(180deg,#ffd964,#e0a81f);
+  box-shadow:inset 0 1px 0 #fff3c4, 0 0 0 1px #000, 0 0 14px rgba(255,203,47,.35);
+  text-shadow:0 1px 0 rgba(255,255,255,.4);
+}
+.ge-frame{width:100%;border:2px solid #000;border-radius:6px;background:var(--void);min-height:600px}
+.ge-credit{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted);margin-top:10px;text-align:right}
+.ge-credit a{color:var(--gold-dim)}
+.ge-credit a:hover{color:var(--gold)}
+@media (max-width:860px){
+  .ge-frame{min-height:500px}
+  .ge-tab{font-size:17px;padding:9px 14px}
+}
+</style>
 </head>
 <body>
 
@@ -53,17 +77,17 @@
 </header>
 
 <main>
-<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">FAQ &amp; Rules</h1><div class="tagline">The basics</div></section>
-  <div class="grid"><section class="panel col-2"><div class="head"><h2><span class="rune"></span>FAQ</h2><span class="badge">draft</span></div>
-  <div class="body">
-    <h3 style="color:var(--gold)">How do I join?</h3>
-    <p>Hit the Join button, hop in our Discord, and say hi — a rank will sort you out. That's the whole process.</p>
-    <h3 style="color:var(--gold);margin-top:14px">Are there requirements?</h3>
-    <p>Nope. New or maxed, iron or main — everyone's welcome.</p>
-    <h3 style="color:var(--gold);margin-top:14px">How do ranks work?</h3>
-    <p>Ranks are earned through activity and time in the clan. Check the <a href="/roster.html" style="color:var(--gold)">roster</a> to see the current hierarchy.</p>
-    <p style="color:var(--muted);margin-top:14px"><em>Draft — send me your real FAQ + rules and I'll replace this.</em></p>
-  </div></section></div>
+<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">Grand Exchange</h1><div class="tagline">Price checker & practice simulator</div></section>
+
+<div class="grid"><section class="panel col-2"><div class="head"><h2><span class="rune"></span>Grand Exchange</h2><a class="more" href="https://1box.online/tools/osrs-ge/" target="_blank" rel="noopener">Open on 1Box →</a></div>
+<div class="body">
+  <div class="ge-tabs">
+    <button class="ge-tab active" data-ge="live">GE Lookup</button>
+    <button class="ge-tab" data-ge="practice">Practice Simulator</button>
+  </div>
+  <iframe id="ge-frame" class="ge-frame" src="https://1box.online/tools/osrs-ge/" title="Grand Exchange Tool" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy"></iframe>
+  <div class="ge-credit">Powered by <a href="https://1box.online" target="_blank" rel="noopener">1Box.online</a></div>
+</div></section></div>
 
 </main>
 
@@ -75,7 +99,7 @@
   </div>
   <div class="foot-links">
     <a href="/">Home</a><a href="/events.html">Events</a><a href="#news">News</a><a href="/guides.html">Guides</a>
-    <a href="/faq.html">FAQ</a><a href="/roster.html">Roster</a><a data-discord href="#">Discord</a>
+    <a href="/faq.html">FAQ</a><a href="/roster.html">Roster</a><a href="/ge.html">Grand Exchange</a><a data-discord href="#">Discord</a>
   </div>
   <div class="disclaimer">
     Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
@@ -84,6 +108,22 @@
 </footer>
 
 <div id="toast"></div>
+
+<script>
+(function(){
+  var tabs = document.querySelectorAll('.ge-tab');
+  var frame = document.getElementById('ge-frame');
+  var urls = { live: 'https://1box.online/tools/osrs-ge/', practice: 'https://1box.online/tools/osrs-ge/practice' };
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      tabs.forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      var src = urls[tab.dataset.ge];
+      if (frame.src !== src) frame.src = src;
+    });
+  });
+})();
+</script>
 
 </body>
 </html>
