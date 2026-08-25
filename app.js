@@ -2,7 +2,8 @@
    - wires the Join / Discord links from one place (CONFIG)
    - mobile nav + "coming soon" toasts
    - pulls the live roster from /api/wom, with a graceful fallback
-   - full roster page: search, rank filter, sortable columns, pagination */
+   - full roster page: search, rank filter, sortable columns, pagination
+   - events page: featured event, upcoming/past grids from /api/events */
 
 const CONFIG = {
   discordInvite: "https://discord.gg/kT4vEGnjgU",
@@ -334,6 +335,181 @@ async function loadNews() {
   }
 }
 
+/* ---- events ---- */
+const EVENTS_FALLBACK = [
+  {
+    id: "sample-1", name: "Bond Giveaway — Round 2",
+    description: "Enter to win a bond! Post a screenshot of your best PvM drop in #events for a FREE entry.\n\nDonation tiers:\n• 500K GP = 1 extra duck\n• 1M GP = 3 extra ducks\n• 2M GP = 5 extra ducks + gold name\n\nAll donations go to the clan prize pool. Duck Race finale at 8 PM GMT!",
+    startTime: "2026-09-01T20:00:00Z", endTime: "2026-09-01T22:00:00Z",
+    status: "scheduled", interestedCount: 23,
+  },
+  {
+    id: "sample-2", name: "CoX Mass Night",
+    description: "Chambers of Xeric mass run. All levels welcome. Voice required.",
+    startTime: "2026-08-28T20:00:00Z", status: "scheduled", interestedCount: 15,
+  },
+  {
+    id: "sample-3", name: "Skill of the Week: Mining",
+    description: "Mine the most XP this week. Top 3 win prizes from the clan bank.",
+    startTime: "2026-09-01T00:00:00Z", endTime: "2026-09-07T23:59:00Z",
+    status: "scheduled", interestedCount: 8,
+  },
+  {
+    id: "sample-4", name: "PvP Tournament",
+    description: "1v1 bracket tournament. Sign up in Discord. 5M prize pool.",
+    startTime: "2026-09-06T21:00:00Z", status: "scheduled", interestedCount: 12,
+  },
+  {
+    id: "sample-5", name: "Bond Giveaway — Round 1",
+    description: "Congratulations to Vilence for winning the first bond giveaway!",
+    startTime: "2026-08-15T20:00:00Z", status: "completed", interestedCount: 31,
+  },
+  {
+    id: "sample-6", name: "ToB Learning Raid",
+    description: "Theatre of Blood learning run for first-timers. Great turnout!",
+    startTime: "2026-08-10T19:00:00Z", status: "completed", interestedCount: 18,
+  },
+];
+
+function formatEventDate(iso) {
+  return new Date(iso).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+
+function formatEventTime(iso) {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function eventCountdown(iso) {
+  const diff = new Date(iso).getTime() - Date.now();
+  if (diff <= 0) return null;
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  let s = "";
+  if (d > 0) s += d + "d ";
+  if (h > 0 || d > 0) s += h + "h ";
+  s += m + "m";
+  return s.trim();
+}
+
+function eventStatusBadge(status) {
+  if (status === "active") return '<span class="ev-status ev-live">LIVE</span>';
+  if (status === "completed") return '<span class="ev-status ev-ended">ENDED</span>';
+  return '<span class="ev-status ev-upcoming">UPCOMING</span>';
+}
+
+function featuredEventHtml(ev) {
+  const badge = eventStatusBadge(ev.status);
+  const countdown = ev.status === "scheduled" ? eventCountdown(ev.startTime) : null;
+  const dateStr = formatEventDate(ev.startTime);
+  const timeStr = formatEventTime(ev.startTime);
+  const desc = ev.description ? esc(ev.description).replace(/\n/g, "<br>") : "";
+  const interested = ev.interestedCount
+    ? `<div class="ev-interested">${ev.interestedCount} interested</div>` : "";
+  const countdownHtml = countdown
+    ? `<div class="ev-countdown" data-countdown="${esc(ev.startTime)}">${countdown}</div>` : "";
+
+  return `<div class="ev-featured">
+    <div class="ev-featured-header"><h3>${esc(ev.name)}</h3>${badge}</div>
+    <div class="ev-featured-meta">
+      <span class="ev-date-text">${dateStr} · ${timeStr}</span>
+      ${countdownHtml}${interested}
+    </div>
+    ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
+    <div class="ev-cta">
+      <a class="btn join" data-discord href="#" aria-label="Join Discord for event details">
+        <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
+        RSVP on Discord
+      </a>
+    </div>
+  </div>`;
+}
+
+function eventCard(ev) {
+  const d = new Date(ev.startTime);
+  const day = d.getDate();
+  const month = d.toLocaleDateString(undefined, { month: "short" }).toUpperCase();
+  const badge = eventStatusBadge(ev.status);
+  const timeStr = ev.status !== "completed" ? formatEventTime(ev.startTime) : "";
+  const interested = ev.interestedCount ? `${ev.interestedCount} interested` : "";
+
+  return `<div class="ev-card">
+    <div class="ev-card-date"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
+    <div class="ev-card-info">
+      <h3>${esc(ev.name)}</h3>
+      <div class="ev-card-meta">${timeStr}${timeStr && interested ? " · " : ""}${interested}</div>
+    </div>
+    ${badge}
+  </div>`;
+}
+
+function renderEvents(events, { cached } = {}) {
+  const featuredBody = document.getElementById("featured-body");
+  const upcomingBody = document.getElementById("upcoming-body");
+  const pastBody = document.getElementById("past-body");
+  if (!featuredBody && !upcomingBody && !pastBody) return;
+
+  const active = events.filter((e) => e.status === "active");
+  const upcoming = events.filter((e) => e.status === "scheduled");
+  const past = events.filter((e) => e.status === "completed");
+
+  const featured = active[0] || upcoming[0];
+  const remainingUpcoming = featured && featured.status === "scheduled"
+    ? upcoming.slice(1) : upcoming;
+
+  if (featuredBody) {
+    featuredBody.innerHTML = featured
+      ? featuredEventHtml(featured)
+      : '<p class="ev-empty">No featured events right now. Check Discord!</p>';
+  }
+
+  if (upcomingBody) {
+    upcomingBody.innerHTML = remainingUpcoming.length
+      ? remainingUpcoming.map(eventCard).join("")
+      : '<p class="ev-empty">No upcoming events. Stay tuned!</p>';
+  }
+
+  if (pastBody) {
+    pastBody.innerHTML = past.length
+      ? past.map(eventCard).join("")
+      : '<p class="ev-empty">No past events yet.</p>';
+  }
+
+  const badge = document.getElementById("events-badge");
+  if (badge) {
+    badge.textContent = cached ? "sample" : "⟳ from Discord";
+  }
+
+  wireDiscordLinks();
+  startCountdownTimers();
+}
+
+function startCountdownTimers() {
+  if (window._evCountdown) clearInterval(window._evCountdown);
+  const els = document.querySelectorAll("[data-countdown]");
+  if (!els.length) return;
+  window._evCountdown = setInterval(() => {
+    els.forEach((el) => {
+      const cd = eventCountdown(el.dataset.countdown);
+      el.textContent = cd || "NOW";
+    });
+  }, 60000);
+}
+
+async function loadEvents() {
+  const featuredBody = document.getElementById("featured-body");
+  if (!featuredBody) return;
+  try {
+    const r = await fetch("/api/events", { headers: { accept: "application/json" } });
+    if (!r.ok) throw new Error("bad status " + r.status);
+    const data = await r.json();
+    if (!data || !data.configured || !Array.isArray(data.events) || !data.events.length) throw new Error("empty");
+    renderEvents(data.events, { cached: false });
+  } catch (e) {
+    renderEvents(EVENTS_FALLBACK, { cached: true });
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   wireDiscordLinks();
   wireNav();
@@ -341,4 +517,5 @@ document.addEventListener("DOMContentLoaded", () => {
   wireRosterControls();
   loadRoster();
   loadNews();
+  loadEvents();
 });

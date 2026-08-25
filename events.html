@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>About — Multi-Misfits</title>
+<title>Events — Multi-Misfits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Jersey+15&display=swap" rel="stylesheet">
@@ -53,12 +53,37 @@
 </header>
 
 <main>
-<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">About</h1><div class="tagline">Who the Misfits are</div></section>
-  <div class="grid"><section class="panel col-2"><div class="head"><h2><span class="rune"></span>About Multi-Misfits</h2></div>
-  <div class="body">
-    <p>Multi-Misfits is a no-drama Old School RuneScape clan for bossers, skillers, and the occasional degenerate. We run weekly masses, community events and competitions, and keep an active Discord going around the clock. New players and returning veterans are equally welcome — there's a spot for everyone.</p>
-    <p style="color:var(--muted)"><em>Draft copy — send me the wording you want here and I'll drop it in.</em></p>
-  </div></section></div>
+<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">Clan Events</h1><div class="tagline">Live from Discord</div></section>
+
+  <!-- Featured Event -->
+  <div class="grid">
+    <section class="panel col-2" id="featured-event">
+      <div class="head"><h2><span class="rune"></span>Featured Event <span class="badge" id="events-badge">sample</span></h2></div>
+      <div class="body" id="featured-body">
+        <p class="ev-loading">Loading events&hellip;</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Upcoming Events -->
+  <div class="grid" style="margin-top:18px">
+    <section class="panel col-2" id="upcoming-events">
+      <div class="head"><h2><span class="rune"></span>Upcoming Events</h2></div>
+      <div class="body">
+        <div class="ev-grid" id="upcoming-body"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Past Events -->
+  <div class="grid" style="margin-top:18px">
+    <section class="panel col-2" id="past-events">
+      <div class="head"><h2><span class="rune"></span>Past Events</h2></div>
+      <div class="body">
+        <div class="ev-grid" id="past-body"></div>
+      </div>
+    </section>
+  </div>
 
 </main>
 
