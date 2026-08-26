@@ -34,6 +34,20 @@ console.log("  " + formatContent("**bold** *italic* `code` <@123> <#456> <:pog:7
 console.log("  " + formatContent("<a:alarm:123456> Check this out @everyone"));
 console.log("  " + formatContent("See https://discord.com/channels/123/456/789 for details"));
 
+// Test: title line that becomes empty after Discord stripping
+const emptyTitleMessages = [
+  { id: "e1", type: 0, timestamp: "2026-08-24T10:00:00Z",
+    author: { id: "666", username: "qoioqx", global_name: "Qoioqx", avatar: "ghi" },
+    content: "<a:alarm:123456> https://discord.com/channels/111/222/333 <a:alarm:123456>\nActual content starts here\nMore details below",
+    attachments: [], reactions: [] },
+  { id: "e2", type: 0, timestamp: "2026-08-24T09:00:00Z",
+    author: { id: "777", username: "testuser", global_name: "TestUser", avatar: null },
+    content: "<a:emoji:999>\n<a:emoji2:888>\nThird line is real",
+    attachments: [], reactions: [] },
+];
+
+const emptyTitle = transformMessages(emptyTitleMessages);
+
 const checks = [
   ["skips bot message", !all.some((i) => i.author === "dinkbot")],
   ["skips system join", !all.some((i) => i.id === "4")],
@@ -46,6 +60,9 @@ const checks = [
   ["custom emoji stripped", !formatContent("<a:alarm:123>").includes("alarm")],
   ["@everyone stripped", !formatContent("Hey @everyone check this").includes("@everyone")],
   ["discord channel link stripped", !formatContent("See https://discord.com/channels/123/456/789 now").includes("discord.com")],
+  ["empty-after-strip title falls back to next line", emptyTitle[0].titleHtml.includes("Actual content")],
+  ["empty-after-strip body excludes used title line", !emptyTitle[0].bodyHtml.includes("Actual content")],
+  ["all-artifact lines skipped for title", emptyTitle[1].titleHtml.includes("Third line")],
 ];
 console.log("\nchecks:");
 let pass = true;

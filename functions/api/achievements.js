@@ -23,25 +23,6 @@ const MEDAL_MAP = {
   default: "🔥",
 };
 
-function classifyAchievement(text) {
-  const t = text.toLowerCase();
-  if (t.includes("pet") || t.includes("olmlet") || t.includes("baby mole") ||
-      t.includes("vorki") || t.includes("jad pet") || t.includes("zuk pet") ||
-      t.includes("metamorphic") || t.includes("youngllef")) return "pet";
-  if (t.includes("combat achievement") || t.includes("combat task")) return "ca";
-  if (t.includes("maxed") || t.includes("max cape") || t.includes("2277")) return "max";
-  if (t.includes("200m") || t.includes("99 ") || t.includes("level 99") ||
-      t.includes("xp milestone")) return "xp";
-  if (t.includes("quest cape") || t.includes("quest point")) return "quest";
-  if (t.includes("clue") || t.includes("casket")) return "clue";
-  if (t.includes("personal best") || t.includes("new pb") || t.includes("fastest")) return "pb";
-  if (t.includes("drop") || t.includes("received") || t.includes("loot") ||
-      t.includes("obtained") || t.includes("bow") || t.includes("scythe") ||
-      t.includes("twisted") || t.includes("rapier") || t.includes("dragon") ||
-      t.includes("rare") || t.includes("unique")) return "drop";
-  return "default";
-}
-
 function stripDiscord(s) {
   return String(s || "")
     .replace(/<a?:\w+:\d+>/g, "")
@@ -52,25 +33,184 @@ function stripDiscord(s) {
     .trim();
 }
 
+function stripMdLinks(s) {
+  return String(s || "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1");
+}
+
+function parseFields(embed) {
+  const fields = Array.isArray(embed.fields) ? embed.fields : [];
+  const map = {};
+  for (const f of fields) {
+    if (f.name) map[f.name.toLowerCase().trim()] = (f.value || "").trim();
+  }
+  return map;
+}
+
+function classifyByTitle(title) {
+  const t = title.toLowerCase().trim();
+  if (t === "loot drop" || t === "loot") return "drop";
+  if (t === "level up") return "xp";
+  if (t === "quest completed") return "quest";
+  if (t.startsWith("combat achievement")) return "ca";
+  if (t.includes("personal best")) return "pb";
+  if (t === "collection log") return "drop";
+  if (t.includes("pet")) return "pet";
+  if (t.includes("clue") || t.includes("casket")) return "clue";
+  if (t === "achievement diary" || t === "diary") return "ca";
+  return null;
+}
+
+function classifyAchievement(text) {
+  const t = text.toLowerCase();
+  if (t.includes("pet") || t.includes("olmlet") || t.includes("baby mole") ||
+      t.includes("vorki") || t.includes("jad pet") || t.includes("zuk pet") ||
+      t.includes("metamorphic") || t.includes("youngllef")) return "pet";
+  if (t.includes("combat achievement") || t.includes("combat task")) return "ca";
+  if (t.includes("maxed") || t.includes("max cape") || t.includes("2277")) return "max";
+  if (t.includes("200m") || t.includes("99 ") || t.includes("level 99") ||
+      t.includes("xp milestone") || t.includes("level up") || t.includes("levelled") ||
+      t.includes("has levelled")) return "xp";
+  if (t.includes("quest cape") || t.includes("quest point") || t.includes("quest completed") ||
+      t.includes("completed a quest")) return "quest";
+  if (t.includes("clue") || t.includes("casket")) return "clue";
+  if (t.includes("personal best") || t.includes("new pb") || t.includes("fastest")) return "pb";
+  if (t.includes("drop") || t.includes("received") || t.includes("loot") ||
+      t.includes("obtained") || t.includes("bow") || t.includes("scythe") ||
+      t.includes("twisted") || t.includes("rapier") || t.includes("dragon") ||
+      t.includes("rare") || t.includes("unique")) return "drop";
+  return "default";
+}
+
+function extractPlayer(text) {
+  if (!text) return null;
+  const pats = [
+    /^(.+?) (?:received|has|got|earned|completed|achieved)/i,
+    /^(.+?)[''\u2019]s /i,
+  ];
+  for (const p of pats) {
+    const m = text.match(p);
+    if (m && m[1] && m[1].length < 30) return m[1].trim();
+  }
+  return null;
+}
+
+function parseDinkEmbed(embed) {
+  const title = (embed.title || "").trim();
+  const rawDesc = (embed.description || "").trim();
+  const desc = stripMdLinks(stripDiscord(rawDesc));
+  const authorName = embed.author ? (embed.author.name || "") : "";
+  const player = stripDiscord(authorName) || extractPlayer(desc) || extractPlayer(title) || "Unknown";
+  const fields = parseFields(embed);
+  const dinkType = classifyByTitle(title);
+
+  if (dinkType) {
+    let what = "";
+    let detail = "";
+
+    switch (dinkType) {
+      case "drop": {
+        const lines = desc.split("\n").filter(function (l) { return l.trim(); });
+        const itemLines = lines.filter(function (l) { return /^\d+\s*x\s+/.test(l); });
+        const fromLine = lines.find(function (l) { return /^From:\s*/i.test(l); });
+        const source = fromLine ? fromLine.replace(/^From:\s*/i, "").trim() : "";
+        const totalValue = fields["total value"] || "";
+        const kc = fields["completion count"] || "";
+
+        if (itemLines.length > 0) {
+          what = itemLines.slice(0, 3).join(", ");
+          if (itemLines.length > 3) what += " +" + (itemLines.length - 3) + " more";
+        } else {
+          what = source ? "Loot from " + source : lines[0] || "Loot";
+        }
+
+        const dp = [];
+        if (source) dp.push("From " + source);
+        if (kc) dp.push(kc + " KC");
+        if (totalValue) dp.push(totalValue);
+        detail = dp.join(" | ");
+        break;
+      }
+      case "xp": {
+        var match = desc.match(/has levelled\s+(.+?\s+to\s+\d+)/i);
+        what = match ? "Levelled " + match[1] : desc.split("\n")[0] || "Level Up";
+        detail = "";
+        break;
+      }
+      case "quest": {
+        var match = desc.match(/completed a quest:\s*(.+)/i);
+        what = match ? "Completed " + match[1].trim() : desc.split("\n")[0] || "Quest Completed";
+        var qc = fields["completed quests"] || "";
+        var qp = fields["quest points"] || "";
+        var dp = [];
+        if (qc) dp.push(qc + " quests");
+        if (qp) dp.push(qp + " QP");
+        detail = dp.join(" | ");
+        break;
+      }
+      case "ca": {
+        var match = desc.match(/has completed\s+(.+)/i) || desc.match(/completed\s+(.+)/i);
+        what = match ? match[1].trim() : desc.split("\n")[0] || "Combat Achievement";
+        detail = fields["total points"] || "";
+        break;
+      }
+      case "pb": {
+        var match = desc.match(/personal best[:\s]+(.+)/i) ||
+                    desc.match(/new (?:personal )?best[:\s]+(.+)/i);
+        what = match ? match[1].trim() : desc.split("\n")[0] || "Personal Best";
+        detail = "";
+        break;
+      }
+      case "pet": {
+        var match = desc.match(/(?:has )?received (?:the )?(.+)/i);
+        what = match ? match[1].trim() : desc.split("\n")[0] || "Pet drop!";
+        detail = "";
+        break;
+      }
+      case "clue": {
+        what = desc.split("\n")[0] || "Clue scroll";
+        detail = fields["total value"] || "";
+        break;
+      }
+      default: {
+        what = desc.split("\n")[0] || title;
+        detail = "";
+      }
+    }
+
+    return {
+      player: player.slice(0, 100),
+      what: (what || title).slice(0, 200),
+      detail: (detail || "").slice(0, 200),
+      type: dinkType,
+      medal: MEDAL_MAP[dinkType] || MEDAL_MAP.default,
+    };
+  }
+
+  return null;
+}
+
 export function parseDinkMessage(m) {
   const embeds = Array.isArray(m.embeds) ? m.embeds : [];
   const content = (m.content || "").trim();
 
   for (const embed of embeds) {
-    const title = (embed.title || "").trim();
-    const desc = (embed.description || "").trim();
-    const authorName = embed.author ? (embed.author.name || "") : "";
+    const dinkResult = parseDinkEmbed(embed);
+    if (dinkResult) return dinkResult;
 
-    const player = stripDiscord(authorName) || extractPlayer(title) || extractPlayer(desc) || "Unknown";
-    const what = stripDiscord(title) || stripDiscord(desc.split("\n")[0]) || stripDiscord(content.split("\n")[0]) || "Achievement";
+    const title = (embed.title || "").trim();
+    const rawDesc = (embed.description || "").trim();
+    const desc = stripMdLinks(stripDiscord(rawDesc));
+    const authorName = embed.author ? (embed.author.name || "") : "";
+    const player = stripDiscord(authorName) || extractPlayer(stripDiscord(title)) || extractPlayer(desc) || "Unknown";
+    const what = stripDiscord(title) || desc.split("\n")[0] || stripDiscord(content.split("\n")[0]) || "Achievement";
 
     if (what && what !== "Achievement") {
-      const type = classifyAchievement(what);
-      const detail = desc ? stripDiscord(desc.split("\n")[0]).slice(0, 200) : "";
+      const type = classifyAchievement(what + " " + desc);
+      const detail = desc ? desc.split("\n")[0].slice(0, 200) : "";
       return {
         player: player.slice(0, 100),
         what: what.slice(0, 200),
-        detail,
+        detail: detail !== what ? detail : "",
         type,
         medal: MEDAL_MAP[type],
       };
@@ -78,7 +218,7 @@ export function parseDinkMessage(m) {
   }
 
   if (content) {
-    const cleaned = stripDiscord(content);
+    const cleaned = stripMdLinks(stripDiscord(content));
     const player = extractPlayer(cleaned) || "Unknown";
     const type = classifyAchievement(cleaned);
     return {
@@ -90,20 +230,6 @@ export function parseDinkMessage(m) {
     };
   }
 
-  return null;
-}
-
-function extractPlayer(text) {
-  if (!text) return null;
-  const pats = [
-    /^(.+?) (?:received|has|got|earned|completed|achieved)/i,
-    /^(.+?)['']s /i,
-    /^(.+?) — /,
-  ];
-  for (const p of pats) {
-    const m = text.match(p);
-    if (m && m[1] && m[1].length < 30) return m[1].trim();
-  }
   return null;
 }
 

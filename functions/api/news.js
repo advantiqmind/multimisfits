@@ -49,6 +49,16 @@ export function formatContent(text) {
   return t;
 }
 
+function stripDiscordRaw(s) {
+  return String(s || "")
+    .replace(/<a?:\w+:\d+>/g, "")
+    .replace(/<@!?\d+>/g, "").replace(/<@&\d+>/g, "").replace(/<#\d+>/g, "")
+    .replace(/<t:\d+(?::[tTdDfFR])?>/g, "")
+    .replace(/@(everyone|here)/gi, "")
+    .replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, "")
+    .trim();
+}
+
 // Pure + testable: raw Discord messages -> news items
 export function transformMessages(messages, opts = {}) {
   const limit = opts.limit || LIMIT;
@@ -70,8 +80,12 @@ export function transformMessages(messages, opts = {}) {
     if (!content && !image) continue;                        // nothing to show
 
     const lines = content.split("\n");
-    const title = (lines[0] || "Announcement").slice(0, 140);
-    const bodyText = lines.slice(1).join("\n").trim();
+    let titleIdx = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (stripDiscordRaw(lines[i])) { titleIdx = i; break; }
+    }
+    const title = (titleIdx >= 0 ? lines[titleIdx] : "Announcement").slice(0, 140);
+    const bodyText = lines.filter(function (_, i) { return i !== titleIdx; }).join("\n").trim();
     const author = m.author ? (m.author.global_name || m.author.username || "Unknown") : "Unknown";
     const avatar = m.author && m.author.avatar
       ? `https://cdn.discordapp.com/avatars/${m.author.id}/${m.author.avatar}.png?size=64`
