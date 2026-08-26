@@ -82,6 +82,7 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
 - **SAUCY RULE**: Do NOT build, write, or push any new feature or code change until
   the owner says "saucy" TWICE in the same message. Discuss, plan, and propose freely,
   but do not touch code until you see "saucy saucy". This applies per feature request.
+  "Saucy saucy" also means merge to main once the changes are committed and tests pass.
   Documentation-only updates (like CLAUDE.md) are exempt.
 - **NO EM DASHES.** Never use em dashes (—) in any user-visible text. Non-negotiable.
 - NEVER put the Discord bot token in client code. Server-side (Functions + env) only.
