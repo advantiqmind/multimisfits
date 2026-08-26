@@ -159,6 +159,7 @@ table.roster .ign{font-family:"Jersey 15";font-size:17px;color:var(--parchment)}
 table.roster .ign a{color:var(--parchment)}
 table.roster .ign a:hover{color:var(--gold)}
 .roster-msg{color:var(--muted);font-family:"Jersey 15";font-size:15px;padding:10px 8px}
+.rank-num{font-family:"Jersey 15",monospace;color:var(--muted);text-align:center;width:36px;white-space:nowrap}
 
 .rank{display:inline-flex;align-items:center;gap:7px;font-family:"Jersey 15";font-size:15px;color:var(--parchment)}
 .rank-icon{width:18px;height:18px;object-fit:contain;image-rendering:pixelated;flex:0 0 auto;filter:drop-shadow(0 1px 0 #000)}

@@ -77,9 +77,14 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
 - Deploy: npx wrangler pages deploy .  (or connect the GitHub repo in the Pages dashboard)
 
 ## Conventions / DO NOT
+- **SAUCY RULE**: Do NOT build, write, or push any new feature or code change until
+  the owner says "saucy" TWICE in the same message. Discuss, plan, and propose freely,
+  but do not touch code until you see "saucy saucy". This applies per feature request.
+  Documentation-only updates (like CLAUDE.md) are exempt.
 - NEVER put the Discord bot token in client code. Server-side (Functions + env) only.
 - Keep it vanilla — don't introduce React/Next/bundlers.
 - Don't add website-side editing of anything that has a Discord/WOM source.
 - Cache external calls (WOM 6h, Discord ~5min) — respect their rate limits; send a User-Agent.
 - Every fetch has a graceful fallback so a panel never renders empty/broken.
 - Fan site: keep the "not affiliated with Jagex" disclaimer in the footer.
+- Push directly to main (no feature branches unless requested).

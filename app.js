@@ -91,7 +91,7 @@ function wireToasts() {
   });
 }
 
-function rosterRow(m, showXP) {
+function rosterRow(m, showXP, num) {
   const cls = "rank rank--" + esc(m.role || "member");
   const displayName = capitalizeName(m.name);
   const profile = m.username
@@ -100,7 +100,9 @@ function rosterRow(m, showXP) {
   const nameHtml = profile
     ? `<a href="${profile}" target="_blank" rel="noopener">${esc(displayName)}</a>`
     : esc(displayName);
-  let html = `<tr><td class="ign">${nameHtml}</td>` +
+  let html = "<tr>";
+  if (num != null) html += `<td class="rank-num">${num}</td>`;
+  html += `<td class="ign">${nameHtml}</td>` +
     `<td><span class="${cls}">${rankMark(m.role)}${esc(m.rankLabel)}</span></td>`;
   if (showXP) {
     html += `<td class="xp-cell">${formatXP(m.exp)}</td>`;
@@ -180,8 +182,8 @@ function renderFullRoster() {
   const page = filtered.slice(start, start + ROSTER_PAGE_SIZE);
 
   body.innerHTML = page.length
-    ? page.map((m) => rosterRow(m, true)).join("")
-    : '<tr><td colspan="3" class="roster-msg">No players found</td></tr>';
+    ? page.map((m, i) => rosterRow(m, true, start + i + 1)).join("")
+    : '<tr><td colspan="4" class="roster-msg">No players found</td></tr>';
 
   const badge = document.getElementById("roster-count");
   if (badge) {
