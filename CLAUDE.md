@@ -29,28 +29,30 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - index.html                  homepage (hero, news, events, achievements, roster, gallery)
 - about.html / guides.html / faq.html   content pages (About + FAQ are DRAFT copy)
 - roster.html                 full 41-member roster (data-full="1")
+- ge.html                     Grand Exchange — full-page iframe embed of 1box.online GE tool
+- events.html                 Events page — featured + upcoming + past layout
 - style.css                   theme
-- app.js                      nav, toasts, Discord links, live roster + news rendering
+- app.js                      nav, toasts, Discord links, live roster + news + events + achievements rendering
 - functions/api/wom.js        GET /api/wom  -> WOM group, cached 6h, sorted roster
 - functions/api/news.js       GET /api/news -> reads #announcements via Discord bot
+- functions/api/events.js     GET /api/events -> reads Discord Scheduled Events, cached 5min
+- functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
 - assets/ranks/*.png          15 rank icons (official, upscaled 2x nearest)
 - assets/gallery/shot1-6.webp clan screenshots
-- test-wom.mjs / test-news.mjs  unit tests for the transform/format logic
+- test-wom.mjs / test-news.mjs / test-events.mjs / test-achievements.mjs   unit tests (43 checks)
 
 ## Status
-DONE: homepage + pages, live roster w/ rank icons + sort, Discord Join wired, gallery.
-BUILT but not connected: news feed (needs bot). 
-NOT built yet: events function, achievements (chest) function.
-BLOCKED on owner: Discord bot creation, deploy, Captain rank icon.
+DONE: homepage + all pages, live roster w/ rank icons + sort + pagination + mobile CSS,
+      Grand Exchange page (full-page iframe embed of 1box.online), events.html with
+      featured/upcoming/past layout, Discord Join wired, gallery, nav/footer on all pages.
+BUILT & READY (needs bot token + env vars to go live): news feed, events feed,
+      achievements feed. All four serverless functions exist with caching, error handling,
+      and graceful fallback. Frontend rendering (loadNews, loadEvents, loadAchievements)
+      is wired in app.js — panels show sample data until the API is configured.
+BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
 
 ## What's left (priority order)
-1. functions/api/events.js  — read Discord Scheduled Events for the guild, return
-   {name, time, description, interestedCount}. Render into the Events panel in app.js
-   (replace the sample markup; add loadEvents()).
-2. functions/api/achievements.js — read the "chest" channel (Dink posts). Parse Dink's
-   embeds/messages into {player, item/achievement, timestamp}. Render into the
-   Achievements panel (add loadAchievements()). Reuse the cache pattern from news.js.
-3. Wire the Discord bot (owner does the Discord side):
+1. Wire the Discord bot (owner does the Discord side):
    - Bot with Message Content Intent, invited read-only (View Channel + Read Message History)
      to #announcements, chest, and guild scheduled-events scope.
    - Env vars (Pages > Settings > Environment variables, and .dev.vars for local):
@@ -59,16 +61,18 @@ BLOCKED on owner: Discord bot creation, deploy, Captain rank icon.
        CHEST_CHANNEL_ID         (plain)  <- for achievements
        DISCORD_GUILD_ID         (plain)  <- for events
        PUBLISH_REACTION         (optional, e.g. "check" emoji, to gate news)
-4. Confirm RANK_ORDER in functions/api/wom.js — Beast/Paladin placement and officer
+2. Confirm RANK_ORDER in functions/api/wom.js — Beast/Paladin placement and officer
    order (colonel vs captain) are BEST GUESSES. Owner's ladder: squire < duellist <
    striker < inquisitor < expert < knight < [officers] < [owners].
-5. Add Captain rank icon (assets/ranks/captain.png) when provided; add it to
+3. Add Captain rank icon (assets/ranks/captain.png) when provided; add it to
    ICON_ROLES in app.js. (striker/beast/squire are hand-cut, could be swapped for official.)
-6. Real content for About / FAQ / Guides.
-7. Deploy to Cloudflare Pages. Optional custom domain (runs on *.pages.dev first).
+4. Real content for About / FAQ / Guides.
+5. Homepage sample text cleanup — replace fake news/events/achievements with
+   cleaner "coming soon" placeholders or remove fake dates.
+6. Deploy to Cloudflare Pages. Optional custom domain (runs on *.pages.dev first).
 
 ## Commands
-- Tests:  npm test   (runs both .mjs tests; pure logic, no network needed)
+- Tests:  npm test   (runs all 4 .mjs tests; pure logic, no network needed)
 - Local:  npx wrangler pages dev .    (needs a Cloudflare login; live API calls need real network)
 - Deploy: npx wrangler pages deploy .  (or connect the GitHub repo in the Pages dashboard)
 
