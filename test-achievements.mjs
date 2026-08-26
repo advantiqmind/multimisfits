@@ -64,6 +64,8 @@ const dinkMessages = [
       title: "Loot Drop",
       description: "StWidu93 has looted:\n\n23 x [Battlestaff](https://prices.runescape.wiki/osrs/item/1391) (173K)\n2 x [Blood essence](https://prices.runescape.wiki/osrs/item/26392) (166K)\nFrom: [Tombs of Amascut: Expert Mode](https://oldschool.runescape.wiki/w/Tombs_of_Amascut)",
       author: { name: "StWidu93" },
+      thumbnail: { url: "https://cdn.example.com/thumb.png" },
+      image: { url: "https://cdn.example.com/screenshot.png" },
       fields: [
         { name: "Completion Count", value: "189" },
         { name: "Total Value", value: "396K gp" },
@@ -141,8 +143,8 @@ const checks = [
   ["dink loot shows second item", dink[1].what.includes("Blood essence")],
   ["dink loot strips md links from items", !dink[1].what.includes("[")],
   ["dink loot detail has source", dink[1].detail.includes("Tombs of Amascut")],
-  ["dink loot detail has KC", dink[1].detail.includes("189 KC")],
-  ["dink loot detail has value", dink[1].detail.includes("396K gp")],
+  ["dink loot detail has KC", dink[1].detail.includes("189 KC")],
+  ["dink loot detail has value", dink[1].detail.includes("396K gp")],
 
   // Dink-format: Quest Completed
   ["dink quest type", dink[2].type === "quest"],
@@ -154,8 +156,20 @@ const checks = [
 
   // Dink-format: single high-value drop
   ["dink single drop shows item", dink[3].what.includes("Twisted bow")],
-  ["dink single drop has KC", dink[3].detail.includes("412 KC")],
-  ["dink single drop has value", dink[3].detail.includes("1.4B gp")],
+  ["dink single drop has KC", dink[3].detail.includes("412 KC")],
+  ["dink single drop has value", dink[3].detail.includes("1.4B gp")],
+
+  // Thumbnail / image passthrough
+  ["dink loot has thumbnail", dink[1].thumbnail === "https://cdn.example.com/thumb.png"],
+  ["dink loot has image", dink[1].image === "https://cdn.example.com/screenshot.png"],
+  ["dink level up no thumbnail", dink[0].thumbnail === ""],
+  ["dink level up no image", dink[0].image === ""],
+
+  // Non-breaking spaces in detail values
+  ["nbsp between kc number and KC", dink[1].detail.includes("189 KC")],
+  ["nbsp in total value", dink[1].detail.includes("396K gp")],
+  ["nbsp in quest detail", dink[2].detail.includes(" quests")],
+  ["nbsp in QP detail", dink[2].detail.includes(" QP")],
 
   // Code block stripping in field values
   ["code block stripped from field", (() => {
@@ -171,7 +185,7 @@ const checks = [
         ],
       }],
     });
-    return r && r.detail.includes("197 KC") && r.detail.includes("17.0M gp") && !r.detail.includes("```");
+    return r && r.detail.includes("197 KC") && r.detail.includes("17.0M gp") && !r.detail.includes("```");
   })()],
 ];
 

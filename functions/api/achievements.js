@@ -44,6 +44,10 @@ function stripCodeBlocks(s) {
     .trim();
 }
 
+function nbsp(s) {
+  return String(s || "").replace(/ /g, String.fromCharCode(160));
+}
+
 function parseFields(embed) {
   const fields = Array.isArray(embed.fields) ? embed.fields : [];
   const map = {};
@@ -108,6 +112,8 @@ function parseDinkEmbed(embed) {
   const authorName = embed.author ? (embed.author.name || "") : "";
   const player = stripDiscord(authorName) || extractPlayer(desc) || extractPlayer(title) || "Unknown";
   const fields = parseFields(embed);
+  const thumbnail = embed.thumbnail && embed.thumbnail.url ? embed.thumbnail.url : "";
+  const image = embed.image && embed.image.url ? embed.image.url : "";
   const dinkType = classifyByTitle(title);
 
   if (dinkType) {
@@ -132,8 +138,8 @@ function parseDinkEmbed(embed) {
 
         const dp = [];
         if (source) dp.push("From " + source);
-        if (kc) dp.push(kc + " KC");
-        if (totalValue) dp.push(totalValue);
+        if (kc) dp.push(nbsp(kc) + String.fromCharCode(160) + "KC");
+        if (totalValue) dp.push(nbsp(totalValue));
         detail = dp.join(" | ");
         break;
       }
@@ -149,8 +155,8 @@ function parseDinkEmbed(embed) {
         var qc = fields["completed quests"] || "";
         var qp = fields["quest points"] || "";
         var dp = [];
-        if (qc) dp.push(qc + " quests");
-        if (qp) dp.push(qp + " QP");
+        if (qc) dp.push(nbsp(qc) + String.fromCharCode(160) + "quests");
+        if (qp) dp.push(nbsp(qp) + String.fromCharCode(160) + "QP");
         detail = dp.join(" | ");
         break;
       }
@@ -190,6 +196,8 @@ function parseDinkEmbed(embed) {
       detail: (detail || "").slice(0, 200),
       type: dinkType,
       medal: MEDAL_MAP[dinkType] || MEDAL_MAP.default,
+      thumbnail,
+      image,
     };
   }
 
@@ -214,12 +222,16 @@ export function parseDinkMessage(m) {
     if (what && what !== "Achievement") {
       const type = classifyAchievement(what + " " + desc);
       const detail = desc ? desc.split("\n")[0].slice(0, 200) : "";
+      const thumbnail = embed.thumbnail && embed.thumbnail.url ? embed.thumbnail.url : "";
+      const image = embed.image && embed.image.url ? embed.image.url : "";
       return {
         player: player.slice(0, 100),
         what: what.slice(0, 200),
         detail: detail !== what ? detail : "",
         type,
         medal: MEDAL_MAP[type],
+        thumbnail,
+        image,
       };
     }
   }

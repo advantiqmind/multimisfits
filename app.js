@@ -373,6 +373,12 @@ async function loadNews() {
 const ACH_LABELS = { pet: "Pet", drop: "Loot Drop", ca: "Combat Achievement", max: "Maxed", xp: "XP Milestone", quest: "Quest", clue: "Clue Scroll", pb: "Personal Best", default: "Achievement" };
 const ACH_COLORS = { pet: "#5bc0de", drop: "#ffcb2f", ca: "#e04040", max: "#ff9900", xp: "#4ad04a", quest: "#c090ff", clue: "#d99f1c", pb: "#4a90d9", default: "#999" };
 
+function achThumb(item) {
+  var src = item.thumbnail || item.image || "";
+  if (!src) return "";
+  return `<a class="ach-thumb lightbox-trigger" href="${esc(item.image || item.thumbnail)}"><img src="${esc(src)}" alt="" loading="lazy"></a>`;
+}
+
 function achItem(item, full) {
   var label = ACH_LABELS[item.type] || "Achievement";
   var color = ACH_COLORS[item.type] || ACH_COLORS.default;
@@ -380,6 +386,7 @@ function achItem(item, full) {
   var detail = item.detail || "";
   var what = item.what || label;
   var tagHtml = `<span class="ach-tag" style="border-color:${color};color:${color}">${esc(label)}</span>`;
+  var thumb = achThumb(item);
   if (full) {
     return `<div class="ach ach-full">` +
       `<div class="medal">${esc(item.medal)}</div>` +
@@ -388,7 +395,7 @@ function achItem(item, full) {
         `<div class="what">${esc(what)}</div>` +
         (detail ? `<div class="ach-detail">${esc(detail)}</div>` : "") +
         (time ? `<div class="ach-meta">${esc(time)}</div>` : "") +
-      `</div></div>`;
+      `</div>${thumb}</div>`;
   }
   return `<div class="ach">` +
     `<div class="medal">${esc(item.medal)}</div>` +
@@ -396,7 +403,7 @@ function achItem(item, full) {
       `<div class="who">${esc(item.player)}</div>` +
       `<div class="what">${esc(what)}</div>` +
       `<div class="ach-meta">${esc(label)}${time ? " · " + esc(time) : ""}</div>` +
-    `</div></div>`;
+    `</div>${thumb}</div>`;
 }
 
 const ACH_PAGE_SIZE = 12;
@@ -757,11 +764,12 @@ function wireGallery() {
     if (e.key === "Escape" && overlay.classList.contains("open")) close();
   });
 
-  document.querySelectorAll(".lightbox-trigger").forEach(function (a) {
-    a.addEventListener("click", function (e) {
+  document.addEventListener("click", function (e) {
+    var trigger = e.target.closest(".lightbox-trigger");
+    if (trigger) {
       e.preventDefault();
-      open(a.getAttribute("href"));
-    });
+      open(trigger.getAttribute("href"));
+    }
   });
 }
 
