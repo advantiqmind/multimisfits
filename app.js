@@ -394,6 +394,27 @@ const EVENTS_FALLBACK = [
   },
 ];
 
+function formatDiscord(text) {
+  let t = String(text || "");
+  t = t.replace(/<a?:(\w+):\d+>/g, ":$1:");
+  t = t.replace(/<@!?\d+>/g, "@member");
+  t = t.replace(/<@&\d+>/g, "@role");
+  t = t.replace(/<#\d+>/g, "#channel");
+  t = t.replace(/<t:\d+(?::[tTdDfFR])?>/g, "");
+  t = esc(t);
+  t = t.replace(/```([\s\S]*?)```/g, "$1");
+  t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
+  t = t.replace(/\*\*\*([^*]+)\*\*\*/g, "<strong><em>$1</em></strong>");
+  t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  t = t.replace(/__([^_]+)__/g, "<u>$1</u>");
+  t = t.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  t = t.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/\n/g, "<br>");
+  return t;
+}
+
+let _eventsData = [];
+
 function formatEventDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
@@ -426,13 +447,16 @@ function featuredEventHtml(ev) {
   const countdown = ev.status === "scheduled" ? eventCountdown(ev.startTime) : null;
   const dateStr = formatEventDate(ev.startTime);
   const timeStr = formatEventTime(ev.startTime);
-  const desc = ev.description ? esc(ev.description).replace(/\n/g, "<br>") : "";
+  const desc = ev.description ? formatDiscord(ev.description) : "";
   const interested = ev.interestedCount
     ? `<div class="ev-interested">${ev.interestedCount} replies</div>` : "";
   const countdownHtml = countdown
     ? `<div class="ev-countdown" data-countdown="${esc(ev.startTime)}">${countdown}</div>` : "";
+  const imgStyle = ev.image
+    ? ` style="background:linear-gradient(to bottom,rgba(18,13,6,.82),rgba(18,13,6,.95)),url('${esc(ev.image)}') center/cover;"`
+    : "";
 
-  return `<div class="ev-featured">
+  return `<div class="ev-featured"${imgStyle}>
     <div class="ev-featured-header"><h3>${esc(ev.name)}</h3>${badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${dateStr} · ${timeStr}</span>
@@ -455,8 +479,11 @@ function eventCard(ev) {
   const badge = eventStatusBadge(ev.status);
   const timeStr = ev.status !== "completed" ? formatEventTime(ev.startTime) : "";
   const interested = ev.interestedCount ? `${ev.interestedCount} replies` : "";
+  const bgStyle = ev.image
+    ? ` style="background:linear-gradient(to right,rgba(18,13,6,.92),rgba(18,13,6,.7)),url('${esc(ev.image)}') center/cover;"`
+    : "";
 
-  return `<div class="ev-card">
+  return `<div class="ev-card ev-clickable" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
       <h3>${esc(ev.name)}</h3>
@@ -467,6 +494,7 @@ function eventCard(ev) {
 }
 
 function renderEvents(events, { cached } = {}) {
+  _eventsData = events;
   const featuredBody = document.getElementById("featured-body");
   const upcomingBody = document.getElementById("upcoming-body");
   const pastBody = document.getElementById("past-body");
@@ -505,6 +533,74 @@ function renderEvents(events, { cached } = {}) {
 
   wireDiscordLinks();
   startCountdownTimers();
+  wireEventModals();
+}
+
+function wireEventModals() {
+  var overlay = document.getElementById("ev-modal-overlay");
+  if (!overlay) return;
+  var body = overlay.querySelector(".ev-modal-body");
+  var closeBtn = overlay.querySelector(".ev-modal-close");
+
+  function openModal(ev) {
+    var dateStr = formatEventDate(ev.startTime);
+    var timeStr = formatEventTime(ev.startTime);
+    var badge = eventStatusBadge(ev.status);
+    var desc = ev.description ? formatDiscord(ev.description) : '<span style="color:var(--muted)">No description</span>';
+    var imgHtml = ev.image
+      ? '<img src="' + esc(ev.image) + '" alt="" style="max-width:100%;border:2px solid #000;border-radius:6px;margin-bottom:14px" loading="lazy">'
+      : "";
+    var replies = ev.interestedCount ? ev.interestedCount + " replies" : "";
+
+    body.innerHTML =
+      '<div class="ev-modal-header"><h3>' + esc(ev.name) + '</h3>' + badge + '</div>' +
+      '<div class="ev-modal-meta">' + dateStr + ' · ' + timeStr +
+      (replies ? ' · ' + replies : '') + '</div>' +
+      imgHtml +
+      '<div class="ev-modal-desc">' + desc + '</div>' +
+      '<div style="margin-top:16px"><a class="btn join" data-discord href="#" aria-label="Join Discord">' +
+      '<svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>' +
+      'View on Discord</a></div>';
+
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+    wireDiscordLinks();
+  }
+
+  function closeModal() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) closeModal();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
+  });
+
+  document.querySelectorAll(".ev-clickable").forEach(function (card) {
+    card.addEventListener("click", function () {
+      var id = card.getAttribute("data-ev-id");
+      var ev = _eventsData.find(function (e) { return e.id === id; });
+      if (ev) openModal(ev);
+    });
+  });
+
+  var featured = document.querySelector(".ev-featured");
+  if (featured) {
+    var fev = _eventsData.find(function (e) { return e.status === "active"; }) ||
+              _eventsData.find(function (e) { return e.status === "scheduled"; });
+    if (fev) {
+      featured.classList.add("ev-clickable");
+      featured.setAttribute("data-ev-id", fev.id);
+      featured.addEventListener("click", function (e) {
+        if (e.target.closest("a")) return;
+        openModal(fev);
+      });
+    }
+  }
 }
 
 function startCountdownTimers() {
