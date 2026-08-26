@@ -97,6 +97,28 @@
   var tabs = document.querySelectorAll('.ge-tab');
   var frame = document.getElementById('ge-frame');
   var urls = { live: 'https://1box.online/tools/osrs-ge/', practice: 'https://1box.online/tools/osrs-ge/practice' };
+
+  var mmTheme = {
+    bg: "#0d0b08",
+    panel: "#2b2419",
+    panel2: "#3a3020",
+    border: "#6b5836",
+    text: "#e6d9b8",
+    muted: "#a99b78",
+    dim: "#8a7449",
+    neon: "#ffcb2f",
+    neon2: "#c9a227",
+    danger: "#b23a30",
+    warn: "#ffcb2f"
+  };
+
+  function applyTheme() {
+    if (!frame.contentWindow) return;
+    frame.contentWindow.postMessage({ type: "ge-theme", colors: mmTheme }, "*");
+  }
+
+  frame.addEventListener("load", applyTheme);
+
   tabs.forEach(function(tab){
     tab.addEventListener('click', function(){
       tabs.forEach(function(t){ t.classList.remove('active'); });
