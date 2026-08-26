@@ -1,4 +1,4 @@
-import { transformThreads } from "./functions/api/events.js";
+import { transformThreads, parseEventForgeDateField } from "./functions/api/events.js";
 
 const threads = [
   {
@@ -143,6 +143,84 @@ ok.push([
 ok.push([
   "null input returns empty array",
   transformThreads(null, null).length === 0,
+]);
+
+// EventForge date parsing tests
+ok.push([
+  "parseEventForgeDateField extracts When date",
+  parseEventForgeDateField("When: Friday, August 28, 2026 at 3:00 PM", "When") != null,
+]);
+ok.push([
+  "parseEventForgeDateField parses correct month",
+  new Date(parseEventForgeDateField("When: Friday, August 28, 2026 at 3:00 PM", "When")).getMonth() === 7,
+]);
+ok.push([
+  "parseEventForgeDateField parses correct day",
+  new Date(parseEventForgeDateField("When: Friday, August 28, 2026 at 3:00 PM", "When")).getDate() === 28,
+]);
+ok.push([
+  "parseEventForgeDateField extracts Ends date",
+  parseEventForgeDateField("Ends: Sunday, August 30, 2026 at 10:00 PM", "Ends") != null,
+]);
+ok.push([
+  "parseEventForgeDateField skips relative time",
+  parseEventForgeDateField("Starts: in 2 days", "Starts") === null,
+]);
+ok.push([
+  "parseEventForgeDateField returns null for missing field",
+  parseEventForgeDateField("No date here", "When") === null,
+]);
+ok.push([
+  "parseEventForgeDateField handles multiline content",
+  parseEventForgeDateField("Title\nWhen: Saturday, September 6, 2026 at 8:00 PM\nEnds: Sunday", "When") != null,
+]);
+
+// EventForge dates in transformThreads
+const forgeThreads = [{
+  id: "2001", name: "BARROWS WEEKEND", parent_id: "9999", message_count: 5,
+  thread_metadata: { archived: false, create_timestamp: "2026-08-24T20:00:00Z" },
+}];
+const forgeMessages = [{
+  id: "2001",
+  content: "BARROWS WEEKEND\nWhen: Friday, August 28, 2026 at 3:00 PM\nStarts: in 2 days\nEnds: Sunday, August 30, 2026 at 10:00 PM",
+  attachments: [],
+}];
+const forgeOut = transformThreads(forgeThreads, forgeMessages);
+ok.push([
+  "EventForge When overrides thread creation date",
+  new Date(forgeOut[0].startTime).getDate() === 28,
+]);
+ok.push([
+  "EventForge Ends populates endTime",
+  forgeOut[0].endTime != null && new Date(forgeOut[0].endTime).getDate() === 30,
+]);
+
+// Mention resolution tests
+const mentionThreads = [{
+  id: "3001", name: "Test Event", parent_id: "9999", message_count: 3,
+  thread_metadata: { archived: false, create_timestamp: "2026-08-26T12:00:00Z" },
+}];
+const mentionMessages = [{
+  id: "3001",
+  content: "Congrats to <@555> for being ranked up! And <@666> too!",
+  attachments: [],
+  mentions: [
+    { id: "555", username: "stwidu", global_name: "StWidu93" },
+    { id: "666", username: "artolux", global_name: "Artolux" },
+  ],
+}];
+const mentionOut = transformThreads(mentionThreads, mentionMessages);
+ok.push([
+  "mention resolved to display name",
+  mentionOut[0].description.includes("**StWidu93**"),
+]);
+ok.push([
+  "second mention also resolved",
+  mentionOut[0].description.includes("**Artolux**"),
+]);
+ok.push([
+  "raw mention tag removed",
+  !mentionOut[0].description.includes("<@555>"),
 ]);
 
 console.log("\nchecks:");

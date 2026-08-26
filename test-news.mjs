@@ -71,6 +71,19 @@ const checks = [
   ["empty-after-strip title falls back to next line", emptyTitle[0].titleHtml.includes("Actual content")],
   ["empty-after-strip body excludes used title line", !emptyTitle[0].bodyHtml.includes("Actual content")],
   ["all-artifact lines skipped for title", emptyTitle[1].titleHtml.includes("Third line")],
+  ["mention resolved to bolded name", (() => {
+    var mentionMsgs = [{ id: "m1", type: 0, timestamp: "2026-08-26T10:00:00Z",
+      author: { id: "100", username: "poster", global_name: "Poster", avatar: null },
+      content: "Rank ups!\nCongrats to <@555> for the rank up!",
+      mentions: [{ id: "555", username: "stwidu", global_name: "StWidu93" }],
+      attachments: [], reactions: [] }];
+    var r = transformMessages(mentionMsgs);
+    return r[0].bodyHtml.includes("<strong>StWidu93</strong>") && !r[0].bodyHtml.includes("&lt;@555&gt;");
+  })()],
+  ["unresolved mention stripped", (() => {
+    var r = formatContent("Hello <@999> world");
+    return !r.includes("@member") && !r.includes("999") && r.includes("Hello") && r.includes("world");
+  })()],
 ];
 console.log("\nchecks:");
 let pass = true;

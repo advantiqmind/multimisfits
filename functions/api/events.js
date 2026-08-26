@@ -16,6 +16,30 @@ function snowflakeToDate(id) {
   return new Date(Number(BigInt(id) >> 22n) + DISCORD_EPOCH);
 }
 
+export function parseEventForgeDateField(content, field) {
+  const re = new RegExp(field + ":\\s*(.+)", "i");
+  const m = content.match(re);
+  if (!m) return null;
+  let s = m[1].trim();
+  if (/^in\s+\d/i.test(s)) return null;
+  s = s.replace(/^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s*/i, "");
+  s = s.replace(/\s+at\s+/i, " ");
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function resolveMentions(text, mentions) {
+  if (!text || !Array.isArray(mentions) || !mentions.length) return text;
+  let t = text;
+  for (const u of mentions) {
+    if (!u || !u.id) continue;
+    const name = u.global_name || u.username || "member";
+    const display = name.charAt(0).toUpperCase() + name.slice(1);
+    t = t.replace(new RegExp("<@!?" + u.id + ">", "g"), "**" + display + "**");
+  }
+  return t;
+}
+
 export function transformThreads(threads, openingMessages) {
   const msgMap = new Map();
   for (const m of Array.isArray(openingMessages) ? openingMessages : []) {
@@ -32,15 +56,20 @@ export function transformThreads(threads, openingMessages) {
 
     const msg = msgMap.get(t.id);
     const content = msg ? (msg.content || "").trim() : "";
+    const msgMentions = msg && Array.isArray(msg.mentions) ? msg.mentions : [];
     const attachments = msg && Array.isArray(msg.attachments) ? msg.attachments : [];
     const image = attachments.find((a) => (a.content_type || "").startsWith("image/"));
+
+    const whenDate = parseEventForgeDateField(content, "When");
+    const endsDate = parseEventForgeDateField(content, "Ends");
+    const description = resolveMentions(content, msgMentions);
 
     events.push({
       id: t.id,
       name: (t.name || "Event").slice(0, 200),
-      description: content.slice(0, 2000),
-      startTime: createdAt,
-      endTime: null,
+      description: description.slice(0, 2000),
+      startTime: whenDate || createdAt,
+      endTime: endsDate || null,
       status,
       interestedCount: t.message_count || 0,
       image: image ? image.url : null,

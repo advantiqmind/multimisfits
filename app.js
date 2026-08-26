@@ -588,7 +588,7 @@ const EVENTS_FALLBACK = [
 function formatDiscord(text) {
   let t = String(text || "");
   t = t.replace(/<a?:\w+:\d+>/g, "");
-  t = t.replace(/<@!?\d+>/g, "@member");
+  t = t.replace(/<@!?\d+>/g, "");
   t = t.replace(/<@&\d+>/g, "@role");
   t = t.replace(/<#\d+>/g, "#channel");
   t = t.replace(/<t:\d+(?::[tTdDfFR])?>/g, "");
@@ -665,6 +665,25 @@ function featuredEventHtml(ev) {
       </a>
     </div>
   </div>`;
+}
+
+function homeEventCard(ev) {
+  const d = new Date(ev.startTime);
+  const day = d.getDate();
+  const month = d.toLocaleDateString(undefined, { month: "short" }).toUpperCase();
+  const timeStr = formatEventTime(ev.startTime);
+  return `<div class="event"><div class="date"><div class="d">${day}</div><div class="m">${esc(month)}</div></div><div><h3>${esc(ev.name)}</h3><div class="when">${timeStr}</div></div></div>`;
+}
+
+function renderHomeEvents(events) {
+  var body = document.getElementById("home-events-body");
+  if (!body) return;
+  var upcoming = events.filter(function (e) { return e.status === "scheduled" || e.status === "active"; });
+  var show = upcoming.slice(0, 3);
+  if (!show.length) return;
+  body.innerHTML = show.map(homeEventCard).join("");
+  var badge = document.getElementById("home-events-badge");
+  if (badge) badge.textContent = "from Discord";
 }
 
 function eventCard(ev) {
@@ -812,15 +831,17 @@ function startCountdownTimers() {
 
 async function loadEvents() {
   const featuredBody = document.getElementById("featured-body");
-  if (!featuredBody) return;
+  const homeEventsBody = document.getElementById("home-events-body");
+  if (!featuredBody && !homeEventsBody) return;
   try {
     const r = await fetch("/api/events", { headers: { accept: "application/json" } });
     if (!r.ok) throw new Error("bad status " + r.status);
     const data = await r.json();
     if (!data || !data.configured || !Array.isArray(data.events) || !data.events.length) throw new Error("empty");
-    renderEvents(data.events, { cached: false });
+    if (featuredBody) renderEvents(data.events, { cached: false });
+    if (homeEventsBody) renderHomeEvents(data.events);
   } catch (e) {
-    renderEvents(EVENTS_FALLBACK, { cached: true });
+    if (featuredBody) renderEvents(EVENTS_FALLBACK, { cached: true });
   }
 }
 

@@ -28,7 +28,7 @@ export function formatContent(text) {
   let t = String(text || "");
   // 1) Discord tokens (raw, before escaping)
   t = t.replace(/<a?:\w+:\d+>/g, "");                       // custom emoji -> strip
-  t = t.replace(/<@!?\d+>/g, "@member");                    // user mention
+  t = t.replace(/<@!?\d+>/g, "");                            // unresolved user mention -> strip
   t = t.replace(/<@&\d+>/g, "@role");                       // role mention
   t = t.replace(/<#\d+>/g, "#channel");                     // channel mention
   t = t.replace(/<t:\d+(?::[tTdDfFR])?>/g, "");             // discord timestamps -> drop
@@ -77,10 +77,18 @@ export function transformMessages(messages, opts = {}) {
         m.reactions.some((r) => r && r.emoji && r.emoji.name === reaction);
       if (!has) continue;                                    // safety-valve gate
     }
-    const content = (m.content || "").trim();
+    let content = (m.content || "").trim();
     const attachments = Array.isArray(m.attachments) ? m.attachments : [];
     const image = attachments.find((a) => (a.content_type || "").startsWith("image/"));
     if (!content && !image) continue;                        // nothing to show
+
+    const mentions = Array.isArray(m.mentions) ? m.mentions : [];
+    for (const u of mentions) {
+      if (!u || !u.id) continue;
+      const name = u.global_name || u.username || "member";
+      const display = name.charAt(0).toUpperCase() + name.slice(1);
+      content = content.replace(new RegExp("<@!?" + u.id + ">", "g"), "**" + display + "**");
+    }
 
     const lines = content.split("\n");
     let titleIdx = -1;
