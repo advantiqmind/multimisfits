@@ -168,6 +168,7 @@ table.roster .ign a:hover{color:var(--gold)}
 .rank-table td{padding:10px 10px;border-bottom:1px solid var(--panel-2);vertical-align:top;line-height:1.45}
 .rank-table tr:last-child td{border-bottom:none}
 .rank-table .rank-icon{width:32px;font-size:20px;text-align:center}
+.rank-dot{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(0,0,0,.5)}
 
 .rank{display:inline-flex;align-items:center;gap:7px;font-family:"Jersey 15";font-size:15px;color:var(--parchment)}
 .rank-icon{width:18px;height:18px;object-fit:contain;image-rendering:pixelated;flex:0 0 auto;filter:drop-shadow(0 1px 0 #000)}
