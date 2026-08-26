@@ -402,7 +402,7 @@ const EVENTS_FALLBACK = [
 
 function formatDiscord(text) {
   let t = String(text || "");
-  t = t.replace(/<a?:(\w+):\d+>/g, ":$1:");
+  t = t.replace(/<a?:\w+:\d+>/g, "");
   t = t.replace(/<@!?\d+>/g, "@member");
   t = t.replace(/<@&\d+>/g, "@role");
   t = t.replace(/<#\d+>/g, "#channel");
