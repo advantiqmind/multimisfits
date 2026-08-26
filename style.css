@@ -283,8 +283,11 @@ footer{border-top:3px solid var(--bronze);background:linear-gradient(180deg,#171
   color:var(--gold);font-family:"Jersey 15";font-size:18px;padding:12px 20px;border-radius:6px;z-index:99;transition:transform .2s,opacity .2s}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* hide GE nav link on desktop — the action button covers it; mobile sees it in hamburger */
+nav.main a[href="/ge.html"]{display:none}
 /* ---------- responsive ---------- */
 @media (max-width:860px){
+  nav.main a[href="/ge.html"]{display:block}
   .hamburger{display:block;order:3}
   nav.main{order:5;flex-basis:100%;display:none;flex-direction:column;gap:2px;padding:8px 0 4px}
   nav.main.open{display:flex}
