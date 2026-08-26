@@ -639,9 +639,9 @@ function eventStatusBadge(status) {
 
 function featuredEventHtml(ev) {
   const badge = eventStatusBadge(ev.status);
-  const countdown = ev.status === "scheduled" ? eventCountdown(ev.startTime) : null;
-  const dateStr = formatEventDate(ev.startTime);
-  const timeStr = formatEventTime(ev.startTime);
+  const countdown = ev.hasParsedDate && ev.status === "scheduled" ? eventCountdown(ev.startTime) : null;
+  const dateStr = ev.hasParsedDate ? formatEventDate(ev.startTime) : "Date TBA";
+  const timeStr = ev.hasParsedDate ? formatEventTime(ev.startTime) : "";
   const desc = ev.description ? formatDiscord(ev.description) : "";
   const interested = ev.interestedCount
     ? `<div class="ev-interested">${ev.interestedCount} replies</div>` : "";
@@ -650,11 +650,12 @@ function featuredEventHtml(ev) {
   const imgStyle = ev.image
     ? ` style="background:linear-gradient(to bottom,rgba(18,13,6,.82),rgba(18,13,6,.95)),url('${esc(ev.image)}') center/cover;"`
     : "";
+  const metaText = timeStr ? `${dateStr} · ${timeStr}` : dateStr;
 
   return `<div class="ev-featured"${imgStyle}>
     <div class="ev-featured-header"><h3>${esc(ev.name)}</h3>${badge}</div>
     <div class="ev-featured-meta">
-      <span class="ev-date-text">${dateStr} · ${timeStr}</span>
+      <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}${interested}
     </div>
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
@@ -669,10 +670,10 @@ function featuredEventHtml(ev) {
 
 function homeEventCard(ev) {
   const d = new Date(ev.startTime);
-  const day = d.getDate();
-  const month = d.toLocaleDateString(undefined, { month: "short" }).toUpperCase();
-  const timeStr = formatEventTime(ev.startTime);
-  return `<div class="event"><div class="date"><div class="d">${day}</div><div class="m">${esc(month)}</div></div><div><h3>${esc(ev.name)}</h3><div class="when">${timeStr}</div></div></div>`;
+  const day = ev.hasParsedDate ? d.getDate() : "DATE";
+  const month = ev.hasParsedDate ? d.toLocaleDateString(undefined, { month: "short" }).toUpperCase() : "TBA";
+  const timeStr = ev.hasParsedDate ? formatEventTime(ev.startTime) : "";
+  return `<div class="event"><div class="date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div><div><h3>${esc(ev.name)}</h3>${timeStr ? `<div class="when">${timeStr}</div>` : ""}</div></div>`;
 }
 
 function renderHomeEvents(events) {
@@ -688,17 +689,17 @@ function renderHomeEvents(events) {
 
 function eventCard(ev) {
   const d = new Date(ev.startTime);
-  const day = d.getDate();
-  const month = d.toLocaleDateString(undefined, { month: "short" }).toUpperCase();
+  const day = ev.hasParsedDate ? d.getDate() : "DATE";
+  const month = ev.hasParsedDate ? d.toLocaleDateString(undefined, { month: "short" }).toUpperCase() : "TBA";
   const badge = eventStatusBadge(ev.status);
-  const timeStr = ev.status !== "completed" ? formatEventTime(ev.startTime) : "";
+  const timeStr = ev.hasParsedDate && ev.status !== "completed" ? formatEventTime(ev.startTime) : "";
   const interested = ev.interestedCount ? `${ev.interestedCount} replies` : "";
   const bgStyle = ev.image
     ? ` style="background:linear-gradient(to right,rgba(18,13,6,.92),rgba(18,13,6,.7)),url('${esc(ev.image)}') center/cover;"`
     : "";
 
   return `<div class="ev-card ev-clickable" data-ev-id="${esc(ev.id)}"${bgStyle}>
-    <div class="ev-card-date"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
+    <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
       <h3>${esc(ev.name)}</h3>
       <div class="ev-card-meta">${timeStr}${timeStr && interested ? " · " : ""}${interested}</div>

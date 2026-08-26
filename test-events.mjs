@@ -137,6 +137,10 @@ ok.push([
   out.every((e) => e.endTime === null),
 ]);
 ok.push([
+  "hasParsedDate is false when no EventForge date",
+  out.find((e) => e.id === "1001").hasParsedDate === false,
+]);
+ok.push([
   "empty input returns empty array",
   transformThreads([], []).length === 0,
 ]);
@@ -211,6 +215,10 @@ ok.push([
 ok.push([
   "EventForge Ends populates endTime",
   forgeOut[0].endTime != null && new Date(forgeOut[0].endTime).getDate() === 30,
+]);
+ok.push([
+  "hasParsedDate is true when EventForge When found",
+  forgeOut[0].hasParsedDate === true,
 ]);
 
 // EventForge with Discord timestamp tokens in transformThreads

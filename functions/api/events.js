@@ -75,6 +75,7 @@ export function transformThreads(threads, openingMessages) {
       description: description.slice(0, 2000),
       startTime: whenDate || createdAt,
       endTime: endsDate || null,
+      hasParsedDate: !!whenDate,
       status,
       interestedCount: t.message_count || 0,
       image: image ? image.url : null,
