@@ -593,6 +593,7 @@ function formatDiscord(text) {
   t = t.replace(/<#\d+>/g, "#channel");
   t = t.replace(/<t:\d+(?::[tTdDfFR])?>/g, "");
   t = t.replace(/@(everyone|here)/gi, "");
+  t = t.replace(/\[([^\]]+)\]\(https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com[^)]*\)/g, "$1");
   t = t.replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, "");
   t = esc(t);
   t = t.replace(/```([\s\S]*?)```/g, "$1");
@@ -601,7 +602,8 @@ function formatDiscord(text) {
   t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   t = t.replace(/__([^_]+)__/g, "<u>$1</u>");
   t = t.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
-  t = t.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
   t = t.replace(/\n/g, "<br>");
   return t;
 }

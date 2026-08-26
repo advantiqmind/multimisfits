@@ -60,6 +60,14 @@ const checks = [
   ["custom emoji stripped", !formatContent("<a:alarm:123>").includes("alarm")],
   ["@everyone stripped", !formatContent("Hey @everyone check this").includes("@everyone")],
   ["discord channel link stripped", !formatContent("See https://discord.com/channels/123/456/789 now").includes("discord.com")],
+  ["md link to discord channel shows text only", (() => {
+    var r = formatContent("Check out [Dink Installation](https://discord.com/channels/123/456) and [Chest](https://discord.com/channels/123/789)");
+    return r.includes("Dink Installation") && r.includes("Chest") && !r.includes("[") && !r.includes("discord.com");
+  })()],
+  ["md link to external url becomes clickable", (() => {
+    var r = formatContent("Visit [Wiki](https://oldschool.runescape.wiki/w/Main)");
+    return r.includes('href="https://oldschool.runescape.wiki/w/Main"') && r.includes(">Wiki<");
+  })()],
   ["empty-after-strip title falls back to next line", emptyTitle[0].titleHtml.includes("Actual content")],
   ["empty-after-strip body excludes used title line", !emptyTitle[0].bodyHtml.includes("Actual content")],
   ["all-artifact lines skipped for title", emptyTitle[1].titleHtml.includes("Third line")],

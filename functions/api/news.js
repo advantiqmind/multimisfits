@@ -33,6 +33,7 @@ export function formatContent(text) {
   t = t.replace(/<#\d+>/g, "#channel");                     // channel mention
   t = t.replace(/<t:\d+(?::[tTdDfFR])?>/g, "");             // discord timestamps -> drop
   t = t.replace(/@(everyone|here)/gi, "");                   // @everyone/@here -> strip
+  t = t.replace(/\[([^\]]+)\]\(https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com[^)]*\)/g, "$1"); // md links to Discord -> text only
   t = t.replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, ""); // discord internal links -> strip
   // 2) escape everything else
   t = escapeHtml(t);
@@ -42,8 +43,10 @@ export function formatContent(text) {
   t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>"); // bold
   t = t.replace(/__([^_]+)__/g, "<u>$1</u>");               // underline
   t = t.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>"); // italics *x*
-  // 4) links (URLs may now contain &amp; — browsers handle that in href)
-  t = t.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  // 4) markdown links [text](url) -> clickable links
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // 5) bare links
+  t = t.replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
   // 5) newlines
   t = t.replace(/\n/g, "<br>");
   return t;
