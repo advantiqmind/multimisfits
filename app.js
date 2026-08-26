@@ -316,7 +316,7 @@ function newsCard(item) {
   const time = item.timestamp ? `<time>${esc(relTime(item.timestamp))} · ${esc(item.author)}</time>` : `<time>${esc(item.author)}</time>`;
   const body = item.bodyHtml ? `<p>${item.bodyHtml}</p>` : "";
   const img = item.image
-    ? `<p><img src="${esc(item.image)}" alt="" loading="lazy" style="max-width:100%;border:2px solid #000;border-radius:6px;margin-top:6px"></p>`
+    ? `<p><img src="${esc(item.image)}" alt="" loading="lazy" style="max-width:100%;max-height:320px;object-fit:contain;border:2px solid #000;border-radius:6px;margin-top:6px"></p>`
     : "";
   return `<div class="news-item">${pin}<div><h3>${item.titleHtml}</h3>${time}${body}${img}</div></div>`;
 }
@@ -329,7 +329,8 @@ async function loadNews() {
     if (!r.ok) throw new Error("bad status");
     const data = await r.json();
     if (!data || !data.configured || !Array.isArray(data.items) || !data.items.length) return;
-    body.innerHTML = data.items.map(newsCard).join("");
+    var items = data.items.slice(0, 5);
+    body.innerHTML = items.map(newsCard).join("");
     const badge = document.getElementById("news-badge");
     if (badge) badge.textContent = "⟳ from #announcements";
   } catch (e) {
@@ -338,8 +339,13 @@ async function loadNews() {
 }
 
 /* ---- achievements ---- */
+const ACH_LABELS = { pet: "Pet", drop: "Loot Drop", ca: "Combat Achievement", max: "Maxed", xp: "XP Milestone", quest: "Quest", clue: "Clue Scroll", pb: "Personal Best", default: "Achievement" };
+
 function achItem(item) {
-  return `<div class="ach"><div class="medal">${esc(item.medal)}</div><div><div class="who">${esc(item.player)}</div><div class="what">${esc(item.what)}</div></div></div>`;
+  var label = ACH_LABELS[item.type] || "Achievement";
+  var time = item.timestamp ? relTime(item.timestamp) : "";
+  var detail = item.what || label;
+  return `<div class="ach"><div class="medal">${esc(item.medal)}</div><div class="ach-info"><div class="who">${esc(item.player)}</div><div class="what">${esc(detail)}</div><div class="ach-meta">${esc(label)}${time ? " · " + esc(time) : ""}</div></div></div>`;
 }
 
 async function loadAchievements() {

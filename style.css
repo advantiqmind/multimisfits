@@ -147,8 +147,10 @@ main{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
 .ach:last-child{border-bottom:0;padding-bottom:0}
 .ach .medal{flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:2px solid #000;display:grid;place-items:center;font-size:18px;
   background:radial-gradient(circle at 35% 30%,#fff0b0,#c98f16);box-shadow:0 0 10px rgba(255,203,47,.3)}
+.ach .ach-info{flex:1;min-width:0}
 .ach .who{font-family:"Jersey 15";font-size:17px;color:var(--gold)}
-.ach .what{font-size:13px;color:var(--muted)}
+.ach .what{font-size:14px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ach .ach-meta{font-family:"Jersey 15";font-size:13px;color:var(--muted);margin-top:1px}
 
 /* ---------- roster ---------- */
 table.roster{width:100%;border-collapse:collapse;font-size:15px}
