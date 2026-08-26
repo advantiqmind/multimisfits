@@ -27,7 +27,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 
 ## Files
 - index.html                  homepage (hero, news, events, achievements, roster, gallery)
-- about.html / guides.html / faq.html   content pages (About + FAQ are DRAFT copy)
+- guides.html / faq.html               content pages (FAQ has real content; Guides is "coming soon")
 - roster.html                 full 41-member roster (data-full="1")
 - ge.html                     Grand Exchange — full-page iframe embed of 1box.online GE tool
 - events.html                 Events page — featured + upcoming + past layout
@@ -66,7 +66,7 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
    striker < inquisitor < expert < knight < [officers] < [owners].
 3. Add Captain rank icon (assets/ranks/captain.png) when provided; add it to
    ICON_ROLES in app.js. (striker/beast/squire are hand-cut, could be swapped for official.)
-4. Real content for About / FAQ / Guides.
+4. Real content for FAQ (provided, needs rewrite) / Guides (coming soon).
 5. Homepage sample text cleanup — replace fake news/events/achievements with
    cleaner "coming soon" placeholders or remove fake dates.
 6. Deploy to Cloudflare Pages. Optional custom domain (runs on *.pages.dev first).

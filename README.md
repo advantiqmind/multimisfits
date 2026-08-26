@@ -4,7 +4,7 @@ Static multi-page site + serverless functions. Plain HTML/CSS/JS, no build step.
 
 ## Pages
 - index.html — homepage (hero, news, events, achievements, live roster, gallery)
-- about.html, guides.html, faq.html — content pages (About/FAQ have DRAFT copy — send real wording)
+- guides.html, faq.html — content pages (FAQ has real content; Guides is "coming soon")
 - roster.html — full 41-member roster, live from WOM
 
 ## Shared
