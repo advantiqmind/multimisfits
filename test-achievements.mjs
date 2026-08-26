@@ -61,6 +61,8 @@ const checks = [
   ["ca medal is ⭐", items[3].medal === "⭐"],
   ["parses personal best", items[4].type === "pb"],
   ["pb medal is ⏱️", items[4].medal === "⏱️"],
+  ["detail from embed description", items[0].detail === "Chambers of Xeric — 412 KC"],
+  ["detail empty for plain content", items[2].detail === ""],
   ["skips empty message (no content, no embeds)", items.length === 5],
   ["respects limit option", transformMessages(messages, { limit: 2 }).length === 2],
   ["handles empty array", transformMessages([]).length === 0],

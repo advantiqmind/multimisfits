@@ -151,6 +151,11 @@ main{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
 .ach .who{font-family:"Jersey 15";font-size:17px;color:var(--gold)}
 .ach .what{font-size:14px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ach .ach-meta{font-family:"Jersey 15";font-size:13px;color:var(--muted);margin-top:1px}
+.ach-full{padding:12px 0}
+.ach-full .what{white-space:normal;overflow:visible;text-overflow:unset}
+.ach-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ach-tag{font-family:"Jersey 15",monospace;font-size:12px;line-height:1;padding:2px 8px;border:1px solid;border-radius:4px;white-space:nowrap}
+.ach-detail{font-size:13px;color:var(--muted);margin-top:2px}
 
 /* ---------- roster ---------- */
 table.roster{width:100%;border-collapse:collapse;font-size:15px}

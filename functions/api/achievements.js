@@ -56,9 +56,11 @@ export function parseDinkMessage(m) {
 
     if (what && what !== "Achievement") {
       const type = classifyAchievement(what);
+      const detail = desc ? desc.split("\n")[0].slice(0, 200) : "";
       return {
         player: player.slice(0, 100),
         what: what.slice(0, 200),
+        detail,
         type,
         medal: MEDAL_MAP[type],
       };
@@ -71,6 +73,7 @@ export function parseDinkMessage(m) {
     return {
       player: player.slice(0, 100),
       what: content.split("\n")[0].slice(0, 200),
+      detail: "",
       type,
       medal: MEDAL_MAP[type],
     };

@@ -321,6 +321,36 @@ function newsCard(item) {
   return `<div class="news-item">${pin}<div><h3>${item.titleHtml}</h3>${time}${body}${img}</div></div>`;
 }
 
+const NEWS_PAGE_SIZE = 5;
+const newsState = { items: [], page: 1 };
+
+function renderNewsPagination() {
+  var container = document.getElementById("news-pagination");
+  if (!container) return;
+  var total = Math.ceil(newsState.items.length / NEWS_PAGE_SIZE) || 1;
+  if (total <= 1) { container.innerHTML = ""; return; }
+  var p = newsState.page;
+  container.innerHTML =
+    `<button ${p <= 1 ? "disabled" : ""} data-np="${p - 1}">&#8249; Prev</button>` +
+    `<span class="page-info">Page ${p} of ${total}</span>` +
+    `<button ${p >= total ? "disabled" : ""} data-np="${p + 1}">Next &#8250;</button>`;
+  container.querySelectorAll("button[data-np]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      newsState.page = parseInt(btn.dataset.np);
+      renderNewsPage();
+    });
+  });
+}
+
+function renderNewsPage() {
+  var body = document.getElementById("news-body");
+  if (!body) return;
+  var start = (newsState.page - 1) * NEWS_PAGE_SIZE;
+  var page = newsState.items.slice(start, start + NEWS_PAGE_SIZE);
+  body.innerHTML = page.map(newsCard).join("");
+  renderNewsPagination();
+}
+
 async function loadNews() {
   const body = document.getElementById("news-body");
   if (!body) return;
@@ -329,8 +359,9 @@ async function loadNews() {
     if (!r.ok) throw new Error("bad status");
     const data = await r.json();
     if (!data || !data.configured || !Array.isArray(data.items) || !data.items.length) return;
-    var items = data.items.slice(0, 5);
-    body.innerHTML = items.map(newsCard).join("");
+    newsState.items = data.items;
+    newsState.page = 1;
+    renderNewsPage();
     const badge = document.getElementById("news-badge");
     if (badge) badge.textContent = "⟳ from #announcements";
   } catch (e) {
@@ -340,25 +371,88 @@ async function loadNews() {
 
 /* ---- achievements ---- */
 const ACH_LABELS = { pet: "Pet", drop: "Loot Drop", ca: "Combat Achievement", max: "Maxed", xp: "XP Milestone", quest: "Quest", clue: "Clue Scroll", pb: "Personal Best", default: "Achievement" };
+const ACH_COLORS = { pet: "#5bc0de", drop: "#ffcb2f", ca: "#e04040", max: "#ff9900", xp: "#4ad04a", quest: "#c090ff", clue: "#d99f1c", pb: "#4a90d9", default: "#999" };
 
-function achItem(item) {
+function achItem(item, full) {
   var label = ACH_LABELS[item.type] || "Achievement";
+  var color = ACH_COLORS[item.type] || ACH_COLORS.default;
   var time = item.timestamp ? relTime(item.timestamp) : "";
-  var detail = item.what || label;
-  return `<div class="ach"><div class="medal">${esc(item.medal)}</div><div class="ach-info"><div class="who">${esc(item.player)}</div><div class="what">${esc(detail)}</div><div class="ach-meta">${esc(label)}${time ? " · " + esc(time) : ""}</div></div></div>`;
+  var detail = item.detail || "";
+  var what = item.what || label;
+  var tagHtml = `<span class="ach-tag" style="border-color:${color};color:${color}">${esc(label)}</span>`;
+  if (full) {
+    return `<div class="ach ach-full">` +
+      `<div class="medal">${esc(item.medal)}</div>` +
+      `<div class="ach-info">` +
+        `<div class="ach-row"><span class="who">${esc(item.player)}</span>${tagHtml}</div>` +
+        `<div class="what">${esc(what)}</div>` +
+        (detail ? `<div class="ach-detail">${esc(detail)}</div>` : "") +
+        (time ? `<div class="ach-meta">${esc(time)}</div>` : "") +
+      `</div></div>`;
+  }
+  return `<div class="ach">` +
+    `<div class="medal">${esc(item.medal)}</div>` +
+    `<div class="ach-info">` +
+      `<div class="who">${esc(item.player)}</div>` +
+      `<div class="what">${esc(what)}</div>` +
+      `<div class="ach-meta">${esc(label)}${time ? " · " + esc(time) : ""}</div>` +
+    `</div></div>`;
+}
+
+const ACH_PAGE_SIZE = 12;
+const achState = { items: [], page: 1 };
+
+function renderAchPage() {
+  var body = document.getElementById("ach-full-body");
+  if (!body) return;
+  var total = Math.ceil(achState.items.length / ACH_PAGE_SIZE) || 1;
+  if (achState.page > total) achState.page = total;
+  var start = (achState.page - 1) * ACH_PAGE_SIZE;
+  var page = achState.items.slice(start, start + ACH_PAGE_SIZE);
+  body.innerHTML = page.length
+    ? page.map(function (i) { return achItem(i, true); }).join("")
+    : '<p class="ev-empty">No achievements yet. Set up the Dink plugin!</p>';
+
+  var pag = document.getElementById("ach-pagination");
+  if (!pag) return;
+  if (total <= 1) { pag.innerHTML = ""; return; }
+  var p = achState.page;
+  pag.innerHTML =
+    `<button ${p <= 1 ? "disabled" : ""} data-ap="${p - 1}">&#8249; Prev</button>` +
+    `<span class="page-info">Page ${p} of ${total}</span>` +
+    `<button ${p >= total ? "disabled" : ""} data-ap="${p + 1}">Next &#8250;</button>`;
+  pag.querySelectorAll("button[data-ap]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      achState.page = parseInt(btn.dataset.ap);
+      renderAchPage();
+    });
+  });
 }
 
 async function loadAchievements() {
-  const body = document.getElementById("ach-body");
-  if (!body) return;
+  var body = document.getElementById("ach-body");
+  var fullBody = document.getElementById("ach-full-body");
+  if (!body && !fullBody) return;
   try {
     const r = await fetch("/api/achievements", { headers: { accept: "application/json" } });
     if (!r.ok) throw new Error("bad status");
     const data = await r.json();
     if (!data || !data.configured || !Array.isArray(data.items) || !data.items.length) return;
-    body.innerHTML = data.items.map(achItem).join("");
-    const badge = document.getElementById("ach-badge");
-    if (badge) badge.textContent = "⟳ from chest";
+
+    if (body) {
+      var preview = data.items.slice(0, 6);
+      body.innerHTML = preview.map(function (i) { return achItem(i, false); }).join("");
+      var badge = document.getElementById("ach-badge");
+      if (badge) badge.textContent = "⟳ from chest";
+    }
+
+    if (fullBody) {
+      achState.items = data.items;
+      achState.page = 1;
+      renderAchPage();
+      var fullBadge = document.getElementById("ach-full-badge");
+      if (fullBadge) fullBadge.textContent = "⟳ from chest";
+    }
   } catch (e) {
     /* keep sample */
   }
