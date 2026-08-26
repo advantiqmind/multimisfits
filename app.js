@@ -428,7 +428,7 @@ function featuredEventHtml(ev) {
   const timeStr = formatEventTime(ev.startTime);
   const desc = ev.description ? esc(ev.description).replace(/\n/g, "<br>") : "";
   const interested = ev.interestedCount
-    ? `<div class="ev-interested">${ev.interestedCount} interested</div>` : "";
+    ? `<div class="ev-interested">${ev.interestedCount} replies</div>` : "";
   const countdownHtml = countdown
     ? `<div class="ev-countdown" data-countdown="${esc(ev.startTime)}">${countdown}</div>` : "";
 
@@ -454,7 +454,7 @@ function eventCard(ev) {
   const month = d.toLocaleDateString(undefined, { month: "short" }).toUpperCase();
   const badge = eventStatusBadge(ev.status);
   const timeStr = ev.status !== "completed" ? formatEventTime(ev.startTime) : "";
-  const interested = ev.interestedCount ? `${ev.interestedCount} interested` : "";
+  const interested = ev.interestedCount ? `${ev.interestedCount} replies` : "";
 
   return `<div class="ev-card">
     <div class="ev-card-date"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
