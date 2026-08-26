@@ -27,11 +27,13 @@ function escapeHtml(s) {
 export function formatContent(text) {
   let t = String(text || "");
   // 1) Discord tokens (raw, before escaping)
-  t = t.replace(/<a?:(\w+):\d+>/g, ":$1:");                 // custom emoji -> :name:
+  t = t.replace(/<a?:\w+:\d+>/g, "");                       // custom emoji -> strip
   t = t.replace(/<@!?\d+>/g, "@member");                    // user mention
   t = t.replace(/<@&\d+>/g, "@role");                       // role mention
   t = t.replace(/<#\d+>/g, "#channel");                     // channel mention
   t = t.replace(/<t:\d+(?::[tTdDfFR])?>/g, "");             // discord timestamps -> drop
+  t = t.replace(/@(everyone|here)/gi, "");                   // @everyone/@here -> strip
+  t = t.replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, ""); // discord internal links -> strip
   // 2) escape everything else
   t = escapeHtml(t);
   // 3) markdown

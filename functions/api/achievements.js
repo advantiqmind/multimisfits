@@ -42,6 +42,16 @@ function classifyAchievement(text) {
   return "default";
 }
 
+function stripDiscord(s) {
+  return String(s || "")
+    .replace(/<a?:\w+:\d+>/g, "")
+    .replace(/<@!?\d+>/g, "").replace(/<@&\d+>/g, "").replace(/<#\d+>/g, "")
+    .replace(/<t:\d+(?::[tTdDfFR])?>/g, "")
+    .replace(/@(everyone|here)/gi, "")
+    .replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, "")
+    .trim();
+}
+
 export function parseDinkMessage(m) {
   const embeds = Array.isArray(m.embeds) ? m.embeds : [];
   const content = (m.content || "").trim();
@@ -51,12 +61,12 @@ export function parseDinkMessage(m) {
     const desc = (embed.description || "").trim();
     const authorName = embed.author ? (embed.author.name || "") : "";
 
-    const player = authorName || extractPlayer(title) || extractPlayer(desc) || "Unknown";
-    const what = title || desc.split("\n")[0] || content.split("\n")[0] || "Achievement";
+    const player = stripDiscord(authorName) || extractPlayer(title) || extractPlayer(desc) || "Unknown";
+    const what = stripDiscord(title) || stripDiscord(desc.split("\n")[0]) || stripDiscord(content.split("\n")[0]) || "Achievement";
 
     if (what && what !== "Achievement") {
       const type = classifyAchievement(what);
-      const detail = desc ? desc.split("\n")[0].slice(0, 200) : "";
+      const detail = desc ? stripDiscord(desc.split("\n")[0]).slice(0, 200) : "";
       return {
         player: player.slice(0, 100),
         what: what.slice(0, 200),
@@ -68,11 +78,12 @@ export function parseDinkMessage(m) {
   }
 
   if (content) {
-    const player = extractPlayer(content) || "Unknown";
-    const type = classifyAchievement(content);
+    const cleaned = stripDiscord(content);
+    const player = extractPlayer(cleaned) || "Unknown";
+    const type = classifyAchievement(cleaned);
     return {
       player: player.slice(0, 100),
-      what: content.split("\n")[0].slice(0, 200),
+      what: cleaned.split("\n")[0].slice(0, 200),
       detail: "",
       type,
       medal: MEDAL_MAP[type],

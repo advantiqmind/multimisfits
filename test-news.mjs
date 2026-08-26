@@ -31,6 +31,8 @@ gated.forEach((i) => console.log(`  [${i.author}] ${i.titleHtml}`));
 
 console.log("\n== formatContent samples ==");
 console.log("  " + formatContent("**bold** *italic* `code` <@123> <#456> <:pog:789> http://x.com"));
+console.log("  " + formatContent("<a:alarm:123456> Check this out @everyone"));
+console.log("  " + formatContent("See https://discord.com/channels/123/456/789 for details"));
 
 const checks = [
   ["skips bot message", !all.some((i) => i.author === "dinkbot")],
@@ -41,6 +43,9 @@ const checks = [
   ["reaction gate keeps only ✅ post", gated.length === 1 && gated[0].id === "1"],
   ["no raw angle brackets leak", !formatContent("<script>").includes("<script>")],
   ["bold converts", formatContent("**x**").includes("<strong>")],
+  ["custom emoji stripped", !formatContent("<a:alarm:123>").includes("alarm")],
+  ["@everyone stripped", !formatContent("Hey @everyone check this").includes("@everyone")],
+  ["discord channel link stripped", !formatContent("See https://discord.com/channels/123/456/789 now").includes("discord.com")],
 ];
 console.log("\nchecks:");
 let pass = true;
