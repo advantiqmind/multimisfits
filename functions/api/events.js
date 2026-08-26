@@ -21,7 +21,12 @@ export function parseEventForgeDateField(content, field) {
   const m = content.match(re);
   if (!m) return null;
   let s = m[1].trim();
+  // Discord timestamp token: <t:1724871600:F> or <t:1724871600>
+  const ts = s.match(/<t:(\d+)(?::[tTdDfFR])?>/);
+  if (ts) return new Date(parseInt(ts[1], 10) * 1000).toISOString();
+  // Skip relative text like "in 2 days"
   if (/^in\s+\d/i.test(s)) return null;
+  // Plain text fallback: "Friday, August 28, 2026 at 3:00 PM"
   s = s.replace(/^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s*/i, "");
   s = s.replace(/\s+at\s+/i, " ");
   const d = new Date(s);

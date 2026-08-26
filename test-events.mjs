@@ -175,7 +175,25 @@ ok.push([
   parseEventForgeDateField("Title\nWhen: Saturday, September 6, 2026 at 8:00 PM\nEnds: Sunday", "When") != null,
 ]);
 
-// EventForge dates in transformThreads
+// Discord timestamp token parsing
+ok.push([
+  "parses Discord timestamp token <t:epoch:F>",
+  parseEventForgeDateField("When: <t:1724871600:F>", "When") != null,
+]);
+ok.push([
+  "Discord timestamp epoch gives correct date",
+  new Date(parseEventForgeDateField("When: <t:1724871600:F>", "When")).getUTCDate() === 28,
+]);
+ok.push([
+  "Discord timestamp without format flag",
+  parseEventForgeDateField("When: <t:1724871600>", "When") != null,
+]);
+ok.push([
+  "Ends with Discord timestamp token",
+  parseEventForgeDateField("Ends: <t:1725058800:F>", "Ends") != null,
+]);
+
+// EventForge dates in transformThreads (plain text)
 const forgeThreads = [{
   id: "2001", name: "BARROWS WEEKEND", parent_id: "9999", message_count: 5,
   thread_metadata: { archived: false, create_timestamp: "2026-08-24T20:00:00Z" },
@@ -193,6 +211,26 @@ ok.push([
 ok.push([
   "EventForge Ends populates endTime",
   forgeOut[0].endTime != null && new Date(forgeOut[0].endTime).getDate() === 30,
+]);
+
+// EventForge with Discord timestamp tokens in transformThreads
+const tokenThreads = [{
+  id: "2002", name: "BARROWS TOKEN TEST", parent_id: "9999", message_count: 3,
+  thread_metadata: { archived: false, create_timestamp: "2026-08-24T20:00:00Z" },
+}];
+const tokenMessages = [{
+  id: "2002",
+  content: "BARROWS EVENT\nWhen: <t:1724871600:F>\nStarts: <t:1724871600:R>\nEnds: <t:1725058800:F>",
+  attachments: [],
+}];
+const tokenOut = transformThreads(tokenThreads, tokenMessages);
+ok.push([
+  "Discord token When overrides thread creation date",
+  new Date(tokenOut[0].startTime).getUTCDate() === 28,
+]);
+ok.push([
+  "Discord token Ends populates endTime",
+  tokenOut[0].endTime != null && new Date(tokenOut[0].endTime).getUTCDate() === 30,
 ]);
 
 // Mention resolution tests
