@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Multi-Misfits OSRS clan website — static + Cloudflare Pages Functions",
   "scripts": {
-    "test": "node test-wom.mjs && node test-news.mjs && node test-events.mjs && node test-achievements.mjs",
+    "test": "node test-wom.mjs && node test-news.mjs && node test-events.mjs && node test-achievements.mjs && node test-spotlight.mjs",
     "dev": "wrangler pages dev .",
     "deploy": "wrangler pages deploy ."
   }

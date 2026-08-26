@@ -36,10 +36,11 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/wom.js        GET /api/wom  -> WOM group, cached 6h, sorted roster
 - functions/api/news.js       GET /api/news -> reads #announcements via Discord bot
 - functions/api/events.js     GET /api/events -> reads Discord Scheduled Events, cached 5min
-- functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
+- functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min; supports ?limit= (max 100) for gallery
+- functions/api/spotlight.js  GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
 - assets/ranks/*.png          15 rank icons (official, upscaled 2x nearest)
-- assets/gallery/shot1-6.webp clan screenshots
-- test-wom.mjs / test-news.mjs / test-events.mjs / test-achievements.mjs   unit tests (43 checks)
+- assets/gallery/shot1-6.webp clan screenshots (static fallback for gallery page)
+- test-wom.mjs / test-news.mjs / test-events.mjs / test-achievements.mjs / test-spotlight.mjs   unit tests (61 checks)
 
 ## Status
 DONE: homepage + all pages, live roster w/ rank icons + sort + pagination + mobile CSS,
@@ -58,7 +59,8 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
    - Env vars (Pages > Settings > Environment variables, and .dev.vars for local):
        DISCORD_BOT_TOKEN        (secret)
        ANNOUNCEMENTS_CHANNEL_ID (plain)
-       CHEST_CHANNEL_ID         (plain)  <- for achievements
+       CHEST_CHANNEL_ID         (plain)  <- for achievements + gallery screenshots
+       SPOTLIGHT_CHANNEL_ID     (plain)  <- for gallery spotlight image (mod-only channel)
        DISCORD_GUILD_ID         (plain)  <- for events
        PUBLISH_REACTION         (optional, e.g. "check" emoji, to gate news)
 2. Confirm RANK_ORDER in functions/api/wom.js — Beast/Paladin placement and officer

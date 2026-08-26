@@ -465,6 +465,32 @@ async function loadAchievements() {
   }
 }
 
+/* ---- spotlight ---- */
+async function loadSpotlight() {
+  var container = document.getElementById("spotlight-container");
+  if (!container) return;
+  try {
+    var r = await fetch("/api/spotlight", { headers: { accept: "application/json" } });
+    if (!r.ok) throw new Error("bad status");
+    var data = await r.json();
+    if (!data || !data.configured || !data.spotlight) return;
+    var s = data.spotlight;
+    var time = s.timestamp ? relTime(s.timestamp) : "";
+    var caption = s.caption || "Clan Spotlight";
+    container.innerHTML =
+      `<a class="spotlight lightbox-trigger" href="${esc(s.image)}">` +
+        `<div class="spotlight-img"><img src="${esc(s.image)}" alt="${esc(caption)}" loading="lazy"></div>` +
+        `<div class="spotlight-info">` +
+          `<div class="spotlight-label">Spotlight</div>` +
+          `<div class="spotlight-caption">${esc(caption)}</div>` +
+          `<div class="spotlight-meta">Posted by ${esc(s.author)}${time ? " · " + esc(time) : ""}</div>` +
+        `</div>` +
+      `</a>`;
+  } catch (e) {
+    /* no spotlight, no problem */
+  }
+}
+
 /* ---- gallery ---- */
 const GALLERY_PAGE_SIZE = 6;
 const galleryState = { items: [], page: 1 };
@@ -842,4 +868,5 @@ document.addEventListener("DOMContentLoaded", () => {
   loadEvents();
   loadAchievements();
   loadGallery();
+  loadSpotlight();
 });
