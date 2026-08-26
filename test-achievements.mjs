@@ -156,6 +156,23 @@ const checks = [
   ["dink single drop shows item", dink[3].what.includes("Twisted bow")],
   ["dink single drop has KC", dink[3].detail.includes("412 KC")],
   ["dink single drop has value", dink[3].detail.includes("1.4B gp")],
+
+  // Code block stripping in field values
+  ["code block stripped from field", (() => {
+    const r = parseDinkMessage({
+      content: "",
+      embeds: [{
+        title: "Loot Drop",
+        description: "TestPlayer has looted:\n\n1 x Bones\nFrom: Zulrah",
+        author: { name: "TestPlayer" },
+        fields: [
+          { name: "Completion Count", value: "``` 197 ```" },
+          { name: "Total Value", value: "```ldif\n17.0M gp```" },
+        ],
+      }],
+    });
+    return r && r.detail.includes("197 KC") && r.detail.includes("17.0M gp") && !r.detail.includes("```");
+  })()],
 ];
 
 console.log("\nchecks:");

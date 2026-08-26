@@ -40,7 +40,7 @@
       <a href="/">Home</a>
       <a href="/events.html">Events</a>
       <a href="/achievements.html">Achievements</a>
-      <a href="/guides.html">Guides</a>
+      <a href="/gallery.html">Gallery</a>
       <a href="/faq.html">FAQ</a>
       <a href="/roster.html">Roster</a>
       <a href="/ge.html">Grand Exchange</a>
@@ -60,7 +60,7 @@
 <section class="hero">
   <svg class="crest-lg"><use href="#crest"/></svg>
   <h1>MULTI-MISFITS</h1>
-  <div class="tagline">PvM · Skilling · Chaos · Since 2019</div>
+  <div class="tagline">PvM · Skilling · Chaos · Since 2025</div>
   <p class="desc">A no-drama Old School clan for bossers, skillers, and the occasional degenerate. Weekly masses, community events, and a Discord that never sleeps. New or returning, there's a spot for you.</p>
   <div class="cta">
     <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true" style="width:18px;height:14px;vertical-align:-1px;margin-right:8px"><use href="#discord"/></svg>JOIN THE CLAN</a>
@@ -73,7 +73,7 @@
 
     <!-- NEWS (sample until Discord hookup) -->
     <section class="panel col-2" id="news">
-      <div class="head"><h2><span class="rune"></span>Latest News <span class="badge" id="news-badge">⟳ from #announcements (sample)</span></h2><a class="more" href="#news">View all →</a></div>
+      <div class="head"><h2><span class="rune"></span>Latest News <span class="badge" id="news-badge">⟳ from #announcements (sample)</span></h2></div>
       <div class="body" id="news-body">
         <div class="news-item">
           <div class="pin promo">RANK<br>UP</div>
@@ -99,6 +99,7 @@
             <p>Welcome to the core, misfits. Check the roster for the full list.</p>
           </div>
         </div>
+        <div class="roster-pagination" id="news-pagination"></div>
       </div>
     </section>
 
@@ -119,7 +120,6 @@
           <div><h3>Clan Movie Night + Drops Recap</h3><div class="when">9:00 PM GMT</div></div>
         </div>
       </div>
-      <div class="roster-pagination" id="news-pagination"></div>
     </section>
 
     <!-- ACHIEVEMENTS (sample until Dink #chest hookup) -->
@@ -148,15 +148,15 @@
 
     <!-- MEDIA -->
     <section class="panel col-2" id="media">
-      <div class="head"><h2><span class="rune"></span>Screenshots &amp; Clips</h2><a class="more" href="#media">Gallery →</a></div>
+      <div class="head"><h2><span class="rune"></span>Screenshots</h2><a class="more" href="/gallery.html">Gallery →</a></div>
       <div class="body">
         <div class="shots">
-          <a class="shot" href="assets/gallery/shot1.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot1.webp" alt="Multi-Misfits raid" loading="lazy"></a>
-          <a class="shot" href="assets/gallery/shot2.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot2.webp" alt="Multi-Misfits boss kill" loading="lazy"></a>
-          <a class="shot" href="assets/gallery/shot3.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot3.webp" alt="Multi-Misfits drop" loading="lazy"></a>
-          <a class="shot" href="assets/gallery/shot4.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot4.webp" alt="Multi-Misfits clan mass" loading="lazy"></a>
-          <a class="shot" href="assets/gallery/shot5.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot5.webp" alt="Multi-Misfits loot" loading="lazy"></a>
-          <a class="shot" href="assets/gallery/shot6.webp" target="_blank" rel="noopener"><img src="assets/gallery/shot6.webp" alt="Multi-Misfits Tombs of Amascut" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot1.webp"><img src="assets/gallery/shot1.webp" alt="Multi-Misfits raid" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot2.webp"><img src="assets/gallery/shot2.webp" alt="Multi-Misfits boss kill" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot3.webp"><img src="assets/gallery/shot3.webp" alt="Multi-Misfits drop" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot4.webp"><img src="assets/gallery/shot4.webp" alt="Multi-Misfits clan mass" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot5.webp"><img src="assets/gallery/shot5.webp" alt="Multi-Misfits loot" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot6.webp"><img src="assets/gallery/shot6.webp" alt="Multi-Misfits Tombs of Amascut" loading="lazy"></a>
         </div>
       </div>
     </section>
@@ -171,7 +171,7 @@
     <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true" style="width:18px;height:14px;vertical-align:-1px;margin-right:8px"><use href="#discord"/></svg>JOIN THE CLAN</a>
   </div>
   <div class="foot-links">
-    <a href="/">Home</a><a href="/events.html">Events</a><a href="/achievements.html">Achievements</a><a href="/guides.html">Guides</a>
+    <a href="/">Home</a><a href="/events.html">Events</a><a href="/achievements.html">Achievements</a><a href="/gallery.html">Gallery</a>
     <a href="/faq.html">FAQ</a><a href="/roster.html">Roster</a><a href="/ge.html">Grand Exchange</a><a data-discord href="#">Discord</a>
   </div>
   <div class="disclaimer">
@@ -179,6 +179,11 @@
     RuneScape and Old School RuneScape are trademarks of Jagex Ltd. · Roster is live from Wise Old Man; news, events &amp; media are samples pending Discord hookup.
   </div>
 </footer>
+
+<div id="lightbox-overlay" class="lightbox-overlay">
+  <button class="lightbox-close" aria-label="Close">&times;</button>
+  <img class="lightbox-img" src="" alt="">
+</div>
 
 <div id="toast"></div>
 

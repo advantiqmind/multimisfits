@@ -37,11 +37,18 @@ function stripMdLinks(s) {
   return String(s || "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1");
 }
 
+function stripCodeBlocks(s) {
+  return String(s || "")
+    .replace(/```\w*\s*([\s\S]*?)```/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .trim();
+}
+
 function parseFields(embed) {
   const fields = Array.isArray(embed.fields) ? embed.fields : [];
   const map = {};
   for (const f of fields) {
-    if (f.name) map[f.name.toLowerCase().trim()] = (f.value || "").trim();
+    if (f.name) map[f.name.toLowerCase().trim()] = stripCodeBlocks((f.value || "").trim());
   }
   return map;
 }

@@ -3,39 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Grand Exchange | Multi-Misfits</title>
+<title>Gallery | Multi-Misfits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Jersey+15&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="app.js" defer></script>
-<style>
-.ge-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 0}
-.ge-tabs{display:flex;gap:8px;flex-wrap:wrap}
-.ge-tab{
-  font-family:"Jersey 15",monospace;font-size:20px;line-height:1;cursor:pointer;
-  color:var(--gold);border:2px solid #000;border-radius:5px;padding:11px 20px;
-  background:linear-gradient(180deg,#5a4a2f,#3a2f1e);
-  box-shadow:inset 0 1px 0 var(--bronze-lite), inset 0 -2px 4px rgba(0,0,0,.4);
-  text-shadow:1px 1px 0 #000;white-space:nowrap;transition:transform .12s ease, filter .12s ease;
-}
-.ge-tab:hover{filter:brightness(1.12);transform:translateY(-1px)}
-.ge-tab.active{
-  color:#1a1305;font-weight:bold;
-  background:linear-gradient(180deg,#ffd964,#e0a81f);
-  box-shadow:inset 0 1px 0 #fff3c4, 0 0 0 1px #000, 0 0 14px rgba(255,203,47,.35);
-  text-shadow:0 1px 0 rgba(255,255,255,.4);
-}
-.ge-credit{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted)}
-.ge-credit a{color:var(--gold-dim)}
-.ge-credit a:hover{color:var(--gold)}
-.ge-frame{width:100%;border:none;border-radius:4px;background:transparent;height:calc(100vh - 120px)}
-@media (max-width:860px){
-  .ge-frame{height:calc(100vh - 110px)}
-  .ge-tab{font-size:17px;padding:9px 14px}
-  .ge-bar{padding:6px 0}
-}
-</style>
+
 </head>
 <body>
 
@@ -79,34 +53,49 @@
   </div>
 </header>
 
-<main style="padding-top:8px;padding-bottom:8px">
-  <div class="ge-bar">
-    <div class="ge-tabs">
-      <button class="ge-tab active" data-ge="live">GE Lookup</button>
-      <button class="ge-tab" data-ge="practice">Practice Simulator</button>
-    </div>
-    <div class="ge-credit">Powered by <a href="https://1box.online/tools/osrs-ge/" target="_blank" rel="noopener">1Box.online</a></div>
+<main>
+<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">Screenshots</h1><div class="tagline">Clan moments captured</div></section>
+
+  <div class="grid">
+    <section class="panel col-2">
+      <div class="head"><h2><span class="rune"></span>Gallery <span class="badge">sample</span></h2></div>
+      <div class="body">
+        <div class="shots shots-gallery">
+          <a class="shot lightbox-trigger" href="assets/gallery/shot1.webp"><img src="assets/gallery/shot1.webp" alt="Multi-Misfits raid" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot2.webp"><img src="assets/gallery/shot2.webp" alt="Multi-Misfits boss kill" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot3.webp"><img src="assets/gallery/shot3.webp" alt="Multi-Misfits drop" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot4.webp"><img src="assets/gallery/shot4.webp" alt="Multi-Misfits clan mass" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot5.webp"><img src="assets/gallery/shot5.webp" alt="Multi-Misfits loot" loading="lazy"></a>
+          <a class="shot lightbox-trigger" href="assets/gallery/shot6.webp"><img src="assets/gallery/shot6.webp" alt="Multi-Misfits Tombs of Amascut" loading="lazy"></a>
+        </div>
+      </div>
+    </section>
   </div>
-  <iframe id="ge-frame" class="ge-frame" src="https://1box.online/tools/osrs-ge/" title="Grand Exchange Tool" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy"></iframe>
+
 </main>
 
-<div id="toast"></div>
+<footer>
+  <div class="foot-cta">
+    <h2>Ready to stop soloing?</h2>
+    <p>Recruiting happens in Discord. Hop in, say hi, and a rank will sort you out. That's it.</p>
+    <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true" style="width:18px;height:14px;vertical-align:-1px;margin-right:8px"><use href="#discord"/></svg>JOIN THE CLAN</a>
+  </div>
+  <div class="foot-links">
+    <a href="/">Home</a><a href="/events.html">Events</a><a href="/achievements.html">Achievements</a><a href="/gallery.html">Gallery</a>
+    <a href="/faq.html">FAQ</a><a href="/roster.html">Roster</a><a href="/ge.html">Grand Exchange</a><a data-discord href="#">Discord</a>
+  </div>
+  <div class="disclaimer">
+    Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
+    RuneScape and Old School RuneScape are trademarks of Jagex Ltd. · Roster is live from Wise Old Man; news, events &amp; media are samples pending Discord hookup.
+  </div>
+</footer>
 
-<script>
-(function(){
-  var tabs = document.querySelectorAll('.ge-tab');
-  var frame = document.getElementById('ge-frame');
-  var urls = { live: 'https://1box.online/tools/osrs-ge/', practice: 'https://1box.online/tools/osrs-ge/practice' };
-  tabs.forEach(function(tab){
-    tab.addEventListener('click', function(){
-      tabs.forEach(function(t){ t.classList.remove('active'); });
-      tab.classList.add('active');
-      var src = urls[tab.dataset.ge];
-      if (frame.src !== src) frame.src = src;
-    });
-  });
-})();
-</script>
+<div id="lightbox-overlay" class="lightbox-overlay">
+  <button class="lightbox-close" aria-label="Close">&times;</button>
+  <img class="lightbox-img" src="" alt="">
+</div>
+
+<div id="toast"></div>
 
 </body>
 </html>

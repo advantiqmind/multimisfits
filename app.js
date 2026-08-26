@@ -731,12 +731,47 @@ async function loadEvents() {
   }
 }
 
+function wireGallery() {
+  var overlay = document.getElementById("lightbox-overlay");
+  if (!overlay) return;
+  var img = overlay.querySelector(".lightbox-img");
+  var closeBtn = overlay.querySelector(".lightbox-close");
+
+  function open(src) {
+    img.src = src;
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+
+  function close() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+    img.src = "";
+  }
+
+  closeBtn.addEventListener("click", close);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) close();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && overlay.classList.contains("open")) close();
+  });
+
+  document.querySelectorAll(".lightbox-trigger").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      open(a.getAttribute("href"));
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   wireDiscordLinks();
   wireNav();
   wireToasts();
   wireRosterControls();
   loadRoster();
+  wireGallery();
   loadNews();
   loadEvents();
   loadAchievements();
