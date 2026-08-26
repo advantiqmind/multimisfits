@@ -465,6 +465,64 @@ async function loadAchievements() {
   }
 }
 
+/* ---- gallery ---- */
+const GALLERY_PAGE_SIZE = 6;
+const galleryState = { items: [], page: 1 };
+
+function galleryCard(item) {
+  var src = item.image || item.thumbnail || "";
+  var caption = esc(item.player) + ": " + esc(item.what);
+  return `<a class="shot lightbox-trigger" href="${esc(src)}"><img src="${esc(src)}" alt="${caption}" loading="lazy"></a>`;
+}
+
+function renderGalleryPage() {
+  var body = document.getElementById("gallery-body");
+  if (!body) return;
+  var total = Math.ceil(galleryState.items.length / GALLERY_PAGE_SIZE) || 1;
+  if (galleryState.page > total) galleryState.page = total;
+  var start = (galleryState.page - 1) * GALLERY_PAGE_SIZE;
+  var page = galleryState.items.slice(start, start + GALLERY_PAGE_SIZE);
+  body.innerHTML = page.length
+    ? '<div class="shots shots-gallery">' + page.map(galleryCard).join("") + "</div>"
+    : '<p class="ev-empty">No screenshots yet. Set up the Dink plugin!</p>';
+
+  var pag = document.getElementById("gallery-pagination");
+  if (!pag) return;
+  if (total <= 1) { pag.innerHTML = ""; return; }
+  var p = galleryState.page;
+  pag.innerHTML =
+    `<button ${p <= 1 ? "disabled" : ""} data-gp="${p - 1}">&#8249; Prev</button>` +
+    `<span class="page-info">Page ${p} of ${total}</span>` +
+    `<button ${p >= total ? "disabled" : ""} data-gp="${p + 1}">Next &#8250;</button>`;
+  pag.querySelectorAll("button[data-gp]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      galleryState.page = parseInt(btn.dataset.gp);
+      renderGalleryPage();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+}
+
+async function loadGallery() {
+  var body = document.getElementById("gallery-body");
+  if (!body) return;
+  try {
+    var r = await fetch("/api/achievements?limit=100", { headers: { accept: "application/json" } });
+    if (!r.ok) throw new Error("bad status");
+    var data = await r.json();
+    if (!data || !data.configured || !Array.isArray(data.items)) return;
+    var withImages = data.items.filter(function (i) { return i.image; });
+    if (!withImages.length) return;
+    galleryState.items = withImages;
+    galleryState.page = 1;
+    renderGalleryPage();
+    var badge = document.getElementById("gallery-badge");
+    if (badge) badge.textContent = "from chest";
+  } catch (e) {
+    /* keep static fallback */
+  }
+}
+
 /* ---- events ---- */
 const EVENTS_FALLBACK = [
   {
@@ -783,4 +841,5 @@ document.addEventListener("DOMContentLoaded", () => {
   loadNews();
   loadEvents();
   loadAchievements();
+  loadGallery();
 });

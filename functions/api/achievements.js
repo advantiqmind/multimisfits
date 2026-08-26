@@ -7,8 +7,9 @@
 //   DISCORD_BOT_TOKEN  (encrypted/secret)  — the bot token
 //   CHEST_CHANNEL_ID   (plain)             — the chest channel id
 
-const LIMIT = 12;
+const DEFAULT_LIMIT = 12;
 const FETCH_COUNT = 50;
+const GALLERY_FETCH_COUNT = 100;
 const CACHE_TTL = 300; // 5 minutes
 
 const MEDAL_MAP = {
@@ -253,7 +254,7 @@ export function parseDinkMessage(m) {
 }
 
 export function transformMessages(messages, opts = {}) {
-  const limit = opts.limit || LIMIT;
+  const limit = opts.limit || DEFAULT_LIMIT;
   const out = [];
 
   for (const m of Array.isArray(messages) ? messages : []) {
@@ -280,20 +281,23 @@ function json(obj, status = 200, extra = {}) {
 export async function onRequest(context) {
   const token = context.env && context.env.DISCORD_BOT_TOKEN;
   const channelId = context.env && context.env.CHEST_CHANNEL_ID;
+  const url = new URL(context.request.url);
+  const reqLimit = Math.min(Math.max(parseInt(url.searchParams.get("limit")) || DEFAULT_LIMIT, 1), 100);
+  const fetchCount = reqLimit > FETCH_COUNT ? GALLERY_FETCH_COUNT : FETCH_COUNT;
 
   if (!token || !channelId) {
     return json({ configured: false, items: [] }, 200, { "Cache-Control": "public, max-age=60" });
   }
 
   const cache = caches.default;
-  const cacheKey = new Request(new URL(context.request.url).origin + "/api/achievements", { method: "GET" });
+  const cacheKey = new Request(url.origin + "/api/achievements?limit=" + reqLimit, { method: "GET" });
   const hit = await cache.match(cacheKey);
   if (hit) return hit;
 
   let messages;
   try {
     const r = await fetch(
-      `https://discord.com/api/v10/channels/${channelId}/messages?limit=${FETCH_COUNT}`,
+      `https://discord.com/api/v10/channels/${channelId}/messages?limit=${fetchCount}`,
       { headers: { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" } }
     );
     if (!r.ok) return json({ configured: true, error: "discord_" + r.status, items: [] }, 502);
@@ -302,7 +306,7 @@ export async function onRequest(context) {
     return json({ configured: true, error: "fetch_failed", items: [] }, 502);
   }
 
-  const items = transformMessages(messages, { limit: LIMIT });
+  const items = transformMessages(messages, { limit: reqLimit });
   const res = json({ configured: true, items }, 200, { "Cache-Control": `public, max-age=${CACHE_TTL}` });
   context.waitUntil(cache.put(cacheKey, res.clone()));
   return res;
