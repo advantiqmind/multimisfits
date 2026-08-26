@@ -43,7 +43,7 @@ function capitalizeName(name) {
 }
 
 function formatXP(xp) {
-  if (typeof xp !== "number" || xp <= 0) return "—";
+  if (typeof xp !== "number" || xp <= 0) return "-";
   if (xp >= 1e9) return (xp / 1e9).toFixed(1) + "B";
   if (xp >= 1e6) return (xp / 1e6).toFixed(1) + "M";
   if (xp >= 1e3) return Math.round(xp / 1e3) + "K";
@@ -361,7 +361,7 @@ async function loadAchievements() {
 /* ---- events ---- */
 const EVENTS_FALLBACK = [
   {
-    id: "sample-1", name: "Bond Giveaway — Round 2",
+    id: "sample-1", name: "Bond Giveaway: Round 2",
     description: "Enter to win a bond! Post a screenshot of your best PvM drop in #events for a FREE entry.\n\nDonation tiers:\n• 500K GP = 1 extra duck\n• 1M GP = 3 extra ducks\n• 2M GP = 5 extra ducks + gold name\n\nAll donations go to the clan prize pool. Duck Race finale at 8 PM GMT!",
     startTime: "2026-09-01T20:00:00Z", endTime: "2026-09-01T22:00:00Z",
     status: "scheduled", interestedCount: 23,
@@ -383,7 +383,7 @@ const EVENTS_FALLBACK = [
     startTime: "2026-09-06T21:00:00Z", status: "scheduled", interestedCount: 12,
   },
   {
-    id: "sample-5", name: "Bond Giveaway — Round 1",
+    id: "sample-5", name: "Bond Giveaway: Round 1",
     description: "Congratulations to Vilence for winning the first bond giveaway!",
     startTime: "2026-08-15T20:00:00Z", status: "completed", interestedCount: 31,
   },
