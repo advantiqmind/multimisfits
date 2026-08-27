@@ -57,8 +57,8 @@ BUILT & READY (needs bot token + env vars to go live): news feed, events feed,
       separate "Live Now" section on events page, Discord timestamp token rendering,
       Discord heading markdown (# ## ###) rendering.
       Giveaway system as tab in events.html (needs GIVEAWAY_CHANNEL_ID env var).
-      Leader-confirmed entries (reply with number + checkmark reaction), auto stats,
-      countdown, past winners from pinned messages.
+      Reaction-based entries (leader reacts 1/2 keycap on member posts, max 2 per person),
+      auto stats, countdown, past winners from pinned messages.
 BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
 
 ## What's left (priority order)
@@ -92,15 +92,15 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
     - Tab toggle at top of events.html (Events | Giveaways)
     - API: functions/api/giveaway.js reads a Discord forum channel
     - Each round = one forum thread with EventForge dates + prize in opening post
-    - Leaders reply to screenshots with a number = entry count (no cap), confirm with checkmark
+    - Leaders react with 1/2 keycap emoji on member screenshots (max 2 entries per person)
     - Stats auto-calculated: total entries, participants, GP raised
     - Countdown from EventForge dates, same as events
     - Past winners from pinned messages in the thread
-    - Prize varies per round (parsed from "Prize:" line in opening post)
+    - Prize varies per round (parsed from "Prize:" line or bold text near "giving away")
     - Env var needed: GIVEAWAY_CHANNEL_ID (plain)
 
 ## Commands
-- Tests:  npm test   (runs all 4 .mjs tests; pure logic, no network needed)
+- Tests:  npm test   (runs all 6 .mjs tests; pure logic, no network needed)
 - Local:  npx wrangler pages dev .    (needs a Cloudflare login; live API calls need real network)
 - Deploy: npx wrangler pages deploy .  (or connect the GitHub repo in the Pages dashboard)
 
