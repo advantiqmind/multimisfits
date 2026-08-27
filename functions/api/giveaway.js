@@ -192,13 +192,15 @@ export async function onRequest(context) {
     });
   }
 
+  const url = new URL(context.request.url);
+  const debug = url.searchParams.get("debug") === "1";
+
   const cache = caches.default;
-  const cacheKey = new Request(
-    new URL(context.request.url).origin + "/api/giveaway",
-    { method: "GET" }
-  );
-  const hit = await cache.match(cacheKey);
-  if (hit) return hit;
+  const cacheKey = new Request(url.origin + "/api/giveaway", { method: "GET" });
+  if (!debug) {
+    const hit = await cache.match(cacheKey);
+    if (hit) return hit;
+  }
 
   const headers = {
     Authorization: `Bot ${token}`,
@@ -250,6 +252,7 @@ export async function onRequest(context) {
   threads = threads.slice(0, MAX_ROUNDS);
 
   const threadMessages = new Map();
+  const debugInfo = debug ? [] : null;
   try {
     await Promise.all(
       threads.map(async (t) => {
@@ -268,8 +271,34 @@ export async function onRequest(context) {
           }
 
           threadMessages.set(t.id, allMsgs);
+
+          if (debugInfo) {
+            const openingMsg = allMsgs.find(m => m.id === t.id);
+            debugInfo.push({
+              threadId: t.id,
+              threadName: t.name,
+              msgsStatus: msgsRes.status,
+              openingStatus: openingRes.status,
+              totalMessages: allMsgs.length,
+              openingFound: !!openingMsg,
+              openingContentLength: openingMsg ? (openingMsg.content || "").length : 0,
+              openingContentPreview: openingMsg ? (openingMsg.content || "").slice(0, 200) : null,
+              messagesWithReactions: allMsgs.filter(m => m.reactions && m.reactions.length).length,
+              reactions: allMsgs.filter(m => m.reactions && m.reactions.length).map(m => ({
+                msgId: m.id,
+                author: m.author && m.author.global_name,
+                reactions: m.reactions.map(r => ({ name: r.emoji && r.emoji.name, count: r.count })),
+              })),
+              trophyMessages: allMsgs.filter(m => (m.content || "").includes("\u{1F3C6}")).map(m => ({
+                msgId: m.id,
+                content: (m.content || "").slice(0, 100),
+                mentions: (m.mentions || []).map(u => u.global_name || u.username),
+              })),
+            });
+          }
         } catch (e) {
           threadMessages.set(t.id, []);
+          if (debugInfo) debugInfo.push({ threadId: t.id, error: e.message });
         }
       })
     );
@@ -278,6 +307,13 @@ export async function onRequest(context) {
   }
 
   const rounds = transformGiveawayData(threads, threadMessages);
+
+  if (debug) {
+    return json({ configured: true, rounds, _debug: debugInfo }, 200, {
+      "Cache-Control": "no-store",
+    });
+  }
+
   const res = json({ configured: true, rounds }, 200, {
     "Cache-Control": `public, max-age=${CACHE_TTL}`,
   });
