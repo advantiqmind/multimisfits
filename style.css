@@ -418,7 +418,9 @@ nav.main a[href="/ge.html"]{display:none}
 .ev-tab{flex:1;font-family:"Jersey 15",monospace;font-size:18px;color:var(--muted);background:transparent;border:2px solid transparent;border-radius:5px;padding:12px 16px;cursor:pointer;transition:color .15s,background .15s;text-align:center}
 .ev-tab:hover{color:var(--gold-dim)}
 .ev-tab.active{color:var(--gold);background:linear-gradient(180deg,#5a4a2f,#3a2f1e);border-color:#000;box-shadow:inset 0 1px 0 var(--bronze-lite)}
-.ev-tab.ga-tab-live{color:#fff;background:linear-gradient(180deg,#e04040,#a02020);border-color:#801515;animation:ev-pulse 2s ease-in-out infinite}
+.ev-tab.ga-tab-live{color:#e04040;background:transparent;border-color:#e04040}
+.ev-tab.ga-tab-live:hover{color:#ff5555}
+.ev-tab.ga-tab-live.active{color:#fff;background:linear-gradient(180deg,#e04040,#a02020);border-color:#801515;animation:ev-pulse 2s ease-in-out infinite}
 
 /* ---------- giveaway ---------- */
 .ga-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
