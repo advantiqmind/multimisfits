@@ -1158,7 +1158,7 @@ function featuredGiveawayHtml(round) {
   var timeStr = round.hasParsedDate && !isLive ? formatEventTime(round.startTime) : "";
   var desc = round.description ? formatDiscord(round.description) : "";
   var countdownHtml = isLive
-    ? '<div class="ev-happening">HAPPENING NOW</div>'
+    ? ''
     : countdown ? `<div class="ev-countdown" data-countdown="${esc(round.startTime)}">${countdown}</div>` : "";
   var metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
 
@@ -1229,13 +1229,13 @@ function renderGiveaways(rounds, { cached } = {}) {
   var gaBadge = document.getElementById("ga-badge");
   if (gaBadge) {
     if (cached) { gaBadge.textContent = "sample"; }
-    else if (featured && computeEventStatus(featured) === "live") {
-      gaBadge.innerHTML = '<span class="ev-live-dot"></span>LIVE';
-      gaBadge.style.background = "linear-gradient(180deg,#e04040,#a02020)";
-      gaBadge.style.color = "#fff";
-      gaBadge.style.animation = "ev-pulse 2s ease-in-out infinite";
-    }
     else { gaBadge.textContent = "⟳ from Discord"; }
+  }
+
+  var gaTab = document.querySelector('.ev-tab[data-tab="giveaways"]');
+  if (gaTab) {
+    var anyLive = rounds.some(function(r) { return computeEventStatus(r) === "live"; });
+    gaTab.classList.toggle("ga-tab-live", anyLive);
   }
 
   wireDiscordLinks();
