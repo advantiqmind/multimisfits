@@ -30,7 +30,7 @@ export function formatContent(text) {
   t = t.replace(/<a?:\w+:\d+>/g, "");                       // custom emoji -> strip
   t = t.replace(/<@!?\d+>/g, "");                            // unresolved user mention -> strip
   t = t.replace(/<@&\d+>/g, "@role");                       // role mention
-  t = t.replace(/<#\d+>/g, "#channel");                     // channel mention
+  t = t.replace(/<#\d+>/g, "");                              // channel mention -> strip (can't resolve name)
   t = t.replace(/<t:\d+(?::[tTdDfFR])?>/g, "");             // discord timestamps -> drop
   t = t.replace(/@(everyone|here)/gi, "");                   // @everyone/@here -> strip
   t = t.replace(/\[([^\]]+)\]\(https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com[^)]*\)/g, "$1"); // md links to Discord -> text only
@@ -47,7 +47,11 @@ export function formatContent(text) {
   t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   // 5) bare links
   t = t.replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
-  // 5) newlines
+  // 6) Discord heading markdown
+  t = t.replace(/(^|<br>|\n)### ([^\n<]+)/g, '$1<strong>$2</strong>');
+  t = t.replace(/(^|<br>|\n)## ([^\n<]+)/g, '$1<strong>$2</strong>');
+  t = t.replace(/(^|<br>|\n)# ([^\n<]+)/g, '$1<strong>$2</strong>');
+  // 7) newlines
   t = t.replace(/\n/g, "<br>");
   return t;
 }
@@ -59,6 +63,7 @@ function stripDiscordRaw(s) {
     .replace(/<t:\d+(?::[tTdDfFR])?>/g, "")
     .replace(/@(everyone|here)/gi, "")
     .replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, "")
+    .replace(/^#{1,3}\s+/, "")
     .trim();
 }
 

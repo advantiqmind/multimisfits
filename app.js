@@ -684,7 +684,7 @@ function formatDiscord(text) {
   t = t.replace(/\[LIVE\]/gi, "");
   t = t.replace(/<@!?\d+>/g, "");
   t = t.replace(/<@&\d+>/g, "@role");
-  t = t.replace(/<#\d+>/g, "#channel");
+  t = t.replace(/<#\d+>/g, "");
   t = t.replace(/<t:(\d+)(?::([tTdDfFR]))?>/g, function(_, epoch, flag) {
     var d = new Date(parseInt(epoch, 10) * 1000);
     if (flag === "R") {
