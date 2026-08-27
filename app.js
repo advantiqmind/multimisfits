@@ -1169,7 +1169,13 @@ function winnerSpotlightHtml(pastRounds) {
       </div>`;
     }
   }
-  return "";
+  return `<div class="ga-winner-spotlight">
+    <span class="ga-winner-spotlight-icon">&#127942;</span>
+    <div class="ga-winner-spotlight-content">
+      <div class="ga-winner-spotlight-label">Previous Round Winner</div>
+      <div class="ga-winner-spotlight-name">TBA</div>
+    </div>
+  </div>`;
 }
 
 function featuredGiveawayHtml(round, pastRounds) {
