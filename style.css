@@ -132,6 +132,7 @@ main{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
 .news-item h3{font-family:"Cinzel";font-size:17px;color:var(--parchment)}
 .news-item time{font-family:"Jersey 15";font-size:14px;color:var(--muted)}
 .news-item p{margin:4px 0 0;font-size:14px;color:var(--muted)}
+.chan-chip{display:inline-block;background:rgba(255,203,47,.12);border:1px solid rgba(255,203,47,.35);color:var(--gold);border-radius:4px;padding:0 5px;font-weight:700;white-space:nowrap}
 
 /* ---------- events ---------- */
 .event{display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:center;padding:11px 0;border-bottom:1px dashed rgba(255,203,47,.18)}

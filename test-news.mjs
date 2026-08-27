@@ -1,4 +1,4 @@
-import { transformMessages, formatContent } from "./functions/api/news.js";
+import { transformMessages, formatContent, collectChannelIds } from "./functions/api/news.js";
 
 // Discord returns newest-first
 const messages = [
@@ -83,6 +83,42 @@ const checks = [
   ["unresolved mention stripped", (() => {
     var r = formatContent("Hello <@999> world");
     return !r.includes("@member") && !r.includes("999") && r.includes("Hello") && r.includes("world");
+  })()],
+  ["channel mention resolves to #name chip", (() => {
+    var r = formatContent("Post in <#456> today", { 456: "event-signups" });
+    return r.includes('<span class="chan-chip">#event-signups</span>') && !r.includes("&lt;#");
+  })()],
+  ["channel link resolves to #name chip (thread/forum title)", (() => {
+    var r = formatContent("📌 https://discord.com/channels/111/222 :", { 222: "BARROWS WEEKEND LONG EVENT 8/28" });
+    return r.includes('<span class="chan-chip">#BARROWS WEEKEND LONG EVENT 8/28</span>') && !r.includes("discord.com");
+  })()],
+  ["message link resolves via its channel id", (() => {
+    var r = formatContent("See https://discord.com/channels/111/222/333 now", { 222: "general" });
+    return r.includes('<span class="chan-chip">#general</span>') && !r.includes("discord.com");
+  })()],
+  ["unknown channel still stripped (no regression)", (() => {
+    var r = formatContent("Go to <#777> and https://discord.com/channels/1/888 ok", { 456: "other" });
+    return !r.includes("777") && !r.includes("discord.com") && r.includes("Go to") && r.includes("ok");
+  })()],
+  ["chip name is escaped", (() => {
+    var r = formatContent("<#9>", { 9: 'x<img src=x onerror=alert(1)>' });
+    return !r.includes("<img") && r.includes("&lt;img");
+  })()],
+  ["collectChannelIds finds mentions + links, deduped", (() => {
+    var ids = collectChannelIds([
+      { content: "a <#111> b https://discord.com/channels/5/222/9 c <#111>" },
+      { content: "https://discordapp.com/channels/@me/333" },
+      { content: "" },
+    ]);
+    return ids.length === 3 && ids.includes("111") && ids.includes("222") && ids.includes("333");
+  })()],
+  ["channels flow through transformMessages", (() => {
+    var msgs = [{ id: "c1", type: 0, timestamp: "2026-08-27T12:42:00Z",
+      author: { id: "555", username: "stwidu" },
+      content: "Screenshot submissions have opened.\n📌 https://discord.com/channels/111/222 :",
+      attachments: [], reactions: [] }];
+    var r = transformMessages(msgs, { channels: { 222: "barrows-weekend" } });
+    return r[0].bodyHtml.includes('<span class="chan-chip">#barrows-weekend</span>');
   })()],
 ];
 console.log("\nchecks:");

@@ -24,17 +24,26 @@ function escapeHtml(s) {
 // Convert a safe subset of Discord markdown to HTML.
 // Order matters: strip Discord's <...> tokens on the RAW text first (so the
 // patterns still match), THEN escape any remaining HTML, THEN apply markdown.
-export function formatContent(text) {
+// `channels` maps channel/thread id -> name; referenced channels render as
+// #name chips (like Discord does). Unknown ids keep the old strip behavior.
+export function formatContent(text, channels = {}) {
   let t = String(text || "");
+  const chips = [];
+  const chip = (id) => {
+    const name = channels && channels[id];
+    if (!name) return "";                                    // unresolvable -> strip (old behavior)
+    chips.push(name);
+    return "\x00" + (chips.length - 1) + "\x00";             // placeholder survives escaping/markdown
+  };
   // 1) Discord tokens (raw, before escaping)
   t = t.replace(/<a?:\w+:\d+>/g, "");                       // custom emoji -> strip
   t = t.replace(/<@!?\d+>/g, "");                            // unresolved user mention -> strip
   t = t.replace(/<@&\d+>/g, "@role");                       // role mention
-  t = t.replace(/<#\d+>/g, "");                              // channel mention -> strip (can't resolve name)
+  t = t.replace(/<#(\d+)>/g, (m, id) => chip(id));           // channel mention -> #name chip
   t = t.replace(/<t:\d+(?::[tTdDfFR])?>/g, "");             // discord timestamps -> drop
   t = t.replace(/@(everyone|here)/gi, "");                   // @everyone/@here -> strip
   t = t.replace(/\[([^\]]+)\]\(https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com[^)]*\)/g, "$1"); // md links to Discord -> text only
-  t = t.replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, ""); // discord internal links -> strip
+  t = t.replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?:\d+|@me)\/(\d+)(?:\/\d+)?/g, (m, id) => chip(id)); // channel/thread link -> #name chip
   // 2) escape everything else
   t = escapeHtml(t);
   // 3) markdown
@@ -53,7 +62,20 @@ export function formatContent(text) {
   t = t.replace(/(^|<br>|\n)# ([^\n<]+)/g, '$1<strong>$2</strong>');
   // 7) newlines
   t = t.replace(/\n/g, "<br>");
+  // 8) channel chips (inserted post-escape so the markup survives)
+  t = t.replace(/\x00(\d+)\x00/g, (m, i) => '<span class="chan-chip">#' + escapeHtml(chips[+i]) + "</span>");
   return t;
+}
+
+// Pull every channel/thread id referenced by mention or link out of raw messages.
+export function collectChannelIds(messages) {
+  const ids = new Set();
+  for (const m of Array.isArray(messages) ? messages : []) {
+    const c = (m && m.content) || "";
+    for (const mt of c.matchAll(/<#(\d+)>/g)) ids.add(mt[1]);
+    for (const mt of c.matchAll(/discord(?:app)?\.com\/channels\/(?:\d+|@me)\/(\d+)/g)) ids.add(mt[1]);
+  }
+  return [...ids];
 }
 
 function stripDiscordRaw(s) {
@@ -72,6 +94,7 @@ export function transformMessages(messages, opts = {}) {
   const limit = opts.limit || LIMIT;
   const reaction = opts.reaction || "";
   const allowBots = !!opts.allowBots;
+  const channels = opts.channels || {};
   const out = [];
 
   for (const m of Array.isArray(messages) ? messages : []) {
@@ -112,8 +135,8 @@ export function transformMessages(messages, opts = {}) {
       author,
       avatar,
       timestamp: m.timestamp || null,
-      titleHtml: formatContent(title),
-      bodyHtml: bodyText ? formatContent(bodyText) : "",
+      titleHtml: formatContent(title, channels),
+      bodyHtml: bodyText ? formatContent(bodyText, channels) : "",
       image: image ? image.url : null,
     });
     if (out.length >= limit) break;
@@ -155,7 +178,22 @@ export async function onRequest(context) {
     return json({ configured: true, error: "fetch_failed", items: [] }, 502);
   }
 
-  const items = transformMessages(messages, { limit: LIMIT, reaction });
+  // Resolve referenced channels/threads to their names (forum-post links from
+  // event announcements included) so the site can show "#name" instead of a
+  // stripped blank. Best-effort: a failed lookup just falls back to stripping.
+  const channels = {};
+  await Promise.all(collectChannelIds(messages).slice(0, 12).map(async (id) => {
+    try {
+      const r = await fetch(`https://discord.com/api/v10/channels/${id}`, {
+        headers: { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" },
+      });
+      if (!r.ok) return;
+      const ch = await r.json();
+      if (ch && typeof ch.name === "string" && ch.name) channels[id] = ch.name;
+    } catch {}
+  }));
+
+  const items = transformMessages(messages, { limit: LIMIT, reaction, channels });
   const res = json({ configured: true, items }, 200, { "Cache-Control": `public, max-age=${CACHE_TTL}` });
   context.waitUntil(cache.put(cacheKey, res.clone()));
   return res;
