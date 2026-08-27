@@ -63,12 +63,105 @@ const rosterState = {
 
 function wireDiscordLinks() {
   document.querySelectorAll("[data-discord]").forEach((el) => {
-    el.setAttribute("href", CONFIG.discordInvite);
-    if (CONFIG.discordInvite !== "#") {
-      el.setAttribute("target", "_blank");
-      el.setAttribute("rel", "noopener");
-    }
+    el.setAttribute("href", "#");
+    el.removeAttribute("target");
+    el.addEventListener("click", function (e) {
+      e.preventDefault();
+      var saved = localStorage.getItem("mm-referral");
+      if (saved) {
+        window.open(saved, "_blank", "noopener");
+      } else {
+        openReferralModal();
+      }
+    });
   });
+}
+
+function openReferralModal() {
+  var overlay = document.getElementById("referral-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "referral-overlay";
+    overlay.className = "ref-overlay";
+    overlay.innerHTML =
+      '<div class="ref-modal">' +
+      '<button class="ref-close" aria-label="Close">&times;</button>' +
+      '<h3>Enter Invite Code</h3>' +
+      '<p>Got a referral code from a clan member? Enter it below to join.</p>' +
+      '<div class="ref-form">' +
+      '<input type="text" id="ref-input" class="ref-input" placeholder="Enter code" maxlength="30" autocomplete="off" spellcheck="false">' +
+      '<button class="btn join ref-submit" id="ref-submit">JOIN</button>' +
+      '</div>' +
+      '<div class="ref-msg" id="ref-msg"></div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    overlay.querySelector(".ref-close").addEventListener("click", closeReferralModal);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeReferralModal(); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && overlay.classList.contains("open")) closeReferralModal();
+    });
+
+    var input = document.getElementById("ref-input");
+    var submit = document.getElementById("ref-submit");
+
+    function doSubmit() {
+      var code = input.value.trim();
+      if (!code) return;
+      var msg = document.getElementById("ref-msg");
+      msg.textContent = "Checking...";
+      msg.style.color = "var(--gold-dim)";
+      submit.disabled = true;
+
+      fetch("/api/referral", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code: code }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.valid && data.invite) {
+            localStorage.setItem("mm-referral", data.invite);
+            msg.textContent = "Code accepted! Redirecting...";
+            msg.style.color = "#3a8a3a";
+            setTimeout(function () {
+              closeReferralModal();
+              window.open(data.invite, "_blank", "noopener");
+            }, 800);
+          } else if (data.error === "not_configured") {
+            localStorage.setItem("mm-referral", CONFIG.discordInvite);
+            msg.textContent = "";
+            closeReferralModal();
+            window.open(CONFIG.discordInvite, "_blank", "noopener");
+          } else {
+            msg.textContent = "Invalid code. Try again or ask a clan member.";
+            msg.style.color = "#e04040";
+          }
+          submit.disabled = false;
+        })
+        .catch(function () {
+          localStorage.setItem("mm-referral", CONFIG.discordInvite);
+          closeReferralModal();
+          window.open(CONFIG.discordInvite, "_blank", "noopener");
+          submit.disabled = false;
+        });
+    }
+
+    submit.addEventListener("click", doSubmit);
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") doSubmit(); });
+  }
+
+  overlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+  setTimeout(function () { document.getElementById("ref-input").focus(); }, 100);
+}
+
+function closeReferralModal() {
+  var overlay = document.getElementById("referral-overlay");
+  if (overlay) {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
 }
 
 function wireNav() {

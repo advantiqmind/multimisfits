@@ -38,6 +38,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/events.js     GET /api/events -> reads Discord forum threads, parses EventForge dates, cached 5min
 - functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min; supports ?limit= (max 100) for gallery
 - functions/api/spotlight.js  GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
+- functions/api/referral.js   POST /api/referral -> validates referral codes against REFERRAL_CODES env var
 - assets/ranks/*.png          15 rank icons (official, upscaled 2x nearest)
 - assets/gallery/shot1-6.webp clan screenshots (static fallback for gallery page)
 - test-wom.mjs / test-news.mjs / test-events.mjs / test-achievements.mjs / test-spotlight.mjs   unit tests (93 checks)
@@ -49,7 +50,11 @@ DONE: homepage + all pages, live roster w/ rank icons + sort + pagination + mobi
 BUILT & READY (needs bot token + env vars to go live): news feed, events feed,
       achievements feed. All four serverless functions exist with caching, error handling,
       and graceful fallback. Frontend rendering (loadNews, loadEvents, loadAchievements)
-      is wired in app.js — panels show sample data until the API is configured.
+      is wired in app.js -- panels show sample data until the API is configured.
+      Referral code gate on Discord join (needs REFERRAL_CODES env var).
+      LIVE event detection (client-side, uses EventForge dates), floating LIVE button on homepage,
+      separate "Live Now" section on events page, Discord timestamp token rendering,
+      Discord heading markdown (# ## ###) rendering.
 BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
 
 ## What's left (priority order)
@@ -63,6 +68,8 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
        SPOTLIGHT_CHANNEL_ID     (plain)  <- for gallery spotlight image (mod-only channel)
        DISCORD_GUILD_ID         (plain)  <- for events
        PUBLISH_REACTION         (optional, e.g. "check" emoji, to gate news)
+       REFERRAL_CODES           (plain)  <- comma-separated codes, e.g. "TEQUILA,FLASH,KOI"
+       DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
 2. Confirm RANK_ORDER in functions/api/wom.js — Beast/Paladin placement and officer
    order (colonel vs captain) are BEST GUESSES. Owner's ladder: squire < duellist <
    striker < inquisitor < expert < knight < [officers] < [owners].
