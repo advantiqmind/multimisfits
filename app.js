@@ -1235,7 +1235,14 @@ function renderGiveaways(rounds, { cached } = {}) {
   var gaTab = document.querySelector('.ev-tab[data-tab="giveaways"]');
   if (gaTab) {
     var anyLive = rounds.some(function(r) { return computeEventStatus(r) === "live"; });
-    gaTab.classList.toggle("ga-tab-live", anyLive);
+    var dot = gaTab.querySelector(".ga-tab-dot");
+    if (anyLive && !dot) {
+      dot = document.createElement("span");
+      dot.className = "ga-tab-dot";
+      gaTab.appendChild(dot);
+    } else if (!anyLive && dot) {
+      dot.remove();
+    }
   }
 
   wireDiscordLinks();
