@@ -95,7 +95,9 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
     - Leaders react with 1/2 keycap emoji on member screenshots (max 2 entries per person)
     - Stats auto-calculated: total entries, participants, GP raised
     - Countdown from EventForge dates, same as events
-    - Past winners from pinned messages in the thread
+    - Winners detected via trophy emoji (🏆) in message, pinned messages as fallback
+    - Winner name from @mentioned user in trophy message, falls back to message author
+    - Previous round winner spotlight banner displays on the current giveaway card
     - Prize varies per round (parsed from "Prize:" line or bold text near "giving away")
     - Env var needed: GIVEAWAY_CHANNEL_ID (plain)
 
