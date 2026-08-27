@@ -1,7 +1,7 @@
 // Cloudflare Pages Function  ->  GET /api/giveaway
 // Reads the giveaway forum channel via Discord REST API.
-// Each thread = one giveaway round. Leader replies with entry counts,
-// confirmed by checkmark reaction. Pinned messages = winners.
+// Each thread = one giveaway round. Leaders react with 1/2 keycap emoji
+// on member screenshots to confirm entries. Pinned messages = winners.
 //
 // Required env:
 //   DISCORD_BOT_TOKEN    (secret)
@@ -31,8 +31,11 @@ export function parseEventForgeDateField(content, field) {
 }
 
 export function parsePrize(content) {
-  const m = content.match(/^Prize:\s*(.+)/im);
-  return m ? m[1].trim() : null;
+  const explicit = content.match(/^Prize:\s*(.+)/im);
+  if (explicit) return explicit[1].trim();
+  const bold = content.match(/giving away (?:an?\s+)?\*\*(.+?)\*\*/i);
+  if (bold) return bold[1].trim();
+  return null;
 }
 
 export function parseEntryRate(content) {
@@ -45,16 +48,17 @@ export function parseEntryRate(content) {
   return 1;
 }
 
-export function extractEntryCount(content) {
-  if (!content) return null;
-  const trimmed = content.trim();
-  const exact = trimmed.match(/^(\d+)$/);
-  if (exact) return parseInt(exact[1], 10);
-  const withLabel = trimmed.match(/^(\d+)\s*(?:entr(?:y|ies)|x|tickets?|ducks?)\s*$/i);
-  if (withLabel) return parseInt(withLabel[1], 10);
-  const prefix = trimmed.match(/^(?:entries?|count|total):\s*(\d+)\s*$/i);
-  if (prefix) return parseInt(prefix[1], 10);
-  return null;
+const MAX_ENTRIES_PER_PERSON = 2;
+
+export function extractEntryCountFromReactions(reactions) {
+  if (!Array.isArray(reactions) || !reactions.length) return 0;
+  let count = 0;
+  for (const r of reactions) {
+    const name = r.emoji && (r.emoji.name || "");
+    if (name === "1️⃣" || name === "1⃣") count += 1;
+    else if (name === "2️⃣" || name === "2⃣") count += 2;
+  }
+  return Math.min(count, MAX_ENTRIES_PER_PERSON);
 }
 
 function resolveMentions(text, mentions) {
@@ -89,43 +93,30 @@ export function transformGiveawayData(threads, threadMessages) {
     const prize = parsePrize(content);
     const gpPerEntry = parseEntryRate(content);
 
-    const msgMap = new Map();
-    for (const m of messages) {
-      msgMap.set(m.id, m);
-    }
-
     const entries = [];
     const participantCounts = new Map();
 
     for (const m of messages) {
       if (m.id === thread.id) continue;
-      if (!m.message_reference || !m.message_reference.message_id) continue;
 
-      const entryCount = extractEntryCount(m.content || "");
-      if (entryCount === null || entryCount <= 0) continue;
+      const entryCount = extractEntryCountFromReactions(m.reactions);
+      if (entryCount <= 0) continue;
 
-      const reactions = m.reactions || [];
-      const hasCheck = reactions.some(r => {
-        const name = r.emoji && (r.emoji.name || "");
-        return name === "✅" || name === "white_check_mark";
-      });
-      if (!hasCheck) continue;
+      const participant = m.author.global_name || m.author.username || "Unknown";
+      const participantId = m.author.id;
 
-      const refMsg = msgMap.get(m.message_reference.message_id);
-      const participant = refMsg
-        ? (refMsg.author.global_name || refMsg.author.username || "Unknown")
-        : "Unknown";
-      const participantId = refMsg ? refMsg.author.id : ("unknown-" + m.id);
+      const existing = participantCounts.get(participantId) || 0;
+      const allowed = Math.min(entryCount, MAX_ENTRIES_PER_PERSON - existing);
+      if (allowed <= 0) continue;
 
       entries.push({
         player: participant,
         playerId: participantId,
-        count: entryCount,
-        confirmedBy: m.author.global_name || m.author.username || "Leader",
+        count: allowed,
         timestamp: m.timestamp,
       });
 
-      participantCounts.set(participantId, (participantCounts.get(participantId) || 0) + entryCount);
+      participantCounts.set(participantId, existing + allowed);
     }
 
     const totalEntries = entries.reduce((sum, e) => sum + e.count, 0);

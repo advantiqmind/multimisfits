@@ -1102,16 +1102,16 @@ function wireGallery() {
 const GIVEAWAY_FALLBACK = [
   {
     id: "ga-sample-1", name: "Bond Giveaway: Round 2",
-    description: "Prize: 1 Old School Bond\nRate: 1M GP = 1 entry\n\nWhen: <t:1725228000:F>\nEnds: <t:1726012740:F>\n\nPost a screenshot of your donation to the clan bank. A leader will reply with your entry count and confirm with a checkmark.",
+    description: "Prize: 1 Old School Bond\nRate: 1M GP = 1 entry\n\nWhen: <t:1725228000:F>\nEnds: <t:1726012740:F>\n\nPost a screenshot of your donation to the clan coffer. A leader will react with 1 or 2 to confirm your entries.",
     startTime: "2026-09-01T20:00:00Z", endTime: "2026-09-11T22:00:00Z",
     hasParsedDate: true, status: "scheduled",
     prize: "1 Old School Bond", gpPerEntry: 1,
     entries: [
-      { player: "Vilence", count: 5, confirmedBy: "mr flsh" },
-      { player: "Artolux", count: 3, confirmedBy: "mr flsh" },
-      { player: "Bwita", count: 2, confirmedBy: "koi ox" },
+      { player: "Vilence", count: 2 },
+      { player: "Artolux", count: 2 },
+      { player: "Bwita", count: 1 },
     ],
-    totalEntries: 10, totalParticipants: 3, gpRaised: 10,
+    totalEntries: 5, totalParticipants: 3, gpRaised: 5,
     winners: [], image: null,
   },
   {
