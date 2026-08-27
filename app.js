@@ -456,9 +456,10 @@ async function loadNews() {
     newsState.page = 1;
     renderNewsPage();
     const badge = document.getElementById("news-badge");
-    if (badge) badge.textContent = "⟳ from #announcements";
+    if (badge) { badge.textContent = "⟳ from #announcements"; badge.classList.remove("badge-offline"); }
   } catch (e) {
-    /* keep sample */
+    var nb = document.getElementById("news-badge");
+    if (nb) nb.classList.add("badge-offline");
   }
 }
 
@@ -543,7 +544,7 @@ async function loadAchievements() {
       var preview = data.items.slice(0, 6);
       body.innerHTML = preview.map(function (i) { return achItem(i, false); }).join("");
       var badge = document.getElementById("ach-badge");
-      if (badge) badge.textContent = "⟳ from chest";
+      if (badge) { badge.textContent = "⟳ from chest"; badge.classList.remove("badge-offline"); }
     }
 
     if (fullBody) {
@@ -551,10 +552,13 @@ async function loadAchievements() {
       achState.page = 1;
       renderAchPage();
       var fullBadge = document.getElementById("ach-full-badge");
-      if (fullBadge) fullBadge.textContent = "⟳ from chest";
+      if (fullBadge) { fullBadge.textContent = "⟳ from chest"; fullBadge.classList.remove("badge-offline"); }
     }
   } catch (e) {
-    /* keep sample */
+    var ab = document.getElementById("ach-badge");
+    if (ab) ab.classList.add("badge-offline");
+    var afb = document.getElementById("ach-full-badge");
+    if (afb) afb.classList.add("badge-offline");
   }
 }
 
@@ -947,7 +951,7 @@ function renderEvents(events, { cached } = {}) {
 
   const evBadge = document.getElementById("events-badge");
   if (evBadge) {
-    if (cached) { evBadge.textContent = "sample"; }
+    if (cached) { evBadge.textContent = "sample"; evBadge.classList.add("badge-offline"); }
     else if (featured && computeEventStatus(featured) === "live") {
       evBadge.innerHTML = '<span class="ev-live-dot"></span>LIVE';
       evBadge.style.background = "linear-gradient(180deg,#e04040,#a02020)";
@@ -1250,8 +1254,8 @@ function renderGiveaways(rounds, { cached } = {}) {
 
   var gaBadge = document.getElementById("ga-badge");
   if (gaBadge) {
-    if (cached) { gaBadge.textContent = "sample"; }
-    else { gaBadge.textContent = "⟳ from Discord"; }
+    if (cached) { gaBadge.textContent = "sample"; gaBadge.classList.add("badge-offline"); }
+    else { gaBadge.textContent = "⟳ from Discord"; gaBadge.classList.remove("badge-offline"); }
   }
 
   var gaTab = document.querySelector('.ev-tab[data-tab="giveaways"]');
