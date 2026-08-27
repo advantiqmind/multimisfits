@@ -839,7 +839,7 @@ function showLiveFab(hasLive) {
   fab.id = "ev-fab";
   fab.className = "ev-fab";
   fab.href = "/events.html";
-  fab.innerHTML = '<span class="ev-live-dot"></span>LIVE EVENT<button class="ev-fab-close" aria-label="Close">&times;</button>';
+  fab.innerHTML = '<span class="ev-live-dot"></span>LIVE<button class="ev-fab-close" aria-label="Close">&times;</button>';
   document.body.appendChild(fab);
   fab.querySelector(".ev-fab-close").addEventListener("click", function(e) {
     e.preventDefault();
@@ -1152,22 +1152,15 @@ function giveawayEntriesHtml(entries) {
   return `<h4 class="ga-entries-title">Confirmed Entries</h4>${rows}`;
 }
 
-function winnerSpotlightHtml(pastRounds) {
-  for (var i = 0; i < pastRounds.length; i++) {
-    var r = pastRounds[i];
-    if (r.winners && r.winners.length) {
-      var roundName = cleanName(r.name);
-      var roundLabel = roundName.match(/round\s*(\d+)/i);
-      var label = roundLabel ? "Round " + roundLabel[1] : roundName;
-      return `<div class="ga-winner-spotlight">
-        <span class="ga-winner-spotlight-icon">&#127942;</span>
-        <div class="ga-winner-spotlight-content">
-          <div class="ga-winner-spotlight-label">Previous Round Winner</div>
-          <div class="ga-winner-spotlight-name">${esc(r.winners[0].name)}</div>
-        </div>
-        <div class="ga-winner-spotlight-round">${esc(label)}</div>
-      </div>`;
-    }
+function winnerSpotlightHtml(round) {
+  if (round && round.winners && round.winners.length) {
+    return `<div class="ga-winner-spotlight">
+      <span class="ga-winner-spotlight-icon">&#127942;</span>
+      <div class="ga-winner-spotlight-content">
+        <div class="ga-winner-spotlight-label">Previous Round Winner</div>
+        <div class="ga-winner-spotlight-name">${esc(round.winners[0].name)}</div>
+      </div>
+    </div>`;
   }
   return `<div class="ga-winner-spotlight">
     <span class="ga-winner-spotlight-icon">&#127942;</span>
@@ -1178,7 +1171,7 @@ function winnerSpotlightHtml(pastRounds) {
   </div>`;
 }
 
-function featuredGiveawayHtml(round, pastRounds) {
+function featuredGiveawayHtml(round) {
   var effStatus = computeEventStatus(round);
   var badge = eventStatusBadge(effStatus);
   var isLive = effStatus === "live";
@@ -1191,7 +1184,7 @@ function featuredGiveawayHtml(round, pastRounds) {
     ? ''
     : countdown ? `<div class="ev-countdown" data-countdown="${esc(round.startTime)}">${countdown}</div>` : "";
   var metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
-  var spotlight = pastRounds ? winnerSpotlightHtml(pastRounds) : "";
+  var spotlight = winnerSpotlightHtml(round);
 
   return `<div class="ev-featured">
     <div class="ev-featured-header"><h3>${esc(cleanName(round.name))}</h3>${badge}</div>
@@ -1247,7 +1240,7 @@ function renderGiveaways(rounds, { cached } = {}) {
 
   if (featuredBody) {
     featuredBody.innerHTML = featured
-      ? featuredGiveawayHtml(featured, past)
+      ? featuredGiveawayHtml(featured)
       : '<p class="ev-empty">No active giveaways right now. Check Discord!</p>';
   }
 
@@ -1327,6 +1320,41 @@ function wireGiveawayTabs() {
   });
 }
 
+async function showWinnerToast() {
+  if (!document.getElementById("home-events-body")) return;
+  try {
+    var r = await fetch("/api/giveaway", { headers: { accept: "application/json" } });
+    if (!r.ok) return;
+    var data = await r.json();
+    if (!data || !data.configured || !Array.isArray(data.rounds) || !data.rounds.length) return;
+    var winner = null;
+    for (var i = 0; i < data.rounds.length; i++) {
+      if (data.rounds[i].winners && data.rounds[i].winners.length) {
+        winner = data.rounds[i].winners[0].name;
+        break;
+      }
+    }
+    if (!winner) return;
+    var key = "ga-winner-seen-" + winner;
+    try { if (localStorage.getItem(key)) return; } catch (e) {}
+    var toast = document.createElement("div");
+    toast.className = "ga-winner-toast";
+    toast.innerHTML = '<span class="ga-winner-toast-icon">&#127942;</span>' +
+      '<div class="ga-winner-toast-body">' +
+        '<div class="ga-winner-toast-title">Giveaway Winner!</div>' +
+        '<div class="ga-winner-toast-name">' + esc(winner) + '</div>' +
+      '</div>' +
+      '<button class="ga-winner-toast-close" aria-label="Close">&times;</button>';
+    document.body.appendChild(toast);
+    requestAnimationFrame(function() { toast.classList.add("ga-winner-toast-show"); });
+    toast.querySelector(".ga-winner-toast-close").addEventListener("click", function() {
+      toast.classList.remove("ga-winner-toast-show");
+      try { localStorage.setItem(key, "1"); } catch (e) {}
+      setTimeout(function() { toast.remove(); }, 300);
+    });
+  } catch (e) {}
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   wireDiscordLinks();
   wireNav();
@@ -1340,4 +1368,5 @@ document.addEventListener("DOMContentLoaded", () => {
   loadGallery();
   loadSpotlight();
   wireGiveawayTabs();
+  showWinnerToast();
 });
