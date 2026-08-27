@@ -680,7 +680,8 @@ const EVENTS_FALLBACK = [
 
 function formatDiscord(text) {
   let t = String(text || "");
-  t = t.replace(/<a?:\w+:\d+>/g, "");
+  t = t.replace(/<a?:[^:>]+:\d+>/g, "");
+  t = t.replace(/\[LIVE\]/gi, "");
   t = t.replace(/<@!?\d+>/g, "");
   t = t.replace(/<@&\d+>/g, "@role");
   t = t.replace(/<#\d+>/g, "#channel");
@@ -702,6 +703,8 @@ function formatDiscord(text) {
   t = t.replace(/@(everyone|here)/gi, "");
   t = t.replace(/\[([^\]]+)\]\(https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com[^)]*\)/g, "$1");
   t = t.replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, "");
+  t = t.replace(/^\s+$/gm, "");
+  t = t.replace(/\n{3,}/g, "\n\n");
   t = esc(t);
   t = t.replace(/```([\s\S]*?)```/g, "$1");
   t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -741,8 +744,17 @@ function eventCountdown(iso) {
   return s.trim();
 }
 
+function hasLiveTag(ev) {
+  return /\[LIVE\]/i.test(ev.name || "") || /\[LIVE\]/i.test(ev.description || "");
+}
+
+function cleanName(name) {
+  return (name || "").replace(/\s*\[LIVE\]\s*/gi, " ").trim();
+}
+
 function computeEventStatus(ev) {
-  if (ev.status === "completed") return "completed";
+  if (ev.status === "completed" && !hasLiveTag(ev)) return "completed";
+  if (hasLiveTag(ev)) return "live";
   if (ev.hasParsedDate && new Date(ev.startTime).getTime() <= Date.now()) {
     if (ev.endTime && new Date(ev.endTime).getTime() < Date.now()) return "completed";
     return "live";
@@ -776,7 +788,7 @@ function featuredEventHtml(ev) {
   const metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
 
   return `<div class="ev-featured"${imgStyle}>
-    <div class="ev-featured-header"><h3>${esc(ev.name)}</h3>${badge}</div>
+    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}${interested}
@@ -798,7 +810,7 @@ function homeEventCard(ev) {
   const month = ev.hasParsedDate ? d.toLocaleDateString(undefined, { month: "short" }).toUpperCase() : "TBA";
   const timeStr = ev.hasParsedDate && effStatus !== "live" ? formatEventTime(ev.startTime) : "";
   const liveBadge = effStatus === "live" ? '<div class="when" style="color:#e04040">LIVE</div>' : "";
-  return `<div class="event"><div class="date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div><div><h3>${esc(ev.name)}</h3>${liveBadge || (timeStr ? `<div class="when">${timeStr}</div>` : "")}</div></div>`;
+  return `<div class="event"><div class="date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div><div><h3>${esc(cleanName(ev.name))}</h3>${liveBadge || (timeStr ? `<div class="when">${timeStr}</div>` : "")}</div></div>`;
 }
 
 function renderHomeEvents(events) {
@@ -877,7 +889,7 @@ function eventCard(ev) {
   return `<div class="ev-card ev-clickable${liveClass}" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
-      <h3>${esc(ev.name)}</h3>
+      <h3>${esc(cleanName(ev.name))}</h3>
       <div class="ev-card-meta">${liveText || timeStr}${(liveText || timeStr) && interested ? " · " : ""}${interested}</div>
     </div>
     ${badge}
@@ -968,7 +980,7 @@ function wireEventModals() {
     var replies = ev.interestedCount ? ev.interestedCount + " replies" : "";
 
     body.innerHTML =
-      '<div class="ev-modal-header"><h3>' + esc(ev.name) + '</h3>' + badge + '</div>' +
+      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + badge + '</div>' +
       '<div class="ev-modal-meta">' + dateStr + ' · ' + timeStr +
       (replies ? ' · ' + replies : '') + '</div>' +
       imgHtml +
