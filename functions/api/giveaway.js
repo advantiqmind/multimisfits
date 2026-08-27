@@ -8,7 +8,7 @@
 //   GIVEAWAY_CHANNEL_ID  (plain)  - the giveaway forum channel id
 //   DISCORD_GUILD_ID     (plain)
 
-const CACHE_TTL = 300;
+const CACHE_TTL = 60;
 const MAX_ROUNDS = 10;
 
 function snowflakeToDate(id) {
