@@ -40,20 +40,20 @@ header{
   box-shadow:0 2px 0 #000, 0 3px 0 var(--bronze), 0 8px 16px rgba(0,0,0,.6);
   border-bottom:1px solid #000;
 }
-.bar{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 16px}
+.bar{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:10px;flex:0 0 auto}
 .brand .crest{width:38px;height:44px;filter:drop-shadow(0 2px 0 #000)}
 .brand b{font-family:"Cinzel",serif;font-weight:900;font-size:20px;color:var(--gold);text-shadow:1px 1px 0 #000;line-height:1}
 .brand small{display:block;font-family:"Jersey 15",monospace;color:var(--muted);font-size:12px;letter-spacing:2px}
 
-nav.main{display:flex;gap:2px;margin-left:8px;flex:1 1 auto}
+nav.main{display:flex;gap:2px;margin-left:4px;flex:1 1 auto}
 nav.main a{
   font-family:"Jersey 15",monospace;font-size:18px;color:var(--parchment);
-  padding:8px 12px;border-radius:4px;line-height:1;
+  padding:8px 10px;border-radius:4px;line-height:1;
 }
 nav.main a:hover{color:var(--gold);background:rgba(255,203,47,.08)}
 
-.actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.actions{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-left:auto}
 .btn{
   font-family:"Jersey 15",monospace;font-size:17px;line-height:1;cursor:pointer;
   color:var(--gold);border:2px solid #000;border-radius:5px;padding:9px 12px;
@@ -132,7 +132,8 @@ main{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
 .news-item h3{font-family:"Cinzel";font-size:17px;color:var(--parchment)}
 .news-item time{font-family:"Jersey 15";font-size:14px;color:var(--muted)}
 .news-item p{margin:4px 0 0;font-size:14px;color:var(--muted)}
-.chan-chip{display:inline-block;background:rgba(255,203,47,.12);border:1px solid rgba(255,203,47,.35);color:var(--gold);border-radius:4px;padding:0 5px;font-weight:700;white-space:nowrap}
+.news-item>div{min-width:0;overflow-wrap:anywhere}
+.chan-chip{display:inline;background:rgba(255,203,47,.12);border:1px solid rgba(255,203,47,.35);color:var(--gold);border-radius:4px;padding:0 5px;font-weight:700;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 
 /* ---------- events ---------- */
 .event{display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:center;padding:11px 0;border-bottom:1px dashed rgba(255,203,47,.18)}
@@ -374,6 +375,13 @@ footer{border-top:3px solid var(--bronze);background:linear-gradient(180deg,#171
 /* hide GE nav link on desktop — the action button covers it; mobile sees it in hamburger */
 nav.main a[href="/ge.html"]{display:none}
 /* ---------- responsive ---------- */
+@media (max-width:430px){
+  .bar{padding:10px 10px;gap:8px}
+  .brand .crest{width:32px;height:38px}
+  .brand b{font-size:17px}
+  .brand small{font-size:10px;letter-spacing:1.5px}
+  .actions .btn.join{font-size:15px;padding:9px 10px}
+}
 @media (max-width:860px){
   nav.main a[href="/ge.html"]{display:block}
   nav.main a{padding:13px 12px}
