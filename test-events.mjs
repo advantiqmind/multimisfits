@@ -220,6 +220,14 @@ ok.push([
   "hasParsedDate is true when EventForge When found",
   forgeOut[0].hasParsedDate === true,
 ]);
+ok.push([
+  "EventForge metadata lines stripped from description",
+  !forgeOut[0].description.includes("When:") && !forgeOut[0].description.includes("Starts:") && !forgeOut[0].description.includes("Ends:"),
+]);
+ok.push([
+  "non-metadata content preserved in description",
+  forgeOut[0].description.includes("BARROWS WEEKEND"),
+]);
 
 // EventForge with Discord timestamp tokens in transformThreads
 const tokenThreads = [{
@@ -239,6 +247,34 @@ ok.push([
 ok.push([
   "Discord token Ends populates endTime",
   tokenOut[0].endTime != null && new Date(tokenOut[0].endTime).getUTCDate() === 30,
+]);
+ok.push([
+  "Discord token metadata lines stripped from description",
+  !tokenOut[0].description.includes("When:") && !tokenOut[0].description.includes("Ends:"),
+]);
+
+// World/Meet line stripping
+const metaThreads = [{
+  id: "2003", name: "COX MASS", parent_id: "9999", message_count: 4,
+  thread_metadata: { archived: false, create_timestamp: "2026-08-26T20:00:00Z" },
+}];
+const metaMessages = [{
+  id: "2003",
+  content: "COX MASS\nWhen: <t:1724871600:F>\nWorld: 329\nMeet: Discord Events Voice Chat\nBring your gear!",
+  attachments: [],
+}];
+const metaOut = transformThreads(metaThreads, metaMessages);
+ok.push([
+  "World line stripped from description",
+  !metaOut[0].description.includes("World:"),
+]);
+ok.push([
+  "Meet line stripped from description",
+  !metaOut[0].description.includes("Meet:"),
+]);
+ok.push([
+  "non-metadata lines preserved after stripping",
+  metaOut[0].description.includes("Bring your gear!"),
 ]);
 
 // Mention resolution tests

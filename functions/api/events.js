@@ -67,7 +67,8 @@ export function transformThreads(threads, openingMessages) {
 
     const whenDate = parseEventForgeDateField(content, "When");
     const endsDate = parseEventForgeDateField(content, "Ends");
-    const description = resolveMentions(content, msgMentions);
+    const cleaned = content.replace(/^[ \t]*(?:When|Starts|Ends|World|Meet):.*$/gim, "").replace(/\n{3,}/g, "\n\n").trim();
+    const description = resolveMentions(cleaned, msgMentions);
 
     events.push({
       id: t.id,
