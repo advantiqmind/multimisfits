@@ -65,9 +65,20 @@ const SCREENSHOT_NO_REACTION = {
   reactions: [],
 };
 
-const WINNER_MSG = {
+const WINNER_MSG_TROPHY = {
   id: "3010",
-  content: "Congratulations Vilence! You won the bond!",
+  content: "\u{1F3C6} Congratulations Vilence! You won the bond!",
+  author: { id: "100", global_name: "mr flsh", username: "mrflsh" },
+  pinned: false,
+  mentions: [{ id: "200", global_name: "Vilence", username: "vilence" }],
+  attachments: [],
+  reactions: [],
+  timestamp: "2026-09-06T23:59:00Z",
+};
+
+const WINNER_MSG_PINNED = {
+  id: "3011",
+  content: "Congratulations! Winner announced!",
   author: { id: "100", global_name: "mr flsh", username: "mrflsh" },
   pinned: true,
   mentions: [],
@@ -209,7 +220,7 @@ const endedScreenshot = {
 const endedMessages = buildMessages("2002", [
   ENDED_OPENING,
   endedScreenshot,
-  { ...WINNER_MSG, id: "4010" },
+  { ...WINNER_MSG_TROPHY, id: "4010" },
 ]);
 const endedRounds = transformGiveawayData([THREAD_ENDED], endedMessages);
 
@@ -219,7 +230,7 @@ check("status is completed (archived)", e.status === "completed");
 check("prize parsed", e.prize === "1 Bond");
 check("totalEntries is 2", e.totalEntries === 2);
 check("1 winner found", e.winners.length === 1);
-check("winner name is mr flsh", e.winners[0].name === "mr flsh");
+check("trophy winner uses mentioned user name", e.winners[0].name === "Vilence");
 check("winner message captured", e.winners[0].message.includes("Congratulations"));
 
 // ---- sorting ----
@@ -305,6 +316,56 @@ const overCapRounds = transformGiveawayData([THREAD_ACTIVE], overCapMessages);
 check("only 1 entry record (second post skipped)", overCapRounds[0].entries.length === 1);
 check("entry count is 2", overCapRounds[0].entries[0].count === 2);
 check("totalEntries is 2", overCapRounds[0].totalEntries === 2);
+
+// ---- trophy winner detection edge cases ----
+console.log("\n== trophy winner: pinned fallback (no trophy) ==");
+const pinnedFallbackMessages = buildMessages("2002", [
+  ENDED_OPENING,
+  endedScreenshot,
+  { ...WINNER_MSG_PINNED, id: "4011" },
+]);
+const pinnedRounds = transformGiveawayData([THREAD_ENDED], pinnedFallbackMessages);
+check("pinned fallback finds 1 winner", pinnedRounds[0].winners.length === 1);
+check("pinned fallback uses author name (no mention)", pinnedRounds[0].winners[0].name === "mr flsh");
+
+console.log("\n== trophy winner: no mention falls back to author ==");
+const trophyNoMention = {
+  id: "4012",
+  content: "\u{1F3C6} Congratulations! Winner!",
+  author: { id: "100", global_name: "mr flsh", username: "mrflsh" },
+  pinned: false,
+  mentions: [],
+  attachments: [],
+  reactions: [],
+  timestamp: "2026-09-06T23:59:00Z",
+};
+const noMentionMessages = buildMessages("2002", [
+  ENDED_OPENING,
+  endedScreenshot,
+  trophyNoMention,
+]);
+const noMentionRounds = transformGiveawayData([THREAD_ENDED], noMentionMessages);
+check("trophy without mention finds winner", noMentionRounds[0].winners.length === 1);
+check("trophy without mention uses author name", noMentionRounds[0].winners[0].name === "mr flsh");
+
+console.log("\n== trophy winner: both trophy and pinned in same round ==");
+const bothWinnerMessages = buildMessages("2002", [
+  ENDED_OPENING,
+  endedScreenshot,
+  { ...WINNER_MSG_TROPHY, id: "4013" },
+  { ...WINNER_MSG_PINNED, id: "4014" },
+]);
+const bothRounds = transformGiveawayData([THREAD_ENDED], bothWinnerMessages);
+check("both trophy and pinned counted", bothRounds[0].winners.length === 2);
+
+console.log("\n== trophy winner: no winner messages ==");
+const noWinnerMessages = buildMessages("2001", [
+  OPENING_MSG,
+  SCREENSHOT_1_ENTRY,
+  CHAT_MSG,
+]);
+const noWinnerRounds = transformGiveawayData([THREAD_ACTIVE], noWinnerMessages);
+check("no winners when no trophy or pinned", noWinnerRounds[0].winners.length === 0);
 
 console.log(`\n${pass + fail} checks: ${pass} passed, ${fail} failed`);
 if (fail) {

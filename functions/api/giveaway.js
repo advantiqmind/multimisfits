@@ -123,12 +123,23 @@ export function transformGiveawayData(threads, threadMessages) {
     const totalParticipants = participantCounts.size;
     const gpRaised = totalEntries * gpPerEntry;
 
-    const pinnedMessages = messages.filter(m => m.pinned && m.id !== thread.id);
-    const winners = pinnedMessages.map(m => ({
-      name: m.author.global_name || m.author.username || "Unknown",
-      message: (m.content || "").slice(0, 500),
-      timestamp: m.timestamp,
-    }));
+    const winners = [];
+    for (const m of messages) {
+      if (m.id === thread.id) continue;
+      const c = (m.content || "");
+      const hasTrophy = c.includes("\u{1F3C6}");
+      if (!hasTrophy && !m.pinned) continue;
+      const mentioned = Array.isArray(m.mentions) && m.mentions.length
+        ? m.mentions[0] : null;
+      const winnerName = mentioned
+        ? (mentioned.global_name || mentioned.username || "Unknown")
+        : (m.author.global_name || m.author.username || "Unknown");
+      winners.push({
+        name: winnerName,
+        message: c.slice(0, 500),
+        timestamp: m.timestamp,
+      });
+    }
 
     const description = resolveMentions(content, openingMentions);
     const status = meta.archived ? "completed" : "scheduled";

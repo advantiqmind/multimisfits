@@ -1148,7 +1148,27 @@ function giveawayEntriesHtml(entries) {
   return `<h4 class="ga-entries-title">Confirmed Entries</h4>${rows}`;
 }
 
-function featuredGiveawayHtml(round) {
+function winnerSpotlightHtml(pastRounds) {
+  for (var i = 0; i < pastRounds.length; i++) {
+    var r = pastRounds[i];
+    if (r.winners && r.winners.length) {
+      var roundName = cleanName(r.name);
+      var roundLabel = roundName.match(/round\s*(\d+)/i);
+      var label = roundLabel ? "Round " + roundLabel[1] : roundName;
+      return `<div class="ga-winner-spotlight">
+        <span class="ga-winner-spotlight-icon">&#127942;</span>
+        <div class="ga-winner-spotlight-content">
+          <div class="ga-winner-spotlight-label">Previous Round Winner</div>
+          <div class="ga-winner-spotlight-name">${esc(r.winners[0].name)}</div>
+        </div>
+        <div class="ga-winner-spotlight-round">${esc(label)}</div>
+      </div>`;
+    }
+  }
+  return "";
+}
+
+function featuredGiveawayHtml(round, pastRounds) {
   var effStatus = computeEventStatus(round);
   var badge = eventStatusBadge(effStatus);
   var isLive = effStatus === "live";
@@ -1161,6 +1181,7 @@ function featuredGiveawayHtml(round) {
     ? ''
     : countdown ? `<div class="ev-countdown" data-countdown="${esc(round.startTime)}">${countdown}</div>` : "";
   var metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
+  var spotlight = pastRounds ? winnerSpotlightHtml(pastRounds) : "";
 
   return `<div class="ev-featured">
     <div class="ev-featured-header"><h3>${esc(cleanName(round.name))}</h3>${badge}</div>
@@ -1168,6 +1189,7 @@ function featuredGiveawayHtml(round) {
       <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}
     </div>
+    ${spotlight}
     ${giveawayStatsHtml(round)}
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
     ${giveawayEntriesHtml(round.entries)}
@@ -1215,7 +1237,7 @@ function renderGiveaways(rounds, { cached } = {}) {
 
   if (featuredBody) {
     featuredBody.innerHTML = featured
-      ? featuredGiveawayHtml(featured)
+      ? featuredGiveawayHtml(featured, past)
       : '<p class="ev-empty">No active giveaways right now. Check Discord!</p>';
   }
 

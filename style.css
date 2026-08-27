@@ -445,6 +445,12 @@ nav.main a[href="/ge.html"]{display:none}
 .ga-winner-name{font-family:"Jersey 15",monospace;font-size:17px;color:var(--gold);flex:1}
 .ga-winner-prize{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted)}
 .ga-card-stats{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted);margin-top:2px}
+.ga-winner-spotlight{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(255,215,0,.06),transparent);border:1px solid rgba(201,168,76,.25);border-left:3px solid #ffd700;border-radius:6px;padding:12px 14px;margin-bottom:14px}
+.ga-winner-spotlight-icon{font-size:1.7rem;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(255,215,0,.3))}
+.ga-winner-spotlight-content{flex:1;min-width:0}
+.ga-winner-spotlight-label{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.ga-winner-spotlight-name{font-family:"Cinzel",serif;font-weight:700;font-size:1.05rem;color:#ffd700}
+.ga-winner-spotlight-round{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted);white-space:nowrap}
 
 @media (max-width:480px){
   .ga-stats{grid-template-columns:repeat(2,1fr)}
