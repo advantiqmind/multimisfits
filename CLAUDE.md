@@ -82,7 +82,21 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
 7. Referral tracking: Discord webhook to a private channel on each successful code use
    (code, timestamp). Lets owner see redemptions in real time.
 8. Fix Discord custom emoji rendering as broken squares in event descriptions/headings.
-9. Manual LIVE override for events (force an event LIVE regardless of dates).
+9. Manual LIVE override for events (force an event LIVE regardless of dates). DONE (via [LIVE] tag).
+10. Giveaway system (universal, not just bonds):
+    - New page: giveaway.html with dashboard layout (countdown, stats, entries, rules, past winners)
+    - New API: functions/api/giveaway.js reads a Discord forum channel
+    - Each round = one forum thread with EventForge dates + prize in the opening post
+    - Members post screenshots as replies in the thread
+    - Leaders reply to screenshots with a number = entry count (no cap on entries)
+    - Leaders react with checkmark to confirm the entry
+    - 1 entry = 1M GP donated (or whatever rate the round specifies)
+    - Stats auto-calculated: total entries, participants, GP raised
+    - Countdown from EventForge dates, same as events page
+    - Past winners: leader pins a winner message in the thread, bot reads pinned messages
+    - Prize varies per round (read from opening post)
+    - Env var needed: GIVEAWAY_CHANNEL_ID (plain) for the forum channel
+    - Artifact mockup exists: Bond Giveaway Dashboard (duck race theme)
 
 ## Commands
 - Tests:  npm test   (runs all 4 .mjs tests; pure logic, no network needed)
