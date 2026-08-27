@@ -221,8 +221,8 @@ ok.push([
   forgeOut[0].hasParsedDate === true,
 ]);
 ok.push([
-  "EventForge metadata lines stripped from description",
-  !forgeOut[0].description.includes("When:") && !forgeOut[0].description.includes("Starts:") && !forgeOut[0].description.includes("Ends:"),
+  "EventForge metadata lines preserved in description",
+  forgeOut[0].description.includes("When:") && forgeOut[0].description.includes("Ends:"),
 ]);
 ok.push([
   "non-metadata content preserved in description",
@@ -249,8 +249,8 @@ ok.push([
   tokenOut[0].endTime != null && new Date(tokenOut[0].endTime).getUTCDate() === 30,
 ]);
 ok.push([
-  "Discord token metadata lines stripped from description",
-  !tokenOut[0].description.includes("When:") && !tokenOut[0].description.includes("Ends:"),
+  "Discord token metadata lines preserved in description",
+  tokenOut[0].description.includes("When:") && tokenOut[0].description.includes("Ends:"),
 ]);
 
 // World/Meet line stripping
@@ -265,27 +265,23 @@ const metaMessages = [{
 }];
 const metaOut = transformThreads(metaThreads, metaMessages);
 ok.push([
-  "World line stripped from description",
-  !metaOut[0].description.includes("World:"),
+  "World line preserved in description",
+  metaOut[0].description.includes("World:"),
 ]);
 ok.push([
-  "Meet line stripped from description",
-  !metaOut[0].description.includes("Meet:"),
+  "Meet line preserved in description",
+  metaOut[0].description.includes("Meet:"),
 ]);
 ok.push([
-  "emoji-prefixed When line stripped",
-  !metaOut[0].description.includes("When:"),
+  "emoji-prefixed When line preserved",
+  metaOut[0].description.includes("When:"),
 ]);
 ok.push([
-  "emoji-prefixed Starts line stripped",
-  !metaOut[0].description.includes("Starts:"),
+  "emoji-prefixed Ends line preserved",
+  metaOut[0].description.includes("Ends:"),
 ]);
 ok.push([
-  "emoji-prefixed Ends line stripped",
-  !metaOut[0].description.includes("Ends:"),
-]);
-ok.push([
-  "non-metadata lines preserved after stripping",
+  "non-metadata lines preserved in description",
   metaOut[0].description.includes("Bring your gear!"),
 ]);
 

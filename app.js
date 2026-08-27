@@ -591,7 +591,11 @@ function formatDiscord(text) {
   t = t.replace(/<@!?\d+>/g, "");
   t = t.replace(/<@&\d+>/g, "@role");
   t = t.replace(/<#\d+>/g, "#channel");
-  t = t.replace(/<t:\d+(?::[tTdDfFR])?>/g, "");
+  t = t.replace(/<t:(\d+)(?::[tTdDfFR])?>/g, function(_, epoch) {
+    var d = new Date(parseInt(epoch, 10) * 1000);
+    return d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+      + " at " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  });
   t = t.replace(/@(everyone|here)/gi, "");
   t = t.replace(/\[([^\]]+)\]\(https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com[^)]*\)/g, "$1");
   t = t.replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, "");
