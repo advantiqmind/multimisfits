@@ -30,7 +30,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - guides.html / faq.html               content pages (FAQ has real content; Guides is "coming soon")
 - roster.html                 full 41-member roster (data-full="1")
 - ge.html                     Grand Exchange — full-page iframe embed of 1box.online GE tool
-- events.html                 Events page — featured + upcoming + past layout
+- events.html                 Events page — featured + upcoming + past layout; Giveaways tab
 - style.css                   theme
 - app.js                      nav, toasts, Discord links, live roster + news + events + achievements rendering
 - functions/api/wom.js        GET /api/wom  -> WOM group, cached 6h, sorted roster
@@ -38,10 +38,11 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/events.js     GET /api/events -> reads Discord forum threads, parses EventForge dates, cached 5min
 - functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min; supports ?limit= (max 100) for gallery
 - functions/api/spotlight.js  GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
+- functions/api/giveaway.js   GET /api/giveaway -> reads giveaway forum channel, parses entries + winners, cached 5min
 - functions/api/referral.js   POST /api/referral -> validates referral codes against REFERRAL_CODES env var
 - assets/ranks/*.png          15 rank icons (official, upscaled 2x nearest)
 - assets/gallery/shot1-6.webp clan screenshots (static fallback for gallery page)
-- test-wom.mjs / test-news.mjs / test-events.mjs / test-achievements.mjs / test-spotlight.mjs   unit tests (93 checks)
+- test-wom.mjs / test-news.mjs / test-events.mjs / test-achievements.mjs / test-spotlight.mjs / test-giveaway.mjs   unit tests
 
 ## Status
 DONE: homepage + all pages, live roster w/ rank icons + sort + pagination + mobile CSS,
@@ -55,6 +56,9 @@ BUILT & READY (needs bot token + env vars to go live): news feed, events feed,
       LIVE event detection (client-side, uses EventForge dates), floating LIVE button on homepage,
       separate "Live Now" section on events page, Discord timestamp token rendering,
       Discord heading markdown (# ## ###) rendering.
+      Giveaway system as tab in events.html (needs GIVEAWAY_CHANNEL_ID env var).
+      Leader-confirmed entries (reply with number + checkmark reaction), auto stats,
+      countdown, past winners from pinned messages.
 BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
 
 ## What's left (priority order)
@@ -66,7 +70,8 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
        ANNOUNCEMENTS_CHANNEL_ID (plain)
        CHEST_CHANNEL_ID         (plain)  <- for achievements + gallery screenshots
        SPOTLIGHT_CHANNEL_ID     (plain)  <- for gallery spotlight image (mod-only channel)
-       DISCORD_GUILD_ID         (plain)  <- for events
+       DISCORD_GUILD_ID         (plain)  <- for events + giveaways
+       GIVEAWAY_CHANNEL_ID     (plain)  <- for giveaway forum channel
        PUBLISH_REACTION         (optional, e.g. "check" emoji, to gate news)
        REFERRAL_CODES           (plain)  <- comma-separated codes, e.g. "TEQUILA,FLASH,KOI"
        DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
@@ -83,20 +88,16 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
    (code, timestamp). Lets owner see redemptions in real time.
 8. Fix Discord custom emoji rendering as broken squares in event descriptions/headings.
 9. Manual LIVE override for events (force an event LIVE regardless of dates). DONE (via [LIVE] tag).
-10. Giveaway system (universal, not just bonds):
-    - New page: giveaway.html with dashboard layout (countdown, stats, entries, rules, past winners)
-    - New API: functions/api/giveaway.js reads a Discord forum channel
-    - Each round = one forum thread with EventForge dates + prize in the opening post
-    - Members post screenshots as replies in the thread
-    - Leaders reply to screenshots with a number = entry count (no cap on entries)
-    - Leaders react with checkmark to confirm the entry
-    - 1 entry = 1M GP donated (or whatever rate the round specifies)
+10. Giveaway system. DONE (as tab in events.html, not a separate page).
+    - Tab toggle at top of events.html (Events | Giveaways)
+    - API: functions/api/giveaway.js reads a Discord forum channel
+    - Each round = one forum thread with EventForge dates + prize in opening post
+    - Leaders reply to screenshots with a number = entry count (no cap), confirm with checkmark
     - Stats auto-calculated: total entries, participants, GP raised
-    - Countdown from EventForge dates, same as events page
-    - Past winners: leader pins a winner message in the thread, bot reads pinned messages
-    - Prize varies per round (read from opening post)
-    - Env var needed: GIVEAWAY_CHANNEL_ID (plain) for the forum channel
-    - Artifact mockup exists: Bond Giveaway Dashboard (duck race theme)
+    - Countdown from EventForge dates, same as events
+    - Past winners from pinned messages in the thread
+    - Prize varies per round (parsed from "Prize:" line in opening post)
+    - Env var needed: GIVEAWAY_CHANNEL_ID (plain)
 
 ## Commands
 - Tests:  npm test   (runs all 4 .mjs tests; pure logic, no network needed)

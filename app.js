@@ -1098,6 +1098,196 @@ function wireGallery() {
   });
 }
 
+/* ---- giveaway ---- */
+const GIVEAWAY_FALLBACK = [
+  {
+    id: "ga-sample-1", name: "Bond Giveaway: Round 2",
+    description: "Prize: 1 Old School Bond\nRate: 1M GP = 1 entry\n\nWhen: <t:1725228000:F>\nEnds: <t:1726012740:F>\n\nPost a screenshot of your donation to the clan bank. A leader will reply with your entry count and confirm with a checkmark.",
+    startTime: "2026-09-01T20:00:00Z", endTime: "2026-09-11T22:00:00Z",
+    hasParsedDate: true, status: "scheduled",
+    prize: "1 Old School Bond", gpPerEntry: 1,
+    entries: [
+      { player: "Vilence", count: 5, confirmedBy: "mr flsh" },
+      { player: "Artolux", count: 3, confirmedBy: "mr flsh" },
+      { player: "Bwita", count: 2, confirmedBy: "koi ox" },
+    ],
+    totalEntries: 10, totalParticipants: 3, gpRaised: 10,
+    winners: [], image: null,
+  },
+  {
+    id: "ga-sample-2", name: "Bond Giveaway: Round 1",
+    description: "Prize: 1 Bond\nRate: 1M GP = 1 entry",
+    startTime: "2026-08-15T20:00:00Z", endTime: "2026-08-25T22:00:00Z",
+    hasParsedDate: true, status: "completed",
+    prize: "1 Bond", gpPerEntry: 1,
+    entries: [], totalEntries: 7, totalParticipants: 4, gpRaised: 7,
+    winners: [{ name: "Vilence", message: "Congratulations to Vilence!" }],
+    image: null,
+  },
+];
+
+function formatGP(m) {
+  if (m >= 1000) return (m / 1000).toFixed(m % 1000 === 0 ? 0 : 1) + "B";
+  return m + "M";
+}
+
+function giveawayStatsHtml(round) {
+  return `<div class="ga-stats">
+    <div class="ga-stat"><div class="ga-stat-value">${round.totalEntries}</div><div class="ga-stat-label">Entries</div></div>
+    <div class="ga-stat"><div class="ga-stat-value">${round.totalParticipants}</div><div class="ga-stat-label">Players</div></div>
+    <div class="ga-stat"><div class="ga-stat-value">${formatGP(round.gpRaised)}</div><div class="ga-stat-label">GP Raised</div></div>
+    <div class="ga-stat"><div class="ga-stat-value">${esc(round.prize)}</div><div class="ga-stat-label">Prize</div></div>
+  </div>`;
+}
+
+function giveawayEntriesHtml(entries) {
+  if (!entries || !entries.length) return "";
+  var rows = entries.map(function(e) {
+    return `<div class="ga-entry"><span class="ga-entry-check">&#10003;</span><span class="ga-entry-player">${esc(e.player)}</span><span class="ga-entry-count">${e.count} ${e.count === 1 ? "entry" : "entries"}</span></div>`;
+  }).join("");
+  return `<h4 class="ga-entries-title">Confirmed Entries</h4>${rows}`;
+}
+
+function featuredGiveawayHtml(round) {
+  var effStatus = computeEventStatus(round);
+  var badge = eventStatusBadge(effStatus);
+  var isLive = effStatus === "live";
+  var countdown = round.hasParsedDate && !isLive && effStatus === "scheduled" ? eventCountdown(round.startTime) : null;
+  var dateStr = round.hasParsedDate ? formatEventDate(round.startTime) : "Date TBA";
+  var endStr = round.hasParsedDate && round.endTime ? " - " + formatEventDate(round.endTime) : "";
+  var timeStr = round.hasParsedDate && !isLive ? formatEventTime(round.startTime) : "";
+  var desc = round.description ? formatDiscord(round.description) : "";
+  var countdownHtml = isLive
+    ? '<div class="ev-happening">HAPPENING NOW</div>'
+    : countdown ? `<div class="ev-countdown" data-countdown="${esc(round.startTime)}">${countdown}</div>` : "";
+  var metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
+
+  return `<div class="ev-featured">
+    <div class="ev-featured-header"><h3>${esc(cleanName(round.name))}</h3>${badge}</div>
+    <div class="ev-featured-meta">
+      <span class="ev-date-text">${metaText}</span>
+      ${countdownHtml}
+    </div>
+    ${giveawayStatsHtml(round)}
+    ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
+    ${giveawayEntriesHtml(round.entries)}
+    <div class="ev-cta" style="margin-top:16px">
+      <a class="btn join" data-discord href="#" aria-label="Join Discord to enter">
+        <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
+        Enter on Discord
+      </a>
+    </div>
+  </div>`;
+}
+
+function giveawayCard(round) {
+  var effStatus = computeEventStatus(round);
+  var d = new Date(round.startTime);
+  var day = round.hasParsedDate ? d.getDate() : "DATE";
+  var month = round.hasParsedDate ? d.toLocaleDateString(undefined, { month: "short" }).toUpperCase() : "TBA";
+  var badge = eventStatusBadge(effStatus);
+  var winnerText = round.winners && round.winners.length ? "Winner: " + esc(round.winners[0].name) : "";
+  var statsText = round.totalEntries + " entries · " + round.totalParticipants + " players · " + formatGP(round.gpRaised) + " GP";
+
+  return `<div class="ev-card">
+    <div class="ev-card-date${round.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
+    <div class="ev-card-info">
+      <h3>${esc(cleanName(round.name))}</h3>
+      <div class="ev-card-meta">${esc(round.prize)}</div>
+      <div class="ga-card-stats">${statsText}</div>
+      ${winnerText ? `<div class="ga-card-stats" style="color:var(--gold)">${winnerText}</div>` : ""}
+    </div>
+    ${badge}
+  </div>`;
+}
+
+let _giveawayLoaded = false;
+
+function renderGiveaways(rounds, { cached } = {}) {
+  var featuredBody = document.getElementById("ga-featured-body");
+  var pastBody = document.getElementById("ga-past-body");
+  if (!featuredBody) return;
+
+  var active = rounds.filter(function(r) { return computeEventStatus(r) !== "completed"; });
+  var past = rounds.filter(function(r) { return computeEventStatus(r) === "completed"; });
+
+  var featured = active[0];
+
+  if (featuredBody) {
+    featuredBody.innerHTML = featured
+      ? featuredGiveawayHtml(featured)
+      : '<p class="ev-empty">No active giveaways right now. Check Discord!</p>';
+  }
+
+  if (pastBody) {
+    var pastRounds = featured ? past : past;
+    pastBody.innerHTML = pastRounds.length
+      ? pastRounds.map(giveawayCard).join("")
+      : '<p class="ev-empty">No past giveaways yet.</p>';
+  }
+
+  var gaBadge = document.getElementById("ga-badge");
+  if (gaBadge) {
+    if (cached) { gaBadge.textContent = "sample"; }
+    else if (featured && computeEventStatus(featured) === "live") {
+      gaBadge.innerHTML = '<span class="ev-live-dot"></span>LIVE';
+      gaBadge.style.background = "linear-gradient(180deg,#e04040,#a02020)";
+      gaBadge.style.color = "#fff";
+      gaBadge.style.animation = "ev-pulse 2s ease-in-out infinite";
+    }
+    else { gaBadge.textContent = "⟳ from Discord"; }
+  }
+
+  wireDiscordLinks();
+  startCountdownTimers();
+}
+
+async function loadGiveaway() {
+  var featuredBody = document.getElementById("ga-featured-body");
+  if (!featuredBody) return;
+  try {
+    var r = await fetch("/api/giveaway", { headers: { accept: "application/json" } });
+    if (!r.ok) throw new Error("bad status " + r.status);
+    var data = await r.json();
+    if (!data || !data.configured || !Array.isArray(data.rounds) || !data.rounds.length) throw new Error("empty");
+    renderGiveaways(data.rounds, { cached: false });
+  } catch (e) {
+    renderGiveaways(GIVEAWAY_FALLBACK, { cached: true });
+  }
+}
+
+function wireGiveawayTabs() {
+  var tabs = document.getElementById("ev-tabs");
+  if (!tabs) return;
+  tabs.querySelectorAll(".ev-tab").forEach(function(tab) {
+    tab.addEventListener("click", function() {
+      var target = tab.dataset.tab;
+      tabs.querySelectorAll(".ev-tab").forEach(function(t) {
+        t.classList.toggle("active", t.dataset.tab === target);
+      });
+      var evContent = document.getElementById("events-content");
+      var gaContent = document.getElementById("giveaways-content");
+      var heroTitle = document.getElementById("ev-hero-title");
+      var heroTag = document.getElementById("ev-hero-tag");
+      if (target === "giveaways") {
+        if (evContent) evContent.style.display = "none";
+        if (gaContent) gaContent.style.display = "";
+        if (heroTitle) heroTitle.textContent = "Giveaways";
+        if (heroTag) heroTag.textContent = "Win prizes, support the clan";
+        if (!_giveawayLoaded) {
+          _giveawayLoaded = true;
+          loadGiveaway();
+        }
+      } else {
+        if (evContent) evContent.style.display = "";
+        if (gaContent) gaContent.style.display = "none";
+        if (heroTitle) heroTitle.textContent = "Clan Events";
+        if (heroTag) heroTag.textContent = "Live from Discord";
+      }
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   wireDiscordLinks();
   wireNav();
@@ -1110,4 +1300,5 @@ document.addEventListener("DOMContentLoaded", () => {
   loadAchievements();
   loadGallery();
   loadSpotlight();
+  wireGiveawayTabs();
 });

@@ -54,46 +54,72 @@
 </header>
 
 <main>
-<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">Clan Events</h1><div class="tagline">Live from Discord</div></section>
+<section class="hero" style="padding:26px 20px"><h1 id="ev-hero-title" style="font-size:clamp(30px,6vw,52px)">Clan Events</h1><div class="tagline" id="ev-hero-tag">Live from Discord</div></section>
 
-  <!-- Featured Event -->
-  <div class="grid">
-    <section class="panel col-2" id="featured-event">
-      <div class="head"><h2><span class="rune"></span>Featured Event <span class="badge" id="events-badge">sample</span></h2></div>
-      <div class="body" id="featured-body">
-        <p class="ev-loading">Loading events&hellip;</p>
-      </div>
-    </section>
+  <!-- Tab Bar -->
+  <div class="ev-tabs" id="ev-tabs">
+    <button class="ev-tab active" data-tab="events">Events</button>
+    <button class="ev-tab" data-tab="giveaways">Giveaways</button>
   </div>
 
-  <!-- Live Now -->
-  <div class="grid" style="margin-top:18px;display:none" id="live-events-wrap">
-    <section class="panel col-2" id="live-events">
-      <div class="head"><h2><span class="rune"></span>Live Now</h2></div>
-      <div class="body">
-        <div class="ev-grid" id="live-body"></div>
-      </div>
-    </section>
+  <!-- Events content -->
+  <div id="events-content">
+    <div class="grid">
+      <section class="panel col-2" id="featured-event">
+        <div class="head"><h2><span class="rune"></span>Featured Event <span class="badge" id="events-badge">sample</span></h2></div>
+        <div class="body" id="featured-body">
+          <p class="ev-loading">Loading events&hellip;</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid" style="margin-top:18px;display:none" id="live-events-wrap">
+      <section class="panel col-2" id="live-events">
+        <div class="head"><h2><span class="rune"></span>Live Now</h2></div>
+        <div class="body">
+          <div class="ev-grid" id="live-body"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid" style="margin-top:18px">
+      <section class="panel col-2" id="upcoming-events">
+        <div class="head"><h2><span class="rune"></span>Upcoming Events</h2></div>
+        <div class="body">
+          <div class="ev-grid" id="upcoming-body"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid" style="margin-top:18px">
+      <section class="panel col-2" id="past-events">
+        <div class="head"><h2><span class="rune"></span>Past Events</h2></div>
+        <div class="body">
+          <div class="ev-grid" id="past-body"></div>
+        </div>
+      </section>
+    </div>
   </div>
 
-  <!-- Upcoming Events -->
-  <div class="grid" style="margin-top:18px">
-    <section class="panel col-2" id="upcoming-events">
-      <div class="head"><h2><span class="rune"></span>Upcoming Events</h2></div>
-      <div class="body">
-        <div class="ev-grid" id="upcoming-body"></div>
-      </div>
-    </section>
-  </div>
+  <!-- Giveaways content -->
+  <div id="giveaways-content" style="display:none">
+    <div class="grid">
+      <section class="panel col-2" id="ga-featured">
+        <div class="head"><h2><span class="rune"></span>Current Giveaway <span class="badge" id="ga-badge">sample</span></h2></div>
+        <div class="body" id="ga-featured-body">
+          <p class="ev-loading">Loading giveaways&hellip;</p>
+        </div>
+      </section>
+    </div>
 
-  <!-- Past Events -->
-  <div class="grid" style="margin-top:18px">
-    <section class="panel col-2" id="past-events">
-      <div class="head"><h2><span class="rune"></span>Past Events</h2></div>
-      <div class="body">
-        <div class="ev-grid" id="past-body"></div>
-      </div>
-    </section>
+    <div class="grid" style="margin-top:18px">
+      <section class="panel col-2" id="ga-past">
+        <div class="head"><h2><span class="rune"></span>Past Giveaways</h2></div>
+        <div class="body">
+          <div class="ev-grid" id="ga-past-body"></div>
+        </div>
+      </section>
+    </div>
   </div>
 
 </main>
