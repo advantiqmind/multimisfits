@@ -591,8 +591,18 @@ function formatDiscord(text) {
   t = t.replace(/<@!?\d+>/g, "");
   t = t.replace(/<@&\d+>/g, "@role");
   t = t.replace(/<#\d+>/g, "#channel");
-  t = t.replace(/<t:(\d+)(?::[tTdDfFR])?>/g, function(_, epoch) {
+  t = t.replace(/<t:(\d+)(?::([tTdDfFR]))?>/g, function(_, epoch, flag) {
     var d = new Date(parseInt(epoch, 10) * 1000);
+    if (flag === "R") {
+      var diff = d.getTime() - Date.now();
+      var abs = Math.abs(diff);
+      var future = diff > 0;
+      if (abs < 60000) return "just now";
+      if (abs < 3600000) { var m = Math.floor(abs / 60000); return future ? "in " + m + " minute" + (m > 1 ? "s" : "") : m + " minute" + (m > 1 ? "s" : "") + " ago"; }
+      if (abs < 86400000) { var h = Math.floor(abs / 3600000); return future ? "in " + h + " hour" + (h > 1 ? "s" : "") : h + " hour" + (h > 1 ? "s" : "") + " ago"; }
+      if (abs < 604800000) { var dd = Math.floor(abs / 86400000); return future ? "in " + dd + " day" + (dd > 1 ? "s" : "") : dd + " day" + (dd > 1 ? "s" : "") + " ago"; }
+      var w = Math.floor(abs / 604800000); return future ? "in " + w + " week" + (w > 1 ? "s" : "") : w + " week" + (w > 1 ? "s" : "") + " ago";
+    }
     return d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })
       + " at " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   });
@@ -608,6 +618,9 @@ function formatDiscord(text) {
   t = t.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
   t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   t = t.replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+  t = t.replace(/(^|<br>|\n)### ([^\n<]+)/g, '$1<h4 class="dc-h3">$2</h4>');
+  t = t.replace(/(^|<br>|\n)## ([^\n<]+)/g, '$1<h3 class="dc-h2">$2</h3>');
+  t = t.replace(/(^|<br>|\n)# ([^\n<]+)/g, '$1<h3 class="dc-h1">$2</h3>');
   t = t.replace(/\n/g, "<br>");
   return t;
 }
@@ -635,26 +648,39 @@ function eventCountdown(iso) {
   return s.trim();
 }
 
+function computeEventStatus(ev) {
+  if (ev.status === "completed") return "completed";
+  if (ev.hasParsedDate && new Date(ev.startTime).getTime() <= Date.now()) {
+    if (ev.endTime && new Date(ev.endTime).getTime() < Date.now()) return "completed";
+    return "live";
+  }
+  return "scheduled";
+}
+
 function eventStatusBadge(status) {
-  if (status === "active") return '<span class="ev-status ev-live">LIVE</span>';
+  if (status === "live") return '<span class="ev-status ev-live"><span class="ev-live-dot"></span>LIVE</span>';
   if (status === "completed") return '<span class="ev-status ev-ended">ENDED</span>';
   return '<span class="ev-status ev-upcoming">UPCOMING</span>';
 }
 
 function featuredEventHtml(ev) {
-  const badge = eventStatusBadge(ev.status);
-  const countdown = ev.hasParsedDate && ev.status === "scheduled" ? eventCountdown(ev.startTime) : null;
+  var effStatus = computeEventStatus(ev);
+  const badge = eventStatusBadge(effStatus);
+  const isLive = effStatus === "live";
+  const countdown = ev.hasParsedDate && !isLive && effStatus === "scheduled" ? eventCountdown(ev.startTime) : null;
   const dateStr = ev.hasParsedDate ? formatEventDate(ev.startTime) : "Date TBA";
-  const timeStr = ev.hasParsedDate ? formatEventTime(ev.startTime) : "";
+  const endStr = ev.hasParsedDate && ev.endTime ? " - " + formatEventDate(ev.endTime) : "";
+  const timeStr = ev.hasParsedDate && !isLive ? formatEventTime(ev.startTime) : "";
   const desc = ev.description ? formatDiscord(ev.description) : "";
   const interested = ev.interestedCount
     ? `<div class="ev-interested">${ev.interestedCount} replies</div>` : "";
-  const countdownHtml = countdown
-    ? `<div class="ev-countdown" data-countdown="${esc(ev.startTime)}">${countdown}</div>` : "";
+  const countdownHtml = isLive
+    ? '<div class="ev-happening">HAPPENING NOW</div>'
+    : countdown ? `<div class="ev-countdown" data-countdown="${esc(ev.startTime)}">${countdown}</div>` : "";
   const imgStyle = ev.image
     ? ` style="background:linear-gradient(to bottom,rgba(18,13,6,.82),rgba(18,13,6,.95)),url('${esc(ev.image)}') center/cover;"`
     : "";
-  const metaText = timeStr ? `${dateStr} · ${timeStr}` : dateStr;
+  const metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
 
   return `<div class="ev-featured"${imgStyle}>
     <div class="ev-featured-header"><h3>${esc(ev.name)}</h3>${badge}</div>
@@ -673,40 +699,93 @@ function featuredEventHtml(ev) {
 }
 
 function homeEventCard(ev) {
+  var effStatus = computeEventStatus(ev);
   const d = new Date(ev.startTime);
   const day = ev.hasParsedDate ? d.getDate() : "DATE";
   const month = ev.hasParsedDate ? d.toLocaleDateString(undefined, { month: "short" }).toUpperCase() : "TBA";
-  const timeStr = ev.hasParsedDate ? formatEventTime(ev.startTime) : "";
-  return `<div class="event"><div class="date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div><div><h3>${esc(ev.name)}</h3>${timeStr ? `<div class="when">${timeStr}</div>` : ""}</div></div>`;
+  const timeStr = ev.hasParsedDate && effStatus !== "live" ? formatEventTime(ev.startTime) : "";
+  const liveBadge = effStatus === "live" ? '<div class="when" style="color:#e04040">LIVE</div>' : "";
+  return `<div class="event"><div class="date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div><div><h3>${esc(ev.name)}</h3>${liveBadge || (timeStr ? `<div class="when">${timeStr}</div>` : "")}</div></div>`;
 }
 
 function renderHomeEvents(events) {
   var body = document.getElementById("home-events-body");
   if (!body) return;
-  var upcoming = events.filter(function (e) { return e.status === "scheduled" || e.status === "active"; });
-  var show = upcoming.slice(0, 3);
+  var liveEvs = events.filter(function(e) { return computeEventStatus(e) === "live"; });
+  var upcomingEvs = events.filter(function(e) { return computeEventStatus(e) === "scheduled"; });
+  var show = liveEvs.concat(upcomingEvs).slice(0, 3);
   if (!show.length) return;
   body.innerHTML = show.map(homeEventCard).join("");
   var badge = document.getElementById("home-events-badge");
   if (badge) badge.textContent = "from Discord";
+  showLiveFab(liveEvs.length > 0);
+}
+
+function showLiveFab(hasLive) {
+  var existing = document.getElementById("ev-fab");
+  if (!hasLive) { if (existing) existing.classList.add("ev-fab-hidden"); return; }
+  if (existing) { existing.classList.remove("ev-fab-hidden"); return; }
+  if (sessionStorage.getItem("ev-fab-closed")) return;
+  var fab = document.createElement("a");
+  fab.id = "ev-fab";
+  fab.className = "ev-fab";
+  fab.href = "/events.html";
+  fab.innerHTML = '<span class="ev-live-dot"></span>LIVE EVENT<button class="ev-fab-close" aria-label="Close">&times;</button>';
+  document.body.appendChild(fab);
+  fab.querySelector(".ev-fab-close").addEventListener("click", function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    fab.classList.add("ev-fab-hidden");
+    sessionStorage.setItem("ev-fab-closed", "1");
+  });
+  var dragState = null;
+  fab.addEventListener("pointerdown", function(e) {
+    if (e.target.closest(".ev-fab-close")) return;
+    dragState = { sx: e.clientX, sy: e.clientY, ox: fab.offsetLeft, oy: fab.offsetTop, moved: false };
+    fab.setPointerCapture(e.pointerId);
+  });
+  fab.addEventListener("pointermove", function(e) {
+    if (!dragState) return;
+    var dx = e.clientX - dragState.sx, dy = e.clientY - dragState.sy;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragState.moved = true;
+    if (!dragState.moved) return;
+    fab.style.right = "auto";
+    fab.style.bottom = "auto";
+    fab.style.left = Math.max(0, dragState.ox + dx) + "px";
+    fab.style.top = Math.max(0, dragState.oy + dy) + "px";
+  });
+  fab.addEventListener("pointerup", function(e) {
+    if (dragState && dragState.moved) e.preventDefault();
+    dragState = null;
+  });
+  fab.addEventListener("click", function(e) {
+    if (fab.style.left) {
+      var rect = fab.getBoundingClientRect();
+      if (rect.right > window.innerWidth || rect.bottom > window.innerHeight) return;
+    }
+  });
 }
 
 function eventCard(ev) {
+  var effStatus = computeEventStatus(ev);
   const d = new Date(ev.startTime);
   const day = ev.hasParsedDate ? d.getDate() : "DATE";
   const month = ev.hasParsedDate ? d.toLocaleDateString(undefined, { month: "short" }).toUpperCase() : "TBA";
-  const badge = eventStatusBadge(ev.status);
-  const timeStr = ev.hasParsedDate && ev.status !== "completed" ? formatEventTime(ev.startTime) : "";
+  const badge = eventStatusBadge(effStatus);
+  const isLive = effStatus === "live";
+  const timeStr = ev.hasParsedDate && effStatus !== "completed" && !isLive ? formatEventTime(ev.startTime) : "";
+  const liveText = isLive ? "Started " + formatEventDate(ev.startTime) : "";
   const interested = ev.interestedCount ? `${ev.interestedCount} replies` : "";
   const bgStyle = ev.image
     ? ` style="background:linear-gradient(to right,rgba(18,13,6,.92),rgba(18,13,6,.7)),url('${esc(ev.image)}') center/cover;"`
     : "";
+  const liveClass = isLive ? " ev-card-live" : "";
 
-  return `<div class="ev-card ev-clickable" data-ev-id="${esc(ev.id)}"${bgStyle}>
+  return `<div class="ev-card ev-clickable${liveClass}" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
       <h3>${esc(ev.name)}</h3>
-      <div class="ev-card-meta">${timeStr}${timeStr && interested ? " · " : ""}${interested}</div>
+      <div class="ev-card-meta">${liveText || timeStr}${(liveText || timeStr) && interested ? " · " : ""}${interested}</div>
     </div>
     ${badge}
   </div>`;
@@ -715,22 +794,38 @@ function eventCard(ev) {
 function renderEvents(events, { cached } = {}) {
   _eventsData = events;
   const featuredBody = document.getElementById("featured-body");
+  const liveBody = document.getElementById("live-body");
+  const liveWrap = document.getElementById("live-events-wrap");
   const upcomingBody = document.getElementById("upcoming-body");
   const pastBody = document.getElementById("past-body");
   if (!featuredBody && !upcomingBody && !pastBody) return;
 
-  const active = events.filter((e) => e.status === "active");
-  const upcoming = events.filter((e) => e.status === "scheduled");
-  const past = events.filter((e) => e.status === "completed");
+  var live = events.filter(function(e) { return computeEventStatus(e) === "live"; });
+  var upcoming = events.filter(function(e) { return computeEventStatus(e) === "scheduled"; });
+  var past = events.filter(function(e) { return computeEventStatus(e) === "completed"; });
 
-  const featured = active[0] || upcoming[0];
-  const remainingUpcoming = featured && featured.status === "scheduled"
-    ? upcoming.slice(1) : upcoming;
+  live.sort(function(a, b) {
+    if (a.endTime && b.endTime) return new Date(a.endTime) - new Date(b.endTime);
+    return new Date(b.startTime) - new Date(a.startTime);
+  });
+
+  var featured = live[0] || upcoming[0];
+  var remainingLive = featured && computeEventStatus(featured) === "live" ? live.slice(1) : live;
+  var remainingUpcoming = featured && computeEventStatus(featured) === "scheduled" ? upcoming.slice(1) : upcoming;
 
   if (featuredBody) {
     featuredBody.innerHTML = featured
       ? featuredEventHtml(featured)
       : '<p class="ev-empty">No featured events right now. Check Discord!</p>';
+  }
+
+  if (liveBody && liveWrap) {
+    if (remainingLive.length) {
+      liveWrap.style.display = "";
+      liveBody.innerHTML = remainingLive.map(eventCard).join("");
+    } else {
+      liveWrap.style.display = "none";
+    }
   }
 
   if (upcomingBody) {
@@ -745,9 +840,16 @@ function renderEvents(events, { cached } = {}) {
       : '<p class="ev-empty">No past events yet.</p>';
   }
 
-  const badge = document.getElementById("events-badge");
-  if (badge) {
-    badge.textContent = cached ? "sample" : "⟳ from Discord";
+  const evBadge = document.getElementById("events-badge");
+  if (evBadge) {
+    if (cached) { evBadge.textContent = "sample"; }
+    else if (featured && computeEventStatus(featured) === "live") {
+      evBadge.innerHTML = '<span class="ev-live-dot"></span>LIVE';
+      evBadge.style.background = "linear-gradient(180deg,#e04040,#a02020)";
+      evBadge.style.color = "#fff";
+      evBadge.style.animation = "ev-pulse 2s ease-in-out infinite";
+    }
+    else { evBadge.textContent = "⟳ from Discord"; }
   }
 
   wireDiscordLinks();
@@ -762,9 +864,10 @@ function wireEventModals() {
   var closeBtn = overlay.querySelector(".ev-modal-close");
 
   function openModal(ev) {
+    var effStatus = computeEventStatus(ev);
     var dateStr = formatEventDate(ev.startTime);
     var timeStr = formatEventTime(ev.startTime);
-    var badge = eventStatusBadge(ev.status);
+    var badge = eventStatusBadge(effStatus);
     var desc = ev.description ? formatDiscord(ev.description) : '<span style="color:var(--muted)">No description</span>';
     var imgHtml = ev.image
       ? '<img src="' + esc(ev.image) + '" alt="" style="max-width:100%;border:2px solid #000;border-radius:6px;margin-bottom:14px" loading="lazy">'
@@ -809,8 +912,8 @@ function wireEventModals() {
 
   var featured = document.querySelector(".ev-featured");
   if (featured) {
-    var fev = _eventsData.find(function (e) { return e.status === "active"; }) ||
-              _eventsData.find(function (e) { return e.status === "scheduled"; });
+    var fev = _eventsData.find(function (e) { return computeEventStatus(e) === "live"; }) ||
+              _eventsData.find(function (e) { return computeEventStatus(e) === "scheduled"; });
     if (fev) {
       featured.classList.add("ev-clickable");
       featured.setAttribute("data-ev-id", fev.id);
@@ -829,7 +932,12 @@ function startCountdownTimers() {
   window._evCountdown = setInterval(() => {
     els.forEach((el) => {
       const cd = eventCountdown(el.dataset.countdown);
-      el.textContent = cd || "NOW";
+      if (!cd) {
+        el.textContent = "HAPPENING NOW";
+        el.className = "ev-happening";
+      } else {
+        el.textContent = cd;
+      }
     });
   }, 60000);
 }
