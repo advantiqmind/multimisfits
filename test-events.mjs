@@ -260,7 +260,7 @@ const metaThreads = [{
 }];
 const metaMessages = [{
   id: "2003",
-  content: "COX MASS\nWhen: <t:1724871600:F>\nWorld: 329\nMeet: Discord Events Voice Chat\nBring your gear!",
+  content: "COX MASS\n📅 When: <t:1724871600:F>\n⏳ Starts: <t:1724871600:R>\n💀 Ends: <t:1725058800:F>\n🌐 World: 329\n📍 Meet: Discord Events Voice Chat\nBring your gear!",
   attachments: [],
 }];
 const metaOut = transformThreads(metaThreads, metaMessages);
@@ -271,6 +271,18 @@ ok.push([
 ok.push([
   "Meet line stripped from description",
   !metaOut[0].description.includes("Meet:"),
+]);
+ok.push([
+  "emoji-prefixed When line stripped",
+  !metaOut[0].description.includes("When:"),
+]);
+ok.push([
+  "emoji-prefixed Starts line stripped",
+  !metaOut[0].description.includes("Starts:"),
+]);
+ok.push([
+  "emoji-prefixed Ends line stripped",
+  !metaOut[0].description.includes("Ends:"),
 ]);
 ok.push([
   "non-metadata lines preserved after stripping",

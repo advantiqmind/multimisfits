@@ -40,7 +40,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/spotlight.js  GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
 - assets/ranks/*.png          15 rank icons (official, upscaled 2x nearest)
 - assets/gallery/shot1-6.webp clan screenshots (static fallback for gallery page)
-- test-wom.mjs / test-news.mjs / test-events.mjs / test-achievements.mjs / test-spotlight.mjs   unit tests (91 checks)
+- test-wom.mjs / test-news.mjs / test-events.mjs / test-achievements.mjs / test-spotlight.mjs   unit tests (94 checks)
 
 ## Status
 DONE: homepage + all pages, live roster w/ rank icons + sort + pagination + mobile CSS,
