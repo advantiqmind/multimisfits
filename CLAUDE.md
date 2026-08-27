@@ -79,6 +79,10 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
 5. Homepage sample text cleanup — replace fake news/events/achievements with
    cleaner "coming soon" placeholders or remove fake dates.
 6. Deploy to Cloudflare Pages. Optional custom domain (runs on *.pages.dev first).
+7. Referral tracking: Discord webhook to a private channel on each successful code use
+   (code, timestamp). Lets owner see redemptions in real time.
+8. Fix Discord custom emoji rendering as broken squares in event descriptions/headings.
+9. Manual LIVE override for events (force an event LIVE regardless of dates).
 
 ## Commands
 - Tests:  npm test   (runs all 4 .mjs tests; pure logic, no network needed)
