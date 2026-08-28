@@ -317,6 +317,27 @@ th.sortable.sort-desc::after{content:"▼";opacity:1;color:var(--gold)}
 .ga-winner-toast-close:hover{color:#fff}
 @media(max-width:600px){.ga-winner-toast{left:12px;right:12px;max-width:none}}
 
+/* countdown toast (24h before event) */
+.cd-toast{position:fixed;top:80px;left:24px;z-index:81;display:flex;align-items:center;gap:10px;background:rgba(30,24,16,.94);border:1px solid rgba(201,168,76,.3);border-left:3px solid var(--gold);border-radius:8px;padding:12px 14px;box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 12px rgba(255,170,40,.08);backdrop-filter:blur(6px);transform:translateY(-20px);opacity:0;transition:transform .6s ease,opacity .6s ease;max-width:340px;overflow:hidden;cursor:pointer;text-decoration:none}
+.cd-toast::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,203,47,.12),transparent);animation:cd-shimmer 1s .4s ease-out forwards;pointer-events:none}
+.cd-toast-show{transform:translateY(0);opacity:1;animation:cd-glow 3s 1.2s ease-in-out infinite}
+@keyframes cd-shimmer{to{left:100%}}
+@keyframes cd-glow{0%,100%{box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 12px rgba(255,170,40,.06)}50%{box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 22px rgba(255,170,40,.15),0 0 6px rgba(255,203,47,.1)}}
+.cd-toast-icon{flex-shrink:0;width:36px;height:36px;border-radius:6px;background:linear-gradient(135deg,rgba(255,203,47,.12),rgba(224,147,42,.08));border:1px solid rgba(255,203,47,.15);display:flex;align-items:center;justify-content:center}
+.cd-toast-icon svg{width:18px;height:18px;fill:var(--gold)}
+.cd-toast-body{flex:1;min-width:0}
+.cd-toast-label{font-family:"Jersey 15",monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;line-height:1}
+.cd-toast-name{font-family:"Cinzel",serif;font-weight:700;font-size:13px;color:var(--parchment);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd-toast-timer{flex-shrink:0;display:flex;gap:2px;align-items:baseline}
+.cd-toast-digits{font-family:"Jersey 15",monospace;font-size:22px;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums;min-width:28px;text-align:center}
+.cd-toast-unit{font-family:"Jersey 15",monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:1px}
+.cd-toast-sep{font-family:"Jersey 15",monospace;font-size:18px;color:rgba(255,203,47,.35);margin:0 1px;align-self:flex-start;line-height:1}
+.cd-toast-dg{display:flex;flex-direction:column;align-items:center}
+.cd-toast-close{position:absolute;top:2px;right:4px;background:none;border:none;color:rgba(255,255,255,.3);font-size:14px;cursor:pointer;padding:4px;line-height:1}
+.cd-toast-close:hover{color:#fff}
+.ga-winner-toast.cd-bumped{top:148px}
+@media(max-width:600px){.cd-toast{left:12px;right:12px;max-width:none}.ga-winner-toast.cd-bumped{top:152px}}
+
 /* event modal */
 .ev-modal-overlay{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .ev-modal-overlay.open{opacity:1;pointer-events:auto}

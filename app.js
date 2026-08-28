@@ -830,6 +830,88 @@ function renderHomeEvents(events) {
   var badge = document.getElementById("home-events-badge");
   if (badge) badge.textContent = "from Discord";
   showLiveFab(liveEvs.length > 0);
+  showCountdownToast(events);
+}
+
+function showCountdownToast(events) {
+  var existing = document.getElementById("cd-toast");
+  var now = Date.now();
+  var best = null;
+  for (var i = 0; i < events.length; i++) {
+    var ev = events[i];
+    if (!ev.hasParsedDate) continue;
+    if (computeEventStatus(ev) !== "scheduled") continue;
+    var diff = new Date(ev.startTime).getTime() - now;
+    if (diff <= 0 || diff > 86400000) continue;
+    if (!best || diff < (new Date(best.startTime).getTime() - now)) best = ev;
+  }
+  if (!best) {
+    if (existing) { existing.classList.remove("cd-toast-show"); bumpWinnerToast(false); setTimeout(function() { existing.remove(); }, 600); }
+    return;
+  }
+  if (sessionStorage.getItem("cd-toast-closed")) return;
+  if (existing) { updateCountdownDigits(existing, best.startTime); return; }
+  var el = document.createElement("a");
+  el.id = "cd-toast";
+  el.className = "cd-toast";
+  el.href = "/events.html";
+  el.dataset.cdStart = best.startTime;
+  el.innerHTML =
+    '<button class="cd-toast-close" aria-label="Close">&times;</button>' +
+    '<div class="cd-toast-icon"><svg viewBox="0 0 24 24"><path d="M17 10H7v2h10v-2zm2-7h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zm-5-5H7v2h7v-2z"/></svg></div>' +
+    '<div class="cd-toast-body">' +
+      '<div class="cd-toast-label">Starts soon</div>' +
+      '<div class="cd-toast-name">' + esc(cleanName(best.name)) + '</div>' +
+    '</div>' +
+    '<div class="cd-toast-timer">' +
+      '<div class="cd-toast-dg"><span class="cd-toast-digits cd-hr">00</span><span class="cd-toast-unit">HR</span></div>' +
+      '<span class="cd-toast-sep">:</span>' +
+      '<div class="cd-toast-dg"><span class="cd-toast-digits cd-mn">00</span><span class="cd-toast-unit">MIN</span></div>' +
+      '<span class="cd-toast-sep">:</span>' +
+      '<div class="cd-toast-dg"><span class="cd-toast-digits cd-sc">00</span><span class="cd-toast-unit">SEC</span></div>' +
+    '</div>';
+  var winnerToast = document.querySelector(".ga-winner-toast");
+  if (winnerToast) document.body.insertBefore(el, winnerToast);
+  else document.body.appendChild(el);
+  updateCountdownDigits(el, best.startTime);
+  requestAnimationFrame(function() { el.classList.add("cd-toast-show"); bumpWinnerToast(true); });
+  el.querySelector(".cd-toast-close").addEventListener("click", function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    el.classList.remove("cd-toast-show");
+    bumpWinnerToast(false);
+    sessionStorage.setItem("cd-toast-closed", "1");
+    setTimeout(function() { el.remove(); }, 600);
+  });
+  startCountdownToastTick();
+}
+
+function bumpWinnerToast(bump) {
+  var wt = document.querySelector(".ga-winner-toast");
+  if (wt) { if (bump) wt.classList.add("cd-bumped"); else wt.classList.remove("cd-bumped"); }
+}
+
+function updateCountdownDigits(el, iso) {
+  var diff = new Date(iso).getTime() - Date.now();
+  if (diff <= 0) { el.classList.remove("cd-toast-show"); bumpWinnerToast(false); setTimeout(function() { el.remove(); }, 600); return; }
+  var h = Math.floor(diff / 3600000);
+  var m = Math.floor((diff % 3600000) / 60000);
+  var s = Math.floor((diff % 60000) / 1000);
+  var hr = el.querySelector(".cd-hr");
+  var mn = el.querySelector(".cd-mn");
+  var sc = el.querySelector(".cd-sc");
+  if (hr) hr.textContent = String(h).padStart(2, "0");
+  if (mn) mn.textContent = String(m).padStart(2, "0");
+  if (sc) sc.textContent = String(s).padStart(2, "0");
+}
+
+function startCountdownToastTick() {
+  if (window._cdToastTick) return;
+  window._cdToastTick = setInterval(function() {
+    var el = document.getElementById("cd-toast");
+    if (!el) { clearInterval(window._cdToastTick); window._cdToastTick = null; return; }
+    updateCountdownDigits(el, el.dataset.cdStart);
+  }, 1000);
 }
 
 function showLiveFab(hasLive) {
@@ -1359,6 +1441,8 @@ async function showWinnerToast() {
       '</div>' +
       '<button class="ga-winner-toast-close" aria-label="Close">&times;</button>';
     document.body.appendChild(toast);
+    var cdToast = document.getElementById("cd-toast");
+    if (cdToast && cdToast.classList.contains("cd-toast-show")) toast.classList.add("cd-bumped");
     requestAnimationFrame(function() { toast.classList.add("ga-winner-toast-show"); });
     toast.querySelector(".ga-winner-toast-close").addEventListener("click", function() {
       toast.classList.remove("ga-winner-toast-show");
