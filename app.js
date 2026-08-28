@@ -1041,11 +1041,12 @@ function startCountdownTimers() {
   window._evCountdown = setInterval(() => {
     els.forEach((el) => {
       const cd = eventCountdown(el.dataset.countdown);
+      const prefix = el.dataset.cdPrefix || "";
       if (!cd) {
-        el.textContent = "HAPPENING NOW";
+        el.textContent = prefix ? "ENDED" : "HAPPENING NOW";
         el.className = "ev-happening";
       } else {
-        el.textContent = cd;
+        el.textContent = prefix + cd;
       }
     });
   }, 60000);
@@ -1175,14 +1176,15 @@ function featuredGiveawayHtml(round) {
   var effStatus = computeEventStatus(round);
   var badge = eventStatusBadge(effStatus);
   var isLive = effStatus === "live";
-  var countdown = round.hasParsedDate && !isLive && effStatus === "scheduled" ? eventCountdown(round.startTime) : null;
-  var dateStr = round.hasParsedDate ? formatEventDate(round.startTime) : "Date TBA";
-  var endStr = round.hasParsedDate && round.endTime ? " - " + formatEventDate(round.endTime) : "";
-  var timeStr = round.hasParsedDate && !isLive ? formatEventTime(round.startTime) : "";
+  var endsCountdown = isLive && round.endTime ? eventCountdown(round.endTime) : null;
+  var startsCountdown = !isLive && effStatus === "scheduled" ? eventCountdown(round.startTime) : null;
+  var dateStr = formatEventDate(round.startTime);
+  var endStr = round.endTime ? " - " + formatEventDate(round.endTime) : "";
+  var timeStr = !isLive ? formatEventTime(round.startTime) : "";
   var desc = round.description ? formatDiscord(round.description) : "";
-  var countdownHtml = isLive
-    ? ''
-    : countdown ? `<div class="ev-countdown" data-countdown="${esc(round.startTime)}">${countdown}</div>` : "";
+  var countdownHtml = endsCountdown
+    ? `<div class="ev-countdown" data-countdown="${esc(round.endTime)}" data-cd-prefix="Ends ">Ends ${endsCountdown}</div>`
+    : startsCountdown ? `<div class="ev-countdown" data-countdown="${esc(round.startTime)}">${startsCountdown}</div>` : "";
   var metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
   var spotlight = winnerSpotlightHtml(round);
 

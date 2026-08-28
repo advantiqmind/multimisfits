@@ -48,6 +48,15 @@ export function parseEntryRate(content) {
   return 1;
 }
 
+const GIVEAWAY_CYCLE_DAYS = 14;
+
+function defaultEndDate(startISO) {
+  const d = new Date(startISO);
+  if (isNaN(d.getTime())) return null;
+  d.setDate(d.getDate() + GIVEAWAY_CYCLE_DAYS);
+  return d.toISOString();
+}
+
 const MAX_ENTRIES_PER_PERSON = 2;
 
 export function extractEntryCountFromReactions(reactions) {
@@ -131,9 +140,21 @@ export function transformGiveawayData(threads, threadMessages) {
       if (!hasTrophy && !m.pinned) continue;
       const mentioned = Array.isArray(m.mentions) && m.mentions.length
         ? m.mentions[0] : null;
-      const winnerName = mentioned
-        ? (mentioned.global_name || mentioned.username || "Unknown")
-        : (m.author.global_name || m.author.username || "Unknown");
+      let winnerName;
+      if (mentioned) {
+        winnerName = mentioned.global_name || mentioned.username || "Unknown";
+      } else if (hasTrophy) {
+        let afterTrophy = c.split("\u{1F3C6}").pop().split("\n")[0]
+          .replace(/[!.,;:]+$/g, "").trim();
+        afterTrophy = afterTrophy.replace(/^(?:congratulations|congrats|winner|grats)[!.,;:]*\s*/i, "")
+          .replace(/[!.,;:]+$/g, "").trim();
+        const wordCount = afterTrophy.split(/\s+/).length;
+        winnerName = afterTrophy.length > 0 && afterTrophy.length < 40 && wordCount <= 3
+          ? afterTrophy
+          : (m.author.global_name || m.author.username || "Unknown");
+      } else {
+        winnerName = m.author.global_name || m.author.username || "Unknown";
+      }
       winners.push({
         name: winnerName,
         message: c.slice(0, 500),
@@ -149,8 +170,8 @@ export function transformGiveawayData(threads, threadMessages) {
       name: (thread.name || "Giveaway").slice(0, 200),
       description: description.slice(0, 2000),
       startTime: whenDate || createdAt,
-      endTime: endsDate || null,
-      hasParsedDate: !!whenDate,
+      endTime: endsDate || (!meta.archived ? defaultEndDate(whenDate || createdAt) : null),
+      hasParsedDate: true,
       status,
       prize: prize || "TBA",
       gpPerEntry,

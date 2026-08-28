@@ -251,6 +251,7 @@ const noMsgRounds = transformGiveawayData([THREAD_ACTIVE], new Map());
 check("thread with no messages", noMsgRounds.length === 1);
 check("missing messages defaults", noMsgRounds[0].totalEntries === 0);
 check("missing messages prize TBA", noMsgRounds[0].prize === "TBA");
+check("hasParsedDate always true for giveaways", noMsgRounds[0].hasParsedDate === true);
 
 // ---- no reactions = no entries ----
 console.log("\n== no reactions = no entries ==");
@@ -328,10 +329,10 @@ const pinnedRounds = transformGiveawayData([THREAD_ENDED], pinnedFallbackMessage
 check("pinned fallback finds 1 winner", pinnedRounds[0].winners.length === 1);
 check("pinned fallback uses author name (no mention)", pinnedRounds[0].winners[0].name === "mr flsh");
 
-console.log("\n== trophy winner: no mention falls back to author ==");
-const trophyNoMention = {
+console.log("\n== trophy winner: text name parsing ==");
+const trophyWithName = {
   id: "4012",
-  content: "\u{1F3C6} Congratulations! Winner!",
+  content: "\u{1F3C6} jackson",
   author: { id: "100", global_name: "mr flsh", username: "mrflsh" },
   pinned: false,
   mentions: [],
@@ -339,14 +340,68 @@ const trophyNoMention = {
   reactions: [],
   timestamp: "2026-09-06T23:59:00Z",
 };
-const noMentionMessages = buildMessages("2002", [
+const nameMessages = buildMessages("2002", [
   ENDED_OPENING,
   endedScreenshot,
-  trophyNoMention,
+  trophyWithName,
 ]);
-const noMentionRounds = transformGiveawayData([THREAD_ENDED], noMentionMessages);
-check("trophy without mention finds winner", noMentionRounds[0].winners.length === 1);
-check("trophy without mention uses author name", noMentionRounds[0].winners[0].name === "mr flsh");
+const nameRounds = transformGiveawayData([THREAD_ENDED], nameMessages);
+check("plain trophy name finds winner", nameRounds[0].winners.length === 1);
+check("plain trophy name extracts text", nameRounds[0].winners[0].name === "jackson");
+
+const trophyWithGreeting = {
+  id: "4013",
+  content: "\u{1F3C6} Congratulations jackson!",
+  author: { id: "100", global_name: "mr flsh", username: "mrflsh" },
+  pinned: false,
+  mentions: [],
+  attachments: [],
+  reactions: [],
+  timestamp: "2026-09-06T23:59:00Z",
+};
+const greetingMessages = buildMessages("2002", [
+  ENDED_OPENING,
+  endedScreenshot,
+  trophyWithGreeting,
+]);
+const greetingRounds = transformGiveawayData([THREAD_ENDED], greetingMessages);
+check("strips greeting, extracts name", greetingRounds[0].winners[0].name === "jackson");
+
+const trophyLongText = {
+  id: "4014",
+  content: "\u{1F3C6} Congratulations to our winner of this giveaway round!",
+  author: { id: "100", global_name: "mr flsh", username: "mrflsh" },
+  pinned: false,
+  mentions: [],
+  attachments: [],
+  reactions: [],
+  timestamp: "2026-09-06T23:59:00Z",
+};
+const longMessages = buildMessages("2002", [
+  ENDED_OPENING,
+  endedScreenshot,
+  trophyLongText,
+]);
+const longRounds = transformGiveawayData([THREAD_ENDED], longMessages);
+check("long text falls back to author", longRounds[0].winners[0].name === "mr flsh");
+
+const trophyGreetingPunct = {
+  id: "4015",
+  content: "\u{1F3C6} Congrats! jackson!",
+  author: { id: "100", global_name: "mr flsh", username: "mrflsh" },
+  pinned: false,
+  mentions: [],
+  attachments: [],
+  reactions: [],
+  timestamp: "2026-09-06T23:59:00Z",
+};
+const punctMessages = buildMessages("2002", [
+  ENDED_OPENING,
+  endedScreenshot,
+  trophyGreetingPunct,
+]);
+const punctRounds = transformGiveawayData([THREAD_ENDED], punctMessages);
+check("strips greeting with punctuation", punctRounds[0].winners[0].name === "jackson");
 
 console.log("\n== trophy winner: both trophy and pinned in same round ==");
 const bothWinnerMessages = buildMessages("2002", [
@@ -357,6 +412,31 @@ const bothWinnerMessages = buildMessages("2002", [
 ]);
 const bothRounds = transformGiveawayData([THREAD_ENDED], bothWinnerMessages);
 check("both trophy and pinned counted", bothRounds[0].winners.length === 2);
+
+console.log("\n== auto end-date (14-day cycle) ==");
+const noDateOpening = {
+  id: "2001",
+  content: "Prize: 1 Bond\n1M GP = 1 entry\n\nPost your donations!",
+  author: { id: "100", global_name: "mr flsh", username: "mrflsh" },
+  mentions: [],
+  attachments: [],
+  reactions: [],
+};
+const noDateMessages = buildMessages("2001", [noDateOpening]);
+const noDateRounds = transformGiveawayData([THREAD_ACTIVE], noDateMessages);
+check("active round without Ends gets auto end-date", noDateRounds[0].endTime !== null);
+const autoStart = new Date(noDateRounds[0].startTime);
+const autoEnd = new Date(noDateRounds[0].endTime);
+const diffDays = Math.round((autoEnd - autoStart) / (1000 * 60 * 60 * 24));
+check("auto end-date is 14 days after start", diffDays === 14);
+
+const endedNoDate = transformGiveawayData([THREAD_ENDED], buildMessages("2002", [ENDED_OPENING]));
+check("completed round without Ends keeps null end-date", endedNoDate[0].endTime === null);
+
+const withDatesRounds = transformGiveawayData([THREAD_ACTIVE], buildMessages("2001", [OPENING_MSG]));
+check("explicit Ends date not overridden by auto", withDatesRounds[0].endTime !== null);
+const explicitEnd = new Date(withDatesRounds[0].endTime);
+check("explicit Ends preserves parsed date", explicitEnd.getMonth() === 8);
 
 console.log("\n== trophy winner: no winner messages ==");
 const noWinnerMessages = buildMessages("2001", [
