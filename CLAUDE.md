@@ -1,6 +1,9 @@
-# Multi-Misfits — Clan Website (CLAUDE.md)
+# Multi-Misfits -- Clan Website (CLAUDE.md)
 
 Read this first. It's the full state of the project so you can continue without re-discovery.
+
+When a task is finished, clean up this file: move completed items out of "What's left",
+update the Status section, and keep the doc tight. Don't let it accumulate stale TODOs.
 
 ## What this is
 A read-only website for the OSRS clan **Multi-Misfits**. Philosophy: the site is a
@@ -9,97 +12,87 @@ No CMS, no accounts, no forums, no application forms. Recruiting funnels to Disc
 
 Each content type has exactly ONE source. Never add a second way to edit something.
 - News        -> a locked Discord #announcements channel (bot reads it)
-- Events       -> Discord Scheduled Events (bot reads them; "Interested" = RSVP)
+- Events      -> Discord forum channel (bot reads threads; EventForge dates parsed)
 - Achievements -> Discord "chest" channel (Dink plugin posts drops/pets/CAs)
+- Giveaways   -> Discord giveaway forum channel (reaction-based entries, trophy winners)
 - Roster/ranks/stats -> Wise Old Man (WOM) group, synced from in-game via RuneLite
 
 ## Stack (keep it this way)
 - Plain HTML/CSS/JS. NO framework, NO build step. Mobile-friendly, desktop-primary.
 - Cloudflare Pages (static) + Pages Functions (serverless) for anything needing a token.
 - Dark, heavily OSRS/medieval theme. Fonts: Cinzel (titles) + Jersey 15 (game HUD).
-- Owner works mostly on MOBILE — keep single-file previews easy to view.
+- Owner works mostly on MOBILE -- keep single-file previews easy to view.
 
 ## Key IDs / constants
 - WOM group ID: 26075  (https://wiseoldman.net/groups/26075)
 - Discord invite: https://discord.gg/kT4vEGnjgU
 - In-game clan: "MultiMisfits" (one word). Owner IGN: mr flsh.
-- Dink channel: the "chest" channel (need its numeric channel ID for the achievements fn)
 
 ## Files
-- index.html                  homepage (hero, news, events, achievements, roster, gallery)
-- guides.html / faq.html               content pages (FAQ has real content; Guides is "coming soon")
-- roster.html                 full 41-member roster (data-full="1")
-- ge.html                     Grand Exchange — full-page iframe embed of 1box.online GE tool
-- events.html                 Events page — featured + upcoming + past layout; Giveaways tab
-- style.css                   theme
-- app.js                      nav, toasts, Discord links, live roster + news + events + achievements rendering
-- functions/api/wom.js        GET /api/wom  -> WOM group, cached 6h, sorted roster
-- functions/api/news.js       GET /api/news -> reads #announcements via Discord bot
-- functions/api/events.js     GET /api/events -> reads Discord forum threads, parses EventForge dates, cached 5min
-- functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min; supports ?limit= (max 100) for gallery
-- functions/api/spotlight.js  GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
-- functions/api/giveaway.js   GET /api/giveaway -> reads giveaway forum channel, parses entries + winners, cached 5min
-- functions/api/referral.js   POST /api/referral -> validates referral codes against REFERRAL_CODES env var
-- assets/ranks/*.png          15 rank icons (official, upscaled 2x nearest)
-- assets/gallery/shot1-6.webp clan screenshots (static fallback for gallery page)
-- test-wom.mjs / test-news.mjs / test-events.mjs / test-achievements.mjs / test-spotlight.mjs / test-giveaway.mjs   unit tests
+- index.html                   homepage (hero, news, events, achievements, roster, gallery)
+- guides.html / faq.html       content pages (FAQ has real content; Guides is "coming soon")
+- roster.html                  full roster (data-full="1")
+- ge.html                      Grand Exchange -- full-page iframe embed of 1box.online GE tool
+- events.html                  Events + Giveaways tabs (hash-based: #giveaways persists on refresh)
+- style.css                    theme
+- app.js                       nav, toasts, Discord links, all panel rendering
+- functions/api/wom.js         GET /api/wom  -> WOM group, cached 6h, sorted roster
+- functions/api/news.js        GET /api/news -> reads #announcements via Discord bot
+- functions/api/events.js      GET /api/events -> reads forum threads (filters out giveaway threads), cached 5min
+- functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
+- functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
+- functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
+- functions/api/referral.js    POST /api/referral -> validates referral codes against REFERRAL_CODES env var
+- assets/ranks/*.png           rank icons (official, upscaled 2x nearest)
+- assets/gallery/shot1-6.webp  clan screenshots (static fallback for gallery page)
+- test-*.mjs                   unit tests (6 files: wom, news, events, achievements, spotlight, giveaway)
+
+## Env vars (Cloudflare Pages > Settings > Environment variables)
+    DISCORD_BOT_TOKEN        (secret)
+    ANNOUNCEMENTS_CHANNEL_ID (plain)
+    CHEST_CHANNEL_ID         (plain)  <- achievements + gallery
+    SPOTLIGHT_CHANNEL_ID     (plain)  <- gallery spotlight image (mod-only channel)
+    DISCORD_GUILD_ID         (plain)  <- events + giveaways
+    EVENTS_CHANNEL_ID        (plain)  <- events forum channel
+    GIVEAWAY_CHANNEL_ID      (plain)  <- giveaway forum channel
+    PUBLISH_REACTION         (optional, e.g. "check" emoji, to gate news)
+    REFERRAL_CODES           (plain)  <- comma-separated codes, e.g. "TEQUILA,FLASH,KOI"
+    DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
 
 ## Status
-DONE: homepage + all pages, live roster w/ rank icons + sort + pagination + mobile CSS,
-      Grand Exchange page (full-page iframe embed of 1box.online), events.html with
-      featured/upcoming/past layout, Discord Join wired, gallery, nav/footer on all pages.
-BUILT & READY (needs bot token + env vars to go live): news feed, events feed,
-      achievements feed. All four serverless functions exist with caching, error handling,
-      and graceful fallback. Frontend rendering (loadNews, loadEvents, loadAchievements)
-      is wired in app.js -- panels show sample data until the API is configured.
-      Referral code gate on Discord join (needs REFERRAL_CODES env var).
-      LIVE event detection (client-side, uses EventForge dates), floating LIVE button on homepage,
-      separate "Live Now" section on events page, Discord timestamp token rendering,
-      Discord heading markdown (# ## ###) rendering.
-      Giveaway system as tab in events.html (needs GIVEAWAY_CHANNEL_ID env var).
-      Reaction-based entries (leader reacts 1/2 keycap on member posts, max 2 per person),
-      auto stats, countdown, past winners from pinned messages.
-BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
+LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster,
+      events, giveaways, achievements, news, gallery, FAQ -- everything functional.
 
-## What's left (priority order)
-1. Wire the Discord bot (owner does the Discord side):
-   - Bot with Message Content Intent, invited read-only (View Channel + Read Message History)
-     to #announcements, chest, and guild scheduled-events scope.
-   - Env vars (Pages > Settings > Environment variables, and .dev.vars for local):
-       DISCORD_BOT_TOKEN        (secret)
-       ANNOUNCEMENTS_CHANNEL_ID (plain)
-       CHEST_CHANNEL_ID         (plain)  <- for achievements + gallery screenshots
-       SPOTLIGHT_CHANNEL_ID     (plain)  <- for gallery spotlight image (mod-only channel)
-       DISCORD_GUILD_ID         (plain)  <- for events + giveaways
-       GIVEAWAY_CHANNEL_ID     (plain)  <- for giveaway forum channel
-       PUBLISH_REACTION         (optional, e.g. "check" emoji, to gate news)
-       REFERRAL_CODES           (plain)  <- comma-separated codes, e.g. "TEQUILA,FLASH,KOI"
-       DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
-2. Confirm RANK_ORDER in functions/api/wom.js — Beast/Paladin placement and officer
-   order (colonel vs captain) are BEST GUESSES. Owner's ladder: squire < duellist <
-   striker < inquisitor < expert < knight < [officers] < [owners].
-3. Add Captain rank icon (assets/ranks/captain.png) when provided; add it to
-   ICON_ROLES in app.js. (striker/beast/squire are hand-cut, could be swapped for official.)
-4. Real content for FAQ (provided, needs rewrite) / Guides (coming soon).
-5. Homepage sample text cleanup — replace fake news/events/achievements with
-   cleaner "coming soon" placeholders or remove fake dates.
-6. Deploy to Cloudflare Pages. Optional custom domain (runs on *.pages.dev first).
-7. Referral tracking: Discord webhook to a private channel on each successful code use
-   (code, timestamp). Lets owner see redemptions in real time.
-8. Fix Discord custom emoji rendering as broken squares in event descriptions/headings.
-9. Manual LIVE override for events (force an event LIVE regardless of dates). DONE (via [LIVE] tag).
-10. Giveaway system. DONE (as tab in events.html, not a separate page).
-    - Tab toggle at top of events.html (Events | Giveaways)
-    - API: functions/api/giveaway.js reads a Discord forum channel
-    - Each round = one forum thread with EventForge dates + prize in opening post
-    - Leaders react with 1/2 keycap emoji on member screenshots (max 2 entries per person)
-    - Stats auto-calculated: total entries, participants, GP raised
-    - Countdown from EventForge dates, same as events
-    - Winners detected via trophy emoji (🏆) in message, pinned messages as fallback
-    - Winner name from @mentioned user in trophy message, falls back to message author
-    - Previous round winner spotlight banner displays on the current giveaway card
-    - Prize varies per round (parsed from "Prize:" line or bold text near "giving away")
-    - Env var needed: GIVEAWAY_CHANNEL_ID (plain)
+## What's left
+1. **Referral tracking**: When someone successfully redeems a referral code, fire a
+   Discord webhook to a private mod channel with the code + timestamp. Owner sees
+   redemptions in real time. Needs one new env var: `REFERRAL_WEBHOOK_URL`.
+
+## How things work
+
+### Giveaways
+- Each round = one forum thread. Leaders react with 1/2 keycap emoji on member
+  screenshots to confirm entries (max 2 per person).
+- Stats auto-calculated: total entries, participants, GP raised.
+- Winner detected via trophy emoji in message: @mention > text after trophy
+  (greeting words stripped, max 3 words) > message author. Pinned messages as fallback.
+- Winner names are auto-capitalized (jackson -> Jackson).
+- Auto end-date: active rounds without explicit Ends: line get start + 14 days.
+- Live rounds show "Ends X" countdown. Scheduled rounds count down to start.
+- Previous round winner spotlight always visible on current round card.
+- Winner toast on homepage (dismissable, localStorage per winner).
+- Giveaway threads filtered from events feed (by name containing "giveaway").
+- Tab state persists via URL hash (#giveaways).
+
+### Events
+- Forum threads from events channel, excluding giveaway-named threads.
+- EventForge date parsing: `When:` and `Ends:` lines (plain text or Discord timestamps).
+- [LIVE] tag in thread name forces live status regardless of dates.
+- Emoji-prefixed date lines supported (e.g. calendar emoji before When:).
+
+### Offline indicators
+- Amber tint on panel badges when API returns unconfigured/error state.
+- Debug mode: append `?debug=1` to /api/giveaway to skip cache and see raw Discord data.
 
 ## Commands
 - Tests:  npm test   (runs all 6 .mjs tests; pure logic, no network needed)
@@ -112,11 +105,12 @@ BLOCKED on owner: Discord bot creation + env vars, Captain rank icon.
   but do not touch code until you see "saucy saucy". This applies per feature request.
   "Saucy saucy" also means merge to main once the changes are committed and tests pass.
   Documentation-only updates (like CLAUDE.md) are exempt.
-- **NO EM DASHES.** Never use em dashes (—) in any user-visible text. Non-negotiable.
+- **NO EM DASHES.** Never use em dashes in any user-visible text. Non-negotiable.
 - NEVER put the Discord bot token in client code. Server-side (Functions + env) only.
-- Keep it vanilla — don't introduce React/Next/bundlers.
+- Keep it vanilla -- don't introduce React/Next/bundlers.
 - Don't add website-side editing of anything that has a Discord/WOM source.
-- Cache external calls (WOM 6h, Discord ~5min) — respect their rate limits; send a User-Agent.
+- Cache external calls (WOM 6h, Discord ~5min, giveaway 1min) -- respect rate limits; send a User-Agent.
 - Every fetch has a graceful fallback so a panel never renders empty/broken.
 - Fan site: keep the "not affiliated with Jagex" disclaimer in the footer.
 - Push directly to main (no feature branches unless requested).
+- **Clean up this file** after finishing a task. Keep it current, not a changelog.
