@@ -43,6 +43,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
+- functions/api/discord.js    Discord interactions endpoint (slash commands); GET = register commands
 - assets/ranks/*.png           rank icons (official, upscaled 2x nearest)
 - assets/gallery/shot1-6.webp  clan screenshots (static fallback for gallery page)
 - test-*.mjs                   unit tests (6 files: wom, news, events, achievements, spotlight, giveaway)
@@ -59,6 +60,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     REFERRAL_CODES           (plain)  <- comma-separated codes, e.g. "TEQUILA,FLASH,KOI"
     DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
     REFERRAL_THREAD_ID       (plain, optional) <- forum thread ID for referral tracking
+    DISCORD_PUBLIC_KEY       (plain) <- from Discord Developer Portal, for slash commands
 
 ## Status
 LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster,
