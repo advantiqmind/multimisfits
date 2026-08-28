@@ -304,7 +304,7 @@ th.sortable.sort-desc::after{content:"▼";opacity:1;color:var(--gold)}
 @keyframes ev-fab-glow{0%,100%{box-shadow:0 0 8px rgba(224,64,64,.2)}50%{box-shadow:0 0 20px rgba(224,64,64,.5)}}
 .ev-fab.ev-fab-hidden{opacity:0;pointer-events:none}
 
-.ga-winner-toast{position:fixed;bottom:24px;left:24px;z-index:80;display:flex;align-items:center;gap:10px;background:rgba(30,24,16,.92);border:1px solid rgba(201,168,76,.35);border-left:3px solid #ffd700;border-radius:8px;padding:12px 16px;box-shadow:0 4px 24px rgba(0,0,0,.4),0 0 12px rgba(255,215,0,.1);backdrop-filter:blur(6px);transform:translateY(20px);opacity:0;transition:transform .3s ease,opacity .3s ease;max-width:320px}
+.ga-winner-toast{position:fixed;top:80px;left:24px;z-index:80;display:flex;align-items:center;gap:10px;background:rgba(30,24,16,.92);border:1px solid rgba(201,168,76,.35);border-left:3px solid #ffd700;border-radius:8px;padding:12px 16px;box-shadow:0 4px 24px rgba(0,0,0,.4),0 0 12px rgba(255,215,0,.1);backdrop-filter:blur(6px);transform:translateY(-20px);opacity:0;transition:transform .3s ease,opacity .3s ease;max-width:320px}
 .ga-winner-toast-show{transform:translateY(0);opacity:1}
 .ga-winner-toast-icon{font-size:1.6rem;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(255,215,0,.3))}
 .ga-winner-toast-body{flex:1;min-width:0}
