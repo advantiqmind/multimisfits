@@ -1295,31 +1295,40 @@ function wireGiveawayTabs() {
   if (!tabs) return;
   tabs.querySelectorAll(".ev-tab").forEach(function(tab) {
     tab.addEventListener("click", function() {
-      var target = tab.dataset.tab;
-      tabs.querySelectorAll(".ev-tab").forEach(function(t) {
-        t.classList.toggle("active", t.dataset.tab === target);
-      });
-      var evContent = document.getElementById("events-content");
-      var gaContent = document.getElementById("giveaways-content");
-      var heroTitle = document.getElementById("ev-hero-title");
-      var heroTag = document.getElementById("ev-hero-tag");
-      if (target === "giveaways") {
-        if (evContent) evContent.style.display = "none";
-        if (gaContent) gaContent.style.display = "";
-        if (heroTitle) heroTitle.textContent = "Giveaways";
-        if (heroTag) heroTag.textContent = "Win prizes, support the clan";
-        if (!_giveawayLoaded) {
-          _giveawayLoaded = true;
-          loadGiveaway();
-        }
-      } else {
-        if (evContent) evContent.style.display = "";
-        if (gaContent) gaContent.style.display = "none";
-        if (heroTitle) heroTitle.textContent = "Clan Events";
-        if (heroTag) heroTag.textContent = "Live from Discord";
-      }
+      switchEvTab(tab.dataset.tab);
     });
   });
+  var hash = location.hash.replace("#", "");
+  if (hash === "giveaways") switchEvTab("giveaways");
+}
+
+function switchEvTab(target) {
+  var tabs = document.getElementById("ev-tabs");
+  if (!tabs) return;
+  tabs.querySelectorAll(".ev-tab").forEach(function(t) {
+    t.classList.toggle("active", t.dataset.tab === target);
+  });
+  var evContent = document.getElementById("events-content");
+  var gaContent = document.getElementById("giveaways-content");
+  var heroTitle = document.getElementById("ev-hero-title");
+  var heroTag = document.getElementById("ev-hero-tag");
+  if (target === "giveaways") {
+    if (evContent) evContent.style.display = "none";
+    if (gaContent) gaContent.style.display = "";
+    if (heroTitle) heroTitle.textContent = "Giveaways";
+    if (heroTag) heroTag.textContent = "Win prizes, support the clan";
+    history.replaceState(null, "", "#giveaways");
+    if (!_giveawayLoaded) {
+      _giveawayLoaded = true;
+      loadGiveaway();
+    }
+  } else {
+    if (evContent) evContent.style.display = "";
+    if (gaContent) gaContent.style.display = "none";
+    if (heroTitle) heroTitle.textContent = "Clan Events";
+    if (heroTag) heroTag.textContent = "Live from Discord";
+    history.replaceState(null, "", location.pathname);
+  }
 }
 
 async function showWinnerToast() {
