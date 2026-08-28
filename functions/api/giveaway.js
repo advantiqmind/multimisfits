@@ -57,6 +57,11 @@ function defaultEndDate(startISO) {
   return d.toISOString();
 }
 
+function capitalizeName(name) {
+  if (!name) return name;
+  return name.replace(/\b\w/g, c => c.toUpperCase());
+}
+
 const MAX_ENTRIES_PER_PERSON = 2;
 
 export function extractEntryCountFromReactions(reactions) {
@@ -156,7 +161,7 @@ export function transformGiveawayData(threads, threadMessages) {
         winnerName = m.author.global_name || m.author.username || "Unknown";
       }
       winners.push({
-        name: winnerName,
+        name: capitalizeName(winnerName),
         message: c.slice(0, 500),
         timestamp: m.timestamp,
       });

@@ -230,7 +230,7 @@ check("status is completed (archived)", e.status === "completed");
 check("prize parsed", e.prize === "1 Bond");
 check("totalEntries is 2", e.totalEntries === 2);
 check("1 winner found", e.winners.length === 1);
-check("trophy winner uses mentioned user name", e.winners[0].name === "Vilence");
+check("trophy winner uses mentioned user name (capitalized)", e.winners[0].name === "Vilence");
 check("winner message captured", e.winners[0].message.includes("Congratulations"));
 
 // ---- sorting ----
@@ -327,7 +327,7 @@ const pinnedFallbackMessages = buildMessages("2002", [
 ]);
 const pinnedRounds = transformGiveawayData([THREAD_ENDED], pinnedFallbackMessages);
 check("pinned fallback finds 1 winner", pinnedRounds[0].winners.length === 1);
-check("pinned fallback uses author name (no mention)", pinnedRounds[0].winners[0].name === "mr flsh");
+check("pinned fallback uses author name (capitalized)", pinnedRounds[0].winners[0].name === "Mr Flsh");
 
 console.log("\n== trophy winner: text name parsing ==");
 const trophyWithName = {
@@ -347,7 +347,7 @@ const nameMessages = buildMessages("2002", [
 ]);
 const nameRounds = transformGiveawayData([THREAD_ENDED], nameMessages);
 check("plain trophy name finds winner", nameRounds[0].winners.length === 1);
-check("plain trophy name extracts text", nameRounds[0].winners[0].name === "jackson");
+check("plain trophy name capitalized", nameRounds[0].winners[0].name === "Jackson");
 
 const trophyWithGreeting = {
   id: "4013",
@@ -365,7 +365,7 @@ const greetingMessages = buildMessages("2002", [
   trophyWithGreeting,
 ]);
 const greetingRounds = transformGiveawayData([THREAD_ENDED], greetingMessages);
-check("strips greeting, extracts name", greetingRounds[0].winners[0].name === "jackson");
+check("strips greeting, extracts name capitalized", greetingRounds[0].winners[0].name === "Jackson");
 
 const trophyLongText = {
   id: "4014",
@@ -383,7 +383,7 @@ const longMessages = buildMessages("2002", [
   trophyLongText,
 ]);
 const longRounds = transformGiveawayData([THREAD_ENDED], longMessages);
-check("long text falls back to author", longRounds[0].winners[0].name === "mr flsh");
+check("long text falls back to author (capitalized)", longRounds[0].winners[0].name === "Mr Flsh");
 
 const trophyGreetingPunct = {
   id: "4015",
@@ -401,7 +401,7 @@ const punctMessages = buildMessages("2002", [
   trophyGreetingPunct,
 ]);
 const punctRounds = transformGiveawayData([THREAD_ENDED], punctMessages);
-check("strips greeting with punctuation", punctRounds[0].winners[0].name === "jackson");
+check("strips greeting with punctuation (capitalized)", punctRounds[0].winners[0].name === "Jackson");
 
 console.log("\n== trophy winner: both trophy and pinned in same round ==");
 const bothWinnerMessages = buildMessages("2002", [

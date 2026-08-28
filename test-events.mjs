@@ -91,7 +91,8 @@ for (const ev of out) {
 }
 
 const ok = [];
-ok.push(["5 events total", out.length === 5]);
+ok.push(["4 events (giveaway filtered out)", out.length === 4]);
+ok.push(["giveaway thread excluded", !out.find(e => e.id === "1002")]);
 ok.push([
   "scheduled (non-archived) events sort first",
   out[0].status === "scheduled",
@@ -102,11 +103,11 @@ ok.push([
 ]);
 ok.push([
   "scheduled sorted by newest first",
-  out[0].name === "MULTIMISFITS BOND GIVEAWAY",
+  out[0].name === "Screenshots loot event level 100+",
 ]);
 ok.push([
   "second scheduled is next newest",
-  out[1].name === "Screenshots loot event level 100+",
+  out[1].name === "BARROWS WEEKEND LONG EVENT 8/28-8/30",
 ]);
 ok.push([
   "completed sorted by newest first",

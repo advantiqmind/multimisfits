@@ -53,6 +53,7 @@ export function transformThreads(threads, openingMessages) {
 
   const events = [];
   for (const t of Array.isArray(threads) ? threads : []) {
+    if (/giveaway/i.test(t.name || "")) continue;
     const meta = t.thread_metadata || {};
     const createdAt = meta.create_timestamp
       || snowflakeToDate(t.id).toISOString();
