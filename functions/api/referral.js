@@ -1,12 +1,14 @@
 // Cloudflare Pages Function  ->  POST /api/referral
 // Validates a referral code against REFERRAL_CODES env var.
 // Returns the Discord invite URL only when the code is valid.
-// On success, fires a Discord webhook so mods see the redemption.
+// On success, posts a tracking message to a Discord forum thread
+// so mods see every redemption with a running total.
 //
 // Required env (set in Cloudflare Pages -> Settings -> Environment variables):
 //   REFERRAL_CODES       (plain) - comma-separated valid codes, e.g. "TEQUILA,FLASH,KOI"
 //   DISCORD_INVITE       (plain, optional) - override invite URL; defaults to hardcoded link
-//   REFERRAL_WEBHOOK_URL (plain, optional) - Discord webhook URL for tracking redemptions
+//   DISCORD_BOT_TOKEN    (secret) - bot token (shared with other functions)
+//   REFERRAL_THREAD_ID   (plain, optional) - forum thread ID for tracking redemptions
 
 const DEFAULT_INVITE = "https://discord.gg/kT4vEGnjgU";
 
@@ -53,32 +55,53 @@ export async function onRequest(context) {
     return json({ valid: false }, 200);
   }
 
-  const webhookUrl = context.env && context.env.REFERRAL_WEBHOOK_URL;
-  if (webhookUrl) {
-    context.waitUntil(notifyReferral(webhookUrl, submitted));
+  const token = context.env && context.env.DISCORD_BOT_TOKEN;
+  const threadId = context.env && context.env.REFERRAL_THREAD_ID;
+  if (token && threadId) {
+    context.waitUntil(notifyReferral(token, threadId, submitted));
   }
 
   const invite = (context.env && context.env.DISCORD_INVITE) || DEFAULT_INVITE;
   return json({ valid: true, invite });
 }
 
-async function notifyReferral(webhookUrl, code) {
+async function notifyReferral(token, threadId, code) {
   try {
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        embeds: [{
-          title: "Referral Code Redeemed",
-          color: 0x2ecc71,
-          fields: [
-            { name: "Code", value: code, inline: true },
-            { name: "Time", value: new Date().toUTCString(), inline: true },
-          ],
-        }],
-      }),
-    });
+    const headers = {
+      Authorization: `Bot ${token}`,
+      "Content-Type": "application/json",
+      "User-Agent": "Multi-Misfits clan website",
+    };
+
+    const threadRes = await fetch(
+      `https://discord.com/api/v10/channels/${threadId}`,
+      { headers: { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" } }
+    );
+    let count = 0;
+    if (threadRes.ok) {
+      const thread = await threadRes.json();
+      count = (thread.message_count || 0);
+    }
+
+    await fetch(
+      `https://discord.com/api/v10/channels/${threadId}/messages`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          embeds: [{
+            title: "Referral Code Redeemed",
+            color: 0x2ecc71,
+            fields: [
+              { name: "Code", value: code, inline: true },
+              { name: "Time", value: new Date().toUTCString(), inline: true },
+              { name: "Total Redemptions", value: String(count + 1), inline: true },
+            ],
+          }],
+        }),
+      }
+    );
   } catch (e) {
-    // webhook failure should never break the referral flow
+    // tracking failure should never break the referral flow
   }
 }

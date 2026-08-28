@@ -42,7 +42,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
 - functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
-- functions/api/referral.js    POST /api/referral -> validates referral codes, webhooks to Discord on success
+- functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
 - assets/ranks/*.png           rank icons (official, upscaled 2x nearest)
 - assets/gallery/shot1-6.webp  clan screenshots (static fallback for gallery page)
 - test-*.mjs                   unit tests (6 files: wom, news, events, achievements, spotlight, giveaway)
@@ -58,7 +58,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     PUBLISH_REACTION         (optional, e.g. "check" emoji, to gate news)
     REFERRAL_CODES           (plain)  <- comma-separated codes, e.g. "TEQUILA,FLASH,KOI"
     DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
-    REFERRAL_WEBHOOK_URL     (plain, optional) <- Discord webhook URL for referral tracking
+    REFERRAL_THREAD_ID       (plain, optional) <- forum thread ID for referral tracking
 
 ## Status
 LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster,
@@ -91,9 +91,10 @@ Nothing pending.
 
 ### Referrals
 - POST /api/referral validates code against REFERRAL_CODES env var.
-- On valid code, fires a Discord webhook (REFERRAL_WEBHOOK_URL) with code + timestamp.
-- Webhook runs in background (waitUntil) so the user gets their invite instantly.
-- Webhook failure never blocks the referral flow.
+- On valid code, bot posts an embed to a Discord forum thread (REFERRAL_THREAD_ID)
+  with code, timestamp, and running total redemptions.
+- Runs in background (waitUntil) so the user gets their invite instantly.
+- Tracking failure never blocks the referral flow.
 
 ### Offline indicators
 - Amber tint on panel badges when API returns unconfigured/error state.
