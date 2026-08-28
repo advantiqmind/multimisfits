@@ -426,8 +426,6 @@ async function handleGiveawayStats(interaction, token, guildId, channelId, appId
   }
 
   const countdown = formatCountdown(active.endTime);
-  const topEntries = [];
-  const sorted = [...(rounds.find((r) => r === active) ? active : { totalEntries: 0 })].entries || [];
 
   const fields = [
     { name: "Prize", value: active.prize, inline: true },
