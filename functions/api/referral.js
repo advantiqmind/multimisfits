@@ -67,35 +67,43 @@ export async function onRequest(context) {
 
 async function notifyReferral(token, threadId, code) {
   try {
-    const headers = {
+    const authHeaders = {
       Authorization: `Bot ${token}`,
-      "Content-Type": "application/json",
       "User-Agent": "Multi-Misfits clan website",
     };
 
-    const threadRes = await fetch(
-      `https://discord.com/api/v10/channels/${threadId}`,
-      { headers: { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" } }
+    const msgsRes = await fetch(
+      `https://discord.com/api/v10/channels/${threadId}/messages?limit=100`,
+      { headers: authHeaders }
     );
-    let count = 0;
-    if (threadRes.ok) {
-      const thread = await threadRes.json();
-      count = (thread.message_count || 0);
+    let total = 0;
+    let codeCount = 0;
+    if (msgsRes.ok) {
+      const msgs = await msgsRes.json();
+      for (const m of msgs) {
+        if (!Array.isArray(m.embeds) || !m.embeds.length) continue;
+        const fields = m.embeds[0].fields || [];
+        const codeField = fields.find(f => f.name === "Code");
+        if (!codeField) continue;
+        total++;
+        if (codeField.value === code) codeCount++;
+      }
     }
 
     await fetch(
       `https://discord.com/api/v10/channels/${threadId}/messages`,
       {
         method: "POST",
-        headers,
+        headers: { ...authHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({
           embeds: [{
             title: "Referral Code Redeemed",
             color: 0x2ecc71,
             fields: [
               { name: "Code", value: code, inline: true },
-              { name: "Time", value: new Date().toUTCString(), inline: true },
-              { name: "Total Redemptions", value: String(count + 1), inline: true },
+              { name: "Code Uses", value: String(codeCount + 1), inline: true },
+              { name: "Total Redemptions", value: String(total + 1), inline: true },
+              { name: "Time", value: new Date().toUTCString(), inline: false },
             ],
           }],
         }),
