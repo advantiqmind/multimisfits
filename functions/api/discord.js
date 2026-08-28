@@ -106,6 +106,11 @@ const COMMANDS = [
     description: "Show the most recent valuable drops",
     type: 1,
   },
+  {
+    name: "help",
+    description: "List all available bot commands",
+    type: 1,
+  },
 ];
 
 async function getAppId(token) {
@@ -427,7 +432,15 @@ async function handleGiveawayStats(interaction, token, guildId, channelId, appId
     });
   }
 
-  const rounds = await fetchGiveawayRounds(token, guildId, channelId);
+  let rounds;
+  try {
+    rounds = await fetchGiveawayRounds(token, guildId, channelId);
+  } catch (e) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not fetch giveaway data. Try again in a moment.",
+      flags: 64,
+    });
+  }
   const active = rounds.find((r) => r.status === "scheduled");
 
   if (!active) {
@@ -483,7 +496,15 @@ async function handleGiveawayLast(interaction, token, guildId, channelId, appId)
     });
   }
 
-  const rounds = await fetchGiveawayRounds(token, guildId, channelId);
+  let rounds;
+  try {
+    rounds = await fetchGiveawayRounds(token, guildId, channelId);
+  } catch (e) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not fetch giveaway data. Try again in a moment.",
+      flags: 64,
+    });
+  }
   const completed = rounds.filter((r) => r.status === "completed");
   const last = completed.length ? completed[0] : null;
 
@@ -1015,6 +1036,25 @@ async function handleTopDrops(interaction, token, chestChannelId, appId) {
 }
 
 // ---------------------------------------------------------------------------
+// /help
+// ---------------------------------------------------------------------------
+async function handleHelp(interaction, appId) {
+  const lines = COMMANDS
+    .filter((c) => c.name !== "help")
+    .map((c) => `**/${c.name}** -- ${c.description}`);
+  lines.push("**/help** -- You're looking at it!");
+
+  await patchFollowup(appId, interaction.token, {
+    embeds: [{
+      title: "Bot Commands",
+      color: 0x3498db,
+      description: lines.join("\n"),
+      footer: { text: "Multi-Misfits Bot" },
+    }],
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Shared: patch followup message
 // ---------------------------------------------------------------------------
 async function patchFollowup(appId, interactionToken, payload) {
@@ -1064,48 +1104,63 @@ export async function onRequest(context) {
     const name = interaction.data && interaction.data.name;
     const appId = interaction.application_id;
 
+    const safeWait = (promise) =>
+      context.waitUntil(
+        promise.catch((err) =>
+          patchFollowup(appId, interaction.token, {
+            content: "Something went wrong. Try again in a moment.",
+            flags: 64,
+          }).catch(() => {})
+        )
+      );
+
     if (name === "referralstats") {
-      context.waitUntil(handleReferralStats(interaction, token, threadId, appId, referralCodes));
+      safeWait(handleReferralStats(interaction, token, threadId, appId, referralCodes));
       return json({ type: 5 });
     }
 
     if (name === "giveawaystats") {
-      context.waitUntil(handleGiveawayStats(interaction, token, guildId, channelId, appId));
+      safeWait(handleGiveawayStats(interaction, token, guildId, channelId, appId));
       return json({ type: 5 });
     }
 
     if (name === "giveawaylast") {
-      context.waitUntil(handleGiveawayLast(interaction, token, guildId, channelId, appId));
+      safeWait(handleGiveawayLast(interaction, token, guildId, channelId, appId));
       return json({ type: 5 });
     }
 
     if (name === "rank") {
-      context.waitUntil(handleRank(interaction, appId));
+      safeWait(handleRank(interaction, appId));
       return json({ type: 5 });
     }
 
     if (name === "website") {
-      context.waitUntil(handleWebsite(interaction, appId));
+      safeWait(handleWebsite(interaction, appId));
       return json({ type: 5 });
     }
 
     if (name === "status") {
-      context.waitUntil(handleStatus(interaction, env, appId));
+      safeWait(handleStatus(interaction, env, appId));
       return json({ type: 5 });
     }
 
     if (name === "event") {
-      context.waitUntil(handleEvent(interaction, token, guildId, env.EVENTS_CHANNEL_ID, appId));
+      safeWait(handleEvent(interaction, token, guildId, env.EVENTS_CHANNEL_ID, appId));
       return json({ type: 5 });
     }
 
     if (name === "clanstats") {
-      context.waitUntil(handleClanStats(interaction, appId));
+      safeWait(handleClanStats(interaction, appId));
       return json({ type: 5 });
     }
 
     if (name === "topdrops") {
-      context.waitUntil(handleTopDrops(interaction, token, env.CHEST_CHANNEL_ID, appId));
+      safeWait(handleTopDrops(interaction, token, env.CHEST_CHANNEL_ID, appId));
+      return json({ type: 5 });
+    }
+
+    if (name === "help") {
+      safeWait(handleHelp(interaction, appId));
       return json({ type: 5 });
     }
 
