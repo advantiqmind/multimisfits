@@ -130,13 +130,19 @@ async function registerCommands(token, guildId) {
 // ---------------------------------------------------------------------------
 // /referralstats
 // ---------------------------------------------------------------------------
-async function handleReferralStats(interaction, token, threadId, appId) {
+async function handleReferralStats(interaction, token, threadId, appId, referralCodes) {
   const authHeaders = {
     Authorization: `Bot ${token}`,
     "User-Agent": "Multi-Misfits clan website",
   };
 
   const codeCounts = {};
+  if (referralCodes) {
+    for (const c of referralCodes.split(",")) {
+      const code = c.trim();
+      if (code) codeCounts[code] = 0;
+    }
+  }
   let total = 0;
 
   if (threadId) {
@@ -681,6 +687,7 @@ export async function onRequest(context) {
   const guildId = env.DISCORD_GUILD_ID;
   const threadId = env.REFERRAL_THREAD_ID;
   const channelId = env.GIVEAWAY_CHANNEL_ID;
+  const referralCodes = env.REFERRAL_CODES;
 
   if (context.request.method === "GET") {
     if (!token || !guildId) return json({ error: "not_configured" });
@@ -707,7 +714,7 @@ export async function onRequest(context) {
     const appId = interaction.application_id;
 
     if (name === "referralstats") {
-      context.waitUntil(handleReferralStats(interaction, token, threadId, appId));
+      context.waitUntil(handleReferralStats(interaction, token, threadId, appId, referralCodes));
       return json({ type: 5 });
     }
 
