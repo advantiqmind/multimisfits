@@ -905,6 +905,10 @@ async function handleClanStats(interaction, appId) {
 // ---------------------------------------------------------------------------
 // /topdrops
 // ---------------------------------------------------------------------------
+function stripMdLinks(s) {
+  return String(s || "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1");
+}
+
 async function handleTopDrops(interaction, token, chestChannelId, appId) {
   if (!chestChannelId) {
     return patchFollowup(appId, interaction.token, {
@@ -942,9 +946,11 @@ async function handleTopDrops(interaction, token, chestChannelId, appId) {
       const title = (embed.title || "").trim().toLowerCase();
       if (title !== "loot drop" && title !== "loot" && title !== "collection log") continue;
 
-      const rawDesc = (embed.description || "").trim();
+      const rawDesc = stripMdLinks((embed.description || "").trim());
       const authorName = embed.author ? (embed.author.name || "").replace(/<[^>]+>/g, "").trim() : "";
       const player = authorName || "Unknown";
+      const thumbnail = embed.thumbnail && embed.thumbnail.url ? embed.thumbnail.url : "";
+      const image = embed.image && embed.image.url ? embed.image.url : "";
 
       const lines = rawDesc.split("\n").filter((l) => l.trim());
       const itemLines = lines.filter((l) => /^\d+\s*x\s+/.test(l));
@@ -953,7 +959,7 @@ async function handleTopDrops(interaction, token, chestChannelId, appId) {
 
       const eFields = Array.isArray(embed.fields) ? embed.fields : [];
       const valField = eFields.find((f) => (f.name || "").toLowerCase().includes("total value"));
-      const value = valField ? (valField.value || "").replace(/`/g, "").trim() : "";
+      const value = valField ? stripMdLinks((valField.value || "").replace(/`/g, "").trim()) : "";
       const kcField = eFields.find((f) => {
         const n = (f.name || "").toLowerCase();
         return n.includes("completion count") || n.includes("killcount") || n === "kc";
@@ -977,6 +983,8 @@ async function handleTopDrops(interaction, token, chestChannelId, appId) {
         player: player.slice(0, 30),
         items: items.slice(0, 100),
         meta: metaParts.join(" | "),
+        thumbnail,
+        image,
       });
     }
   }
@@ -991,20 +999,19 @@ async function handleTopDrops(interaction, token, chestChannelId, appId) {
     });
   }
 
-  const dropLines = drops.map((d, i) => {
-    let line = `**${i + 1}.** ${d.player} -- ${d.items}`;
-    if (d.meta) line += `\n> ${d.meta}`;
-    return line;
-  });
-
-  await patchFollowup(appId, interaction.token, {
-    embeds: [{
-      title: "Recent Drops",
+  const embeds = drops.map((d, i) => {
+    const e = {
       color: 0xe67e22,
-      description: dropLines.join("\n"),
-      footer: { text: "From the chest channel" },
-    }],
+      description: `**${d.player}** -- ${d.items}${d.meta ? `\n${d.meta}` : ""}`,
+    };
+    if (d.thumbnail) e.thumbnail = { url: d.thumbnail };
+    else if (d.image) e.thumbnail = { url: d.image };
+    return e;
   });
+  embeds[0].title = "Recent Drops";
+  embeds[embeds.length - 1].footer = { text: "From the chest channel" };
+
+  await patchFollowup(appId, interaction.token, { embeds });
 }
 
 // ---------------------------------------------------------------------------
