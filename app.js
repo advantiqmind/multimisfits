@@ -721,6 +721,7 @@ function formatDiscord(text) {
   t = t.replace(/(^|<br>|\n)### ([^\n<]+)/g, '$1<h4 class="dc-h3">$2</h4>');
   t = t.replace(/(^|<br>|\n)## ([^\n<]+)/g, '$1<h3 class="dc-h2">$2</h3>');
   t = t.replace(/(^|<br>|\n)# ([^\n<]+)/g, '$1<h3 class="dc-h1">$2</h3>');
+  t = t.replace(/(dc-h[123]">)\s*(?:[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]\s*)*/gu, "$1");
   t = t.replace(/\n/g, "<br>");
   return t;
 }
