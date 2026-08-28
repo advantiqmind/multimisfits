@@ -794,7 +794,7 @@ function featuredEventHtml(ev) {
   const metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
 
   return `<div class="ev-featured"${imgStyle}>
-    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${badge}</div>
+    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}${interested}
