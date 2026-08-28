@@ -9,6 +9,8 @@
 //   DISCORD_GUILD_ID     (plain)
 //   REFERRAL_THREAD_ID   (plain, optional) - for /referralstats
 //   GIVEAWAY_CHANNEL_ID  (plain, optional) - for /giveawaystats, /giveawaylast
+//   EVENTS_CHANNEL_ID    (plain, optional) - for /event
+//   CHEST_CHANNEL_ID     (plain, optional) - for /topdrops
 
 function hexToUint8Array(hex) {
   const bytes = new Uint8Array(hex.length / 2);
@@ -87,6 +89,21 @@ const COMMANDS = [
   {
     name: "status",
     description: "Check which site features are configured and online",
+    type: 1,
+  },
+  {
+    name: "event",
+    description: "Show the current or next upcoming clan event",
+    type: 1,
+  },
+  {
+    name: "clanstats",
+    description: "Show clan overview from Wise Old Man",
+    type: 1,
+  },
+  {
+    name: "topdrops",
+    description: "Show the most recent valuable drops",
     type: 1,
   },
 ];
@@ -662,6 +679,335 @@ async function handleStatus(interaction, env, appId) {
 }
 
 // ---------------------------------------------------------------------------
+// /event
+// ---------------------------------------------------------------------------
+async function handleEvent(interaction, token, guildId, eventsChannelId, appId) {
+  if (!eventsChannelId || !guildId) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Events channel is not configured.",
+      flags: 64,
+    });
+  }
+
+  const authHeaders = {
+    Authorization: `Bot ${token}`,
+    "User-Agent": "Multi-Misfits clan website",
+  };
+
+  let threads;
+  try {
+    const [activeRes, archivedRes] = await Promise.all([
+      fetch(`https://discord.com/api/v10/guilds/${guildId}/threads/active`, { headers: authHeaders }),
+      fetch(`https://discord.com/api/v10/channels/${eventsChannelId}/threads/archived/public?limit=10`, { headers: authHeaders }),
+    ]);
+    if (!activeRes.ok && !archivedRes.ok) {
+      return patchFollowup(appId, interaction.token, {
+        content: "Could not fetch events from Discord.",
+        flags: 64,
+      });
+    }
+    const activeData = activeRes.ok ? await activeRes.json() : { threads: [] };
+    const archivedData = archivedRes.ok ? await archivedRes.json() : { threads: [] };
+    const active = (activeData.threads || []).filter((t) => t.parent_id === eventsChannelId);
+    const archived = archivedData.threads || [];
+
+    const seen = new Set();
+    threads = [];
+    for (const t of [...active, ...archived]) {
+      if (!seen.has(t.id)) {
+        seen.add(t.id);
+        threads.push(t);
+      }
+    }
+  } catch (e) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not fetch events from Discord.",
+      flags: 64,
+    });
+  }
+
+  threads = threads.filter((t) => !/giveaway/i.test(t.name || ""));
+  if (!threads.length) {
+    return patchFollowup(appId, interaction.token, {
+      embeds: [{
+        title: "No Events",
+        color: 0x95a5a6,
+        description: "No events posted right now.",
+      }],
+    });
+  }
+
+  threads = threads.slice(0, 10);
+  const openingMsgs = await Promise.all(
+    threads.map((t) =>
+      fetch(`https://discord.com/api/v10/channels/${t.id}/messages/${t.id}`, { headers: authHeaders })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)
+    )
+  );
+  const msgMap = new Map();
+  for (const m of openingMsgs) {
+    if (m && m.id) msgMap.set(m.id, m);
+  }
+
+  const now = Date.now();
+  const events = [];
+  for (const t of threads) {
+    const meta = t.thread_metadata || {};
+    const createdAt = meta.create_timestamp || snowflakeToDate(t.id).toISOString();
+    const msg = msgMap.get(t.id);
+    const content = msg ? (msg.content || "").trim() : "";
+    const whenDate = parseEventForgeDateField(content, "When");
+    const endsDate = parseEventForgeDateField(content, "Ends");
+    const name = (t.name || "Event").slice(0, 200);
+    const startTime = whenDate || createdAt;
+    const endTime = endsDate || null;
+
+    const hasLiveTag = /\[LIVE\]/i.test(name);
+    const startMs = new Date(startTime).getTime();
+    const endMs = endTime ? new Date(endTime).getTime() : null;
+
+    let status;
+    if (hasLiveTag) status = "live";
+    else if (meta.archived || (endMs && now >= endMs)) status = "completed";
+    else if (now >= startMs) status = "live";
+    else status = "scheduled";
+
+    events.push({ name, description: content.slice(0, 400), startTime, endTime, status });
+  }
+
+  const live = events.find((e) => e.status === "live");
+  const upcoming = events
+    .filter((e) => e.status === "scheduled")
+    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+  const best = live || (upcoming.length ? upcoming[0] : null);
+
+  if (!best) {
+    return patchFollowup(appId, interaction.token, {
+      embeds: [{
+        title: "No Upcoming Events",
+        color: 0x95a5a6,
+        description: "No live or upcoming events right now. Check [the website](https://multimisfits.us/events.html) for the full schedule.",
+      }],
+    });
+  }
+
+  const fields = [];
+  if (best.status === "live") {
+    fields.push({ name: "Status", value: "LIVE NOW", inline: true });
+    if (best.endTime) {
+      const diff = new Date(best.endTime).getTime() - now;
+      if (diff > 0) {
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const mn = Math.floor((diff % 3600000) / 60000);
+        const cd = d > 0 ? `${d}d ${h}h left` : h > 0 ? `${h}h ${mn}m left` : `${mn}m left`;
+        fields.push({ name: "Ends", value: `${formatDate(best.endTime)} (${cd})`, inline: true });
+      } else {
+        fields.push({ name: "Ends", value: formatDate(best.endTime), inline: true });
+      }
+    }
+  } else {
+    const diff = new Date(best.startTime).getTime() - now;
+    if (diff > 0) {
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const mn = Math.floor((diff % 3600000) / 60000);
+      const cd = d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${mn}m` : `${mn}m`;
+      fields.push({ name: "Starts In", value: cd, inline: true });
+    }
+    fields.push({ name: "When", value: formatDate(best.startTime), inline: true });
+    if (best.endTime) {
+      fields.push({ name: "Ends", value: formatDate(best.endTime), inline: true });
+    }
+  }
+
+  let desc = best.description || "";
+  desc = desc.replace(/^.*?(?:When|Ends|Location|Hosted by|Host):.+$/gim, "").trim();
+  desc = desc.replace(/\n{3,}/g, "\n\n");
+  if (desc.length > 250) desc = desc.slice(0, 250) + "...";
+
+  const displayName = best.name.replace(/\[LIVE\]\s*/i, "").trim();
+  const color = best.status === "live" ? 0xe74c3c : 0x3498db;
+
+  await patchFollowup(appId, interaction.token, {
+    embeds: [{
+      title: displayName,
+      color,
+      description: desc || undefined,
+      fields,
+      footer: { text: best.status === "live" ? "Happening now!" : "multimisfits.us/events.html" },
+    }],
+  });
+}
+
+// ---------------------------------------------------------------------------
+// /clanstats
+// ---------------------------------------------------------------------------
+async function handleClanStats(interaction, appId) {
+  let group;
+  try {
+    const res = await fetch(`https://api.wiseoldman.net/v2/groups/${WOM_GROUP_ID}`, {
+      headers: { "User-Agent": "Multi-Misfits clan website (WOM group 26075)" },
+    });
+    if (!res.ok) {
+      return patchFollowup(appId, interaction.token, {
+        content: "Could not reach Wise Old Man. Try again later.",
+        flags: 64,
+      });
+    }
+    group = await res.json();
+  } catch (e) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not reach Wise Old Man. Try again later.",
+      flags: 64,
+    });
+  }
+
+  const memberships = Array.isArray(group.memberships) ? group.memberships : [];
+  const memberCount = memberships.length;
+
+  const totalXP = memberships.reduce((sum, m) => {
+    return sum + (m.player && typeof m.player.exp === "number" ? m.player.exp : 0);
+  }, 0);
+
+  const byEHB = memberships
+    .filter((m) => m.player && typeof m.player.ehb === "number" && m.player.ehb > 0)
+    .sort((a, b) => b.player.ehb - a.player.ehb)
+    .slice(0, 3);
+  const topEHB = byEHB.length
+    ? byEHB.map((m, i) => `**${i + 1}.** ${m.player.displayName || m.player.username} -- ${m.player.ehb.toFixed(1)} EHB`).join("\n")
+    : "No data";
+
+  const byXP = memberships
+    .filter((m) => m.player && typeof m.player.exp === "number")
+    .sort((a, b) => b.player.exp - a.player.exp)
+    .slice(0, 3);
+  const topXP = byXP.length
+    ? byXP.map((m, i) => `**${i + 1}.** ${m.player.displayName || m.player.username} -- ${formatXP(m.player.exp)}`).join("\n")
+    : "No data";
+
+  await patchFollowup(appId, interaction.token, {
+    embeds: [{
+      title: "Multi-Misfits Clan Stats",
+      color: 0xf1c40f,
+      fields: [
+        { name: "Members", value: String(memberCount), inline: true },
+        { name: "Total Clan XP", value: formatXP(totalXP), inline: true },
+        { name: "Top EHB", value: topEHB, inline: false },
+        { name: "Top XP", value: topXP, inline: false },
+      ],
+      footer: { text: "Data from Wise Old Man" },
+    }],
+  });
+}
+
+// ---------------------------------------------------------------------------
+// /topdrops
+// ---------------------------------------------------------------------------
+async function handleTopDrops(interaction, token, chestChannelId, appId) {
+  if (!chestChannelId) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Chest channel is not configured.",
+      flags: 64,
+    });
+  }
+
+  let messages;
+  try {
+    const res = await fetch(
+      `https://discord.com/api/v10/channels/${chestChannelId}/messages?limit=50`,
+      { headers: { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" } }
+    );
+    if (!res.ok) {
+      return patchFollowup(appId, interaction.token, {
+        content: "Could not fetch drops from Discord.",
+        flags: 64,
+      });
+    }
+    messages = await res.json();
+  } catch (e) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not fetch drops from Discord.",
+      flags: 64,
+    });
+  }
+
+  const drops = [];
+  for (const m of (Array.isArray(messages) ? messages : [])) {
+    if (drops.length >= 5) break;
+    const embeds = Array.isArray(m.embeds) ? m.embeds : [];
+    for (const embed of embeds) {
+      if (drops.length >= 5) break;
+      const title = (embed.title || "").trim().toLowerCase();
+      if (title !== "loot drop" && title !== "loot" && title !== "collection log") continue;
+
+      const rawDesc = (embed.description || "").trim();
+      const authorName = embed.author ? (embed.author.name || "").replace(/<[^>]+>/g, "").trim() : "";
+      const player = authorName || "Unknown";
+
+      const lines = rawDesc.split("\n").filter((l) => l.trim());
+      const itemLines = lines.filter((l) => /^\d+\s*x\s+/.test(l));
+      const fromLine = lines.find((l) => /^From:\s*/i.test(l));
+      const source = fromLine ? fromLine.replace(/^From:\s*/i, "").trim() : "";
+
+      const eFields = Array.isArray(embed.fields) ? embed.fields : [];
+      const valField = eFields.find((f) => (f.name || "").toLowerCase().includes("total value"));
+      const value = valField ? (valField.value || "").replace(/`/g, "").trim() : "";
+      const kcField = eFields.find((f) => {
+        const n = (f.name || "").toLowerCase();
+        return n.includes("completion count") || n.includes("killcount") || n === "kc";
+      });
+      const kc = kcField ? (kcField.value || "").replace(/`/g, "").trim() : "";
+
+      let items;
+      if (itemLines.length > 0) {
+        items = itemLines.slice(0, 3).map((l) => l.trim()).join(", ");
+        if (itemLines.length > 3) items += ` +${itemLines.length - 3} more`;
+      } else {
+        items = source ? `Loot from ${source}` : lines[0] || "Drop";
+      }
+
+      const metaParts = [];
+      if (source) metaParts.push(source);
+      if (value) metaParts.push(value);
+      if (kc) metaParts.push(kc + " KC");
+
+      drops.push({
+        player: player.slice(0, 30),
+        items: items.slice(0, 100),
+        meta: metaParts.join(" | "),
+      });
+    }
+  }
+
+  if (!drops.length) {
+    return patchFollowup(appId, interaction.token, {
+      embeds: [{
+        title: "No Recent Drops",
+        color: 0x95a5a6,
+        description: "No drops recorded recently.",
+      }],
+    });
+  }
+
+  const dropLines = drops.map((d, i) => {
+    let line = `**${i + 1}.** ${d.player} -- ${d.items}`;
+    if (d.meta) line += `\n> ${d.meta}`;
+    return line;
+  });
+
+  await patchFollowup(appId, interaction.token, {
+    embeds: [{
+      title: "Recent Drops",
+      color: 0xe67e22,
+      description: dropLines.join("\n"),
+      footer: { text: "From the chest channel" },
+    }],
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Shared: patch followup message
 // ---------------------------------------------------------------------------
 async function patchFollowup(appId, interactionToken, payload) {
@@ -738,6 +1084,21 @@ export async function onRequest(context) {
 
     if (name === "status") {
       context.waitUntil(handleStatus(interaction, env, appId));
+      return json({ type: 5 });
+    }
+
+    if (name === "event") {
+      context.waitUntil(handleEvent(interaction, token, guildId, env.EVENTS_CHANNEL_ID, appId));
+      return json({ type: 5 });
+    }
+
+    if (name === "clanstats") {
+      context.waitUntil(handleClanStats(interaction, appId));
+      return json({ type: 5 });
+    }
+
+    if (name === "topdrops") {
+      context.waitUntil(handleTopDrops(interaction, token, env.CHEST_CHANNEL_ID, appId));
       return json({ type: 5 });
     }
 
