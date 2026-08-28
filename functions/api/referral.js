@@ -1,10 +1,12 @@
 // Cloudflare Pages Function  ->  POST /api/referral
 // Validates a referral code against REFERRAL_CODES env var.
 // Returns the Discord invite URL only when the code is valid.
+// On success, fires a Discord webhook so mods see the redemption.
 //
 // Required env (set in Cloudflare Pages -> Settings -> Environment variables):
-//   REFERRAL_CODES   (plain) - comma-separated valid codes, e.g. "TEQUILA,FLASH,KOI"
-//   DISCORD_INVITE   (plain, optional) - override invite URL; defaults to hardcoded link
+//   REFERRAL_CODES       (plain) - comma-separated valid codes, e.g. "TEQUILA,FLASH,KOI"
+//   DISCORD_INVITE       (plain, optional) - override invite URL; defaults to hardcoded link
+//   REFERRAL_WEBHOOK_URL (plain, optional) - Discord webhook URL for tracking redemptions
 
 const DEFAULT_INVITE = "https://discord.gg/kT4vEGnjgU";
 
@@ -51,6 +53,32 @@ export async function onRequest(context) {
     return json({ valid: false }, 200);
   }
 
+  const webhookUrl = context.env && context.env.REFERRAL_WEBHOOK_URL;
+  if (webhookUrl) {
+    context.waitUntil(notifyReferral(webhookUrl, submitted));
+  }
+
   const invite = (context.env && context.env.DISCORD_INVITE) || DEFAULT_INVITE;
   return json({ valid: true, invite });
+}
+
+async function notifyReferral(webhookUrl, code) {
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        embeds: [{
+          title: "Referral Code Redeemed",
+          color: 0x2ecc71,
+          fields: [
+            { name: "Code", value: code, inline: true },
+            { name: "Time", value: new Date().toUTCString(), inline: true },
+          ],
+        }],
+      }),
+    });
+  } catch (e) {
+    // webhook failure should never break the referral flow
+  }
 }
