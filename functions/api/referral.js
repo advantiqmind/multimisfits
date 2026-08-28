@@ -76,7 +76,6 @@ async function notifyReferral(token, threadId, code) {
       `https://discord.com/api/v10/channels/${threadId}/messages?limit=100`,
       { headers: authHeaders }
     );
-    let total = 0;
     let codeCount = 0;
     if (msgsRes.ok) {
       const msgs = await msgsRes.json();
@@ -84,9 +83,7 @@ async function notifyReferral(token, threadId, code) {
         if (!Array.isArray(m.embeds) || !m.embeds.length) continue;
         const fields = m.embeds[0].fields || [];
         const codeField = fields.find(f => f.name === "Code");
-        if (!codeField) continue;
-        total++;
-        if (codeField.value === code) codeCount++;
+        if (codeField && codeField.value === code) codeCount++;
       }
     }
 
@@ -101,9 +98,8 @@ async function notifyReferral(token, threadId, code) {
             color: 0x2ecc71,
             fields: [
               { name: "Code", value: code, inline: true },
-              { name: "Code Uses", value: String(codeCount + 1), inline: true },
-              { name: "Total Redemptions", value: String(total + 1), inline: true },
-              { name: "Time", value: new Date().toUTCString(), inline: false },
+              { name: "Time", value: new Date().toUTCString(), inline: true },
+              { name: "Total Redemptions", value: String(codeCount + 1), inline: true },
             ],
           }],
         }),
