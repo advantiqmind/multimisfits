@@ -1423,9 +1423,11 @@ async function showWinnerToast() {
     var data = await r.json();
     if (!data || !data.configured || !Array.isArray(data.rounds) || !data.rounds.length) return;
     var winner = null;
+    var roundName = "";
     for (var i = 0; i < data.rounds.length; i++) {
       if (data.rounds[i].winners && data.rounds[i].winners.length) {
         winner = data.rounds[i].winners[0].name;
+        roundName = data.rounds[i].name || "";
         break;
       }
     }
@@ -1438,6 +1440,7 @@ async function showWinnerToast() {
       '<div class="ga-winner-toast-body">' +
         '<div class="ga-winner-toast-title">Giveaway Winner!</div>' +
         '<div class="ga-winner-toast-name">' + esc(winner) + '</div>' +
+        (roundName ? '<div class="ga-winner-toast-round">' + esc(roundName) + '</div>' : '') +
       '</div>' +
       '<button class="ga-winner-toast-close" aria-label="Close">&times;</button>';
     document.body.appendChild(toast);
