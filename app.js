@@ -1443,7 +1443,27 @@ async function showWinnerToast() {
     document.body.appendChild(toast);
     var cdToast = document.getElementById("cd-toast");
     if (cdToast && cdToast.classList.contains("cd-toast-show")) toast.classList.add("cd-bumped");
-    requestAnimationFrame(function() { toast.classList.add("ga-winner-toast-show"); });
+    requestAnimationFrame(function() {
+      toast.classList.add("ga-winner-toast-show");
+      var colors = ["#ffd700","#ffcb2f","#c9a227","#fff0a0","#e0a81f","#ffa500"];
+      function spawnConfetti() {
+        for (var i = 0; i < 3; i++) {
+          var c = document.createElement("span");
+          c.className = "ga-confetti";
+          c.style.left = Math.random() * 100 + "%";
+          c.style.background = colors[Math.floor(Math.random() * colors.length)];
+          c.style.animationDuration = (1.2 + Math.random() * 1.2) + "s";
+          c.style.animationDelay = (Math.random() * 0.4) + "s";
+          c.style.width = (3 + Math.random() * 4) + "px";
+          c.style.height = (3 + Math.random() * 4) + "px";
+          toast.appendChild(c);
+          c.addEventListener("animationend", function() { this.remove(); });
+        }
+      }
+      spawnConfetti();
+      var confettiInt = setInterval(spawnConfetti, 600);
+      setTimeout(function() { clearInterval(confettiInt); }, 6000);
+    });
     toast.querySelector(".ga-winner-toast-close").addEventListener("click", function() {
       toast.classList.remove("ga-winner-toast-show");
       try { localStorage.setItem(key, "1"); } catch (e) {}

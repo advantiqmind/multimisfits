@@ -310,11 +310,13 @@ th.sortable.sort-desc::after{content:"▼";opacity:1;color:var(--gold)}
 @keyframes ga-shimmer{to{left:100%}}
 @keyframes ga-glow-pulse{0%,100%{border-bottom-color:var(--gold-dim);box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 10px rgba(255,215,0,.08)}50%{border-bottom-color:#ffd700;box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 16px rgba(255,215,0,.18)}}
 .ga-winner-toast-icon{font-size:1.6rem;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(255,215,0,.3))}
-.ga-winner-toast-body{flex:1;min-width:0}
-.ga-winner-toast-title{font-family:"Jersey 15",monospace;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
-.ga-winner-toast-name{font-family:"Cinzel",serif;font-weight:700;font-size:1rem;color:#ffd700;margin-top:2px}
-.ga-winner-toast-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:4px;margin-left:4px;line-height:1}
+.ga-winner-toast-body{flex:none;text-align:center}
+.ga-winner-toast-title{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.ga-winner-toast-name{font-family:"Cinzel",serif;font-weight:800;font-size:1.3rem;color:#ffd700;margin-top:2px;text-shadow:0 0 8px rgba(255,215,0,.3)}
+.ga-winner-toast-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:4px;margin-left:4px;line-height:1;z-index:2;position:relative}
 .ga-winner-toast-close:hover{color:#fff}
+.ga-confetti{position:absolute;top:-6px;width:5px;height:5px;border-radius:1px;opacity:.85;pointer-events:none;animation:ga-confetti-fall linear forwards}
+@keyframes ga-confetti-fall{0%{transform:translateY(0) rotate(0deg);opacity:.85}80%{opacity:.6}100%{transform:translateY(60px) rotate(360deg);opacity:0}}
 @media(max-width:600px){.ga-winner-toast{left:12px;right:12px;max-width:none;transform:translateY(-20px)}.ga-winner-toast.ga-winner-toast-show{transform:translateY(0)}.ga-winner-toast.cd-bumped{top:136px}}
 
 /* countdown toast (24h before event) */
