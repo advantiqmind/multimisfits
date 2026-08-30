@@ -62,7 +62,7 @@ function capitalizeName(name) {
   return name.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-const MAX_ENTRIES_PER_PERSON = 2;
+const MAX_ENTRIES_PER_PERSON = 5;
 
 export function extractEntryCountFromReactions(reactions) {
   if (!Array.isArray(reactions) || !reactions.length) return 0;
@@ -78,11 +78,13 @@ export function extractEntryCountFromReactions(reactions) {
 export function extractBotEntry(message) {
   if (!Array.isArray(message.embeds) || !message.embeds.length) return null;
   var embed = message.embeds[0];
-  if ((embed.title || "").trim() !== "Entry Added") return null;
+  var title = (embed.title || "").trim();
+  if (title !== "Entry Added" && title !== "Entry Removed") return null;
   var fields = embed.fields || [];
   var playerField = fields.find(function (f) { return f.name === "Player"; });
-  var entriesField = fields.find(function (f) { return f.name === "Entries"; });
   if (!playerField) return null;
+  if (title === "Entry Removed") return { player: playerField.value.trim(), count: 0 };
+  var entriesField = fields.find(function (f) { return f.name === "Entries"; });
   var count = entriesField ? parseInt(entriesField.value, 10) : 1;
   return {
     player: playerField.value.trim(),
@@ -131,16 +133,16 @@ export function transformGiveawayData(threads, threadMessages) {
       const botEntry = extractBotEntry(m);
       if (botEntry) {
         const participantKey = "manual:" + botEntry.player.toLowerCase();
-        const existing = participantCounts.get(participantKey) || 0;
-        const allowed = Math.min(botEntry.count, MAX_ENTRIES_PER_PERSON - existing);
-        if (allowed <= 0) continue;
-        entries.push({
-          player: botEntry.player,
-          playerId: participantKey,
-          count: allowed,
-          timestamp: m.timestamp,
-        });
-        participantCounts.set(participantKey, existing + allowed);
+        if (participantCounts.has(participantKey)) continue;
+        participantCounts.set(participantKey, botEntry.count);
+        if (botEntry.count > 0) {
+          entries.push({
+            player: botEntry.player,
+            playerId: participantKey,
+            count: botEntry.count,
+            timestamp: m.timestamp,
+          });
+        }
         continue;
       }
 

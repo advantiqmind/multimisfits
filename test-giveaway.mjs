@@ -152,10 +152,10 @@ check("null returns 0", extractEntryCountFromReactions(null) === 0);
 check("undefined returns 0", extractEntryCountFromReactions(undefined) === 0);
 check("unrelated emoji returns 0", extractEntryCountFromReactions([{ emoji: { name: "👍" }, count: 1 }]) === 0);
 check("checkmark returns 0", extractEntryCountFromReactions([{ emoji: { name: "✅" }, count: 1 }]) === 0);
-check("both 1 and 2 capped at 2", extractEntryCountFromReactions([
+check("both 1 and 2 gives 3", extractEntryCountFromReactions([
   { emoji: { name: "1️⃣" }, count: 1 },
   { emoji: { name: "2️⃣" }, count: 1 },
-]) === 2);
+]) === 3);
 check("mixed reactions only counts keycaps", extractEntryCountFromReactions([
   { emoji: { name: "👍" }, count: 3 },
   { emoji: { name: "1️⃣" }, count: 1 },
@@ -289,11 +289,11 @@ const multiPostMessages = buildMessages("2001", [
 const cappedRounds = transformGiveawayData([THREAD_ACTIVE], multiPostMessages);
 check("two entry records for same person", cappedRounds[0].entries.length === 2);
 check("first post gives 1 entry", cappedRounds[0].entries[0].count === 1);
-check("second post capped to 1 (not 2)", cappedRounds[0].entries[1].count === 1);
-check("totalEntries capped at 2", cappedRounds[0].totalEntries === 2);
+check("second post gives 2 entries (under cap of 5)", cappedRounds[0].entries[1].count === 2);
+check("totalEntries is 3", cappedRounds[0].totalEntries === 3);
 check("only 1 unique participant", cappedRounds[0].totalParticipants === 1);
 
-// ---- person already at cap gets 0 from third post ----
+// ---- person at cap gets nothing from extra posts ----
 console.log("\n== person at cap gets nothing from extra posts ==");
 const overCapMessages = buildMessages("2001", [
   OPENING_MSG,
@@ -315,9 +315,9 @@ const overCapMessages = buildMessages("2001", [
   },
 ]);
 const overCapRounds = transformGiveawayData([THREAD_ACTIVE], overCapMessages);
-check("only 1 entry record (second post skipped)", overCapRounds[0].entries.length === 1);
-check("entry count is 2", overCapRounds[0].entries[0].count === 2);
-check("totalEntries is 2", overCapRounds[0].totalEntries === 2);
+check("both posts counted under cap of 5", overCapRounds[0].entries.length === 2);
+check("first entry count is 2", overCapRounds[0].entries[0].count === 2);
+check("totalEntries is 3", overCapRounds[0].totalEntries === 3);
 
 // ---- trophy winner detection edge cases ----
 console.log("\n== trophy winner: pinned fallback (no trophy) ==");
@@ -485,10 +485,19 @@ check("defaults to 1 entry when Entries field missing", be1 && be1.count === 1);
 const beCapped = extractBotEntry({
   embeds: [{ title: "Entry Added", fields: [
     { name: "Player", value: "TestPlayer" },
-    { name: "Entries", value: "5" },
+    { name: "Entries", value: "10" },
   ]}],
 });
-check("caps at MAX_ENTRIES_PER_PERSON", beCapped && beCapped.count === 2);
+check("caps at MAX_ENTRIES_PER_PERSON", beCapped && beCapped.count === 5);
+
+const beRemoved = extractBotEntry({
+  embeds: [{ title: "Entry Removed", fields: [
+    { name: "Player", value: "TestPlayer" },
+    { name: "Removed by", value: "Leader" },
+  ]}],
+});
+check("Entry Removed returns count 0", beRemoved && beRemoved.count === 0);
+check("Entry Removed preserves player", beRemoved && beRemoved.player === "TestPlayer");
 
 // ---- transformGiveawayData: bot-posted entries ----
 console.log("\n== transformGiveawayData: bot-posted entries ==");
@@ -503,10 +512,9 @@ check("totalEntries includes bot entry", botRounds[0].totalEntries === 3);
 check("totalParticipants counts both", botRounds[0].totalParticipants === 2);
 check("bot entry player name preserved", botRounds[0].entries[0].player === "Vilence");
 
-console.log("\n== bot entries: per-person cap ==");
+console.log("\n== bot entries: latest wins (set behavior) ==");
 const botDoubleMessages = buildMessages("2001", [
   OPENING_MSG,
-  botEntryMsg,
   {
     ...botEntryMsg,
     id: "7002",
@@ -519,10 +527,11 @@ const botDoubleMessages = buildMessages("2001", [
       ],
     }],
   },
+  botEntryMsg,
 ]);
 const botCapRounds = transformGiveawayData([THREAD_ACTIVE], botDoubleMessages);
-check("bot entries capped at 2 per player", botCapRounds[0].totalEntries === 2);
-check("only first bot entry counted when at cap", botCapRounds[0].entries.length === 1);
+check("latest bot entry wins (first in list = newest)", botCapRounds[0].totalEntries === 1);
+check("only latest bot entry counted", botCapRounds[0].entries.length === 1);
 
 console.log("\n== bot entries: case insensitive dedup ==");
 const botCaseMessages = buildMessages("2001", [
@@ -542,6 +551,26 @@ const botCaseMessages = buildMessages("2001", [
 ]);
 const botCaseRounds = transformGiveawayData([THREAD_ACTIVE], botCaseMessages);
 check("case-insensitive player dedup for bot entries", botCaseRounds[0].totalEntries === 2);
+
+console.log("\n== bot entries: Entry Removed sets to 0 ==");
+const botRemovedMessages = buildMessages("2001", [
+  OPENING_MSG,
+  {
+    id: "7010",
+    content: "",
+    author: { id: "999", global_name: "Bot", username: "bot" },
+    embeds: [{ title: "Entry Removed", fields: [
+      { name: "Player", value: "Vilence", inline: true },
+      { name: "Removed by", value: "mr flsh", inline: true },
+    ]}],
+    mentions: [], attachments: [], reactions: [],
+  },
+  botEntryMsg,
+]);
+const botRemovedRounds = transformGiveawayData([THREAD_ACTIVE], botRemovedMessages);
+check("Entry Removed zeroes out player", botRemovedRounds[0].totalEntries === 0);
+check("removed player not in entries list", botRemovedRounds[0].entries.length === 0);
+check("removed player still counted as participant", botRemovedRounds[0].totalParticipants === 1);
 
 console.log(`\n${pass + fail} checks: ${pass} passed, ${fail} failed`);
 if (fail) {

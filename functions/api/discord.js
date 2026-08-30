@@ -139,11 +139,11 @@ const COMMANDS = [
       },
       {
         name: "entries",
-        description: "Number of entries (1 or 2)",
+        description: "Set total entries for this player (0 to remove)",
         type: 4,
         required: true,
-        min_value: 1,
-        max_value: 2,
+        min_value: 0,
+        max_value: 5,
       },
     ],
   },
@@ -243,7 +243,7 @@ async function handleReferralStats(interaction, token, threadId, appId, referral
 // ---------------------------------------------------------------------------
 const MAX_GIVEAWAY_ROUNDS = 10;
 const GIVEAWAY_CYCLE_DAYS = 14;
-const MAX_ENTRIES_PER_PERSON = 2;
+const MAX_ENTRIES_PER_PERSON = 5;
 
 function snowflakeToDate(id) {
   const DISCORD_EPOCH = 1420070400000;
@@ -297,11 +297,13 @@ function capitalizeName(name) {
 function extractBotEntryFromEmbed(message) {
   if (!Array.isArray(message.embeds) || !message.embeds.length) return null;
   const embed = message.embeds[0];
-  if ((embed.title || "").trim() !== "Entry Added") return null;
+  const title = (embed.title || "").trim();
+  if (title !== "Entry Added" && title !== "Entry Removed") return null;
   const fields = embed.fields || [];
   const playerField = fields.find((f) => f.name === "Player");
-  const entriesField = fields.find((f) => f.name === "Entries");
   if (!playerField) return null;
+  if (title === "Entry Removed") return { player: playerField.value.trim(), count: 0 };
+  const entriesField = fields.find((f) => f.name === "Entries");
   const count = entriesField ? parseInt(entriesField.value, 10) : 1;
   return {
     player: playerField.value.trim(),
@@ -396,11 +398,11 @@ async function fetchGiveawayRounds(token, guildId, channelId) {
       const botEntry = extractBotEntryFromEmbed(m);
       if (botEntry) {
         const key = "manual:" + botEntry.player.toLowerCase();
-        const existing = participantCounts.get(key) || 0;
-        const allowed = Math.min(botEntry.count, MAX_ENTRIES_PER_PERSON - existing);
-        if (allowed <= 0) continue;
-        entries.push({ player: botEntry.player, count: allowed });
-        participantCounts.set(key, existing + allowed);
+        if (participantCounts.has(key)) continue;
+        participantCounts.set(key, botEntry.count);
+        if (botEntry.count > 0) {
+          entries.push({ player: botEntry.player, count: botEntry.count });
+        }
         continue;
       }
 
@@ -1121,7 +1123,7 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
   const options = (interaction.data && interaction.data.options) || [];
   const playerOpt = options.find((o) => o.name === "player");
   const entriesOpt = options.find((o) => o.name === "entries");
-  const player = playerOpt ? playerOpt.value.trim() : "";
+  let player = playerOpt ? playerOpt.value.trim() : "";
   const entryCount = entriesOpt ? entriesOpt.value : 1;
 
   if (!player) {
@@ -1131,9 +1133,42 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
     });
   }
 
+  const mentionMatch = player.match(/^<@!?(\d+)>$/);
+  if (mentionMatch) {
+    try {
+      const memberRes = await fetch(
+        `https://discord.com/api/v10/guilds/${interaction.guild_id}/members/${mentionMatch[1]}`,
+        {
+          headers: {
+            Authorization: `Bot ${token}`,
+            "User-Agent": "Multi-Misfits clan website",
+          },
+        }
+      );
+      if (memberRes.ok) {
+        const member = await memberRes.json();
+        player = member.nick
+          || (member.user && (member.user.global_name || member.user.username))
+          || player;
+      }
+    } catch (e) { /* keep raw mention as fallback */ }
+  }
+
   const addedBy = interaction.member && interaction.member.user
     ? (interaction.member.user.global_name || interaction.member.user.username || "Leader")
     : "Leader";
+
+  const isRemoval = entryCount === 0;
+  const embedTitle = isRemoval ? "Entry Removed" : "Entry Added";
+  const embedColor = isRemoval ? 0xe74c3c : 0x2ecc71;
+
+  const fields = [
+    { name: "Player", value: player, inline: true },
+  ];
+  if (!isRemoval) {
+    fields.push({ name: "Entries", value: String(entryCount), inline: true });
+  }
+  fields.push({ name: isRemoval ? "Removed by" : "Added by", value: addedBy, inline: true });
 
   const postRes = await fetch(
     `https://discord.com/api/v10/channels/${interaction.channel_id}/messages`,
@@ -1144,17 +1179,7 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
         "Content-Type": "application/json",
         "User-Agent": "Multi-Misfits clan website",
       },
-      body: JSON.stringify({
-        embeds: [{
-          title: "Entry Added",
-          color: 0x2ecc71,
-          fields: [
-            { name: "Player", value: player, inline: true },
-            { name: "Entries", value: String(entryCount), inline: true },
-            { name: "Added by", value: addedBy, inline: true },
-          ],
-        }],
-      }),
+      body: JSON.stringify({ embeds: [{ title: embedTitle, color: embedColor, fields }] }),
     }
   );
 
@@ -1165,10 +1190,10 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
     });
   }
 
-  await patchFollowup(appId, interaction.token, {
-    content: `Added ${entryCount} ${entryCount === 1 ? "entry" : "entries"} for **${player}**.`,
-    flags: 64,
-  });
+  const msg = isRemoval
+    ? `Removed entries for **${player}**.`
+    : `Set **${player}** to ${entryCount} ${entryCount === 1 ? "entry" : "entries"}.`;
+  await patchFollowup(appId, interaction.token, { content: msg, flags: 64 });
 }
 
 // ---------------------------------------------------------------------------
