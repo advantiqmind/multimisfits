@@ -68,7 +68,6 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     DISCORD_PUBLIC_KEY       (plain) <- from Discord Developer Portal, for slash commands
     DISCORD_CLIENT_ID        (plain)  <- OAuth2 client ID from Discord Developer Portal
     DISCORD_CLIENT_SECRET    (secret) <- OAuth2 client secret
-    AUTH_SESSION_SECRET       (secret) <- random string for signing session cookies
 
 ## Bindings (Cloudflare Pages > Settings > Functions)
     DB  ->  D1 database "multimisfits-auth"  (auth sessions table)
