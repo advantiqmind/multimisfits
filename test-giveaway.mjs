@@ -3,6 +3,7 @@ import {
   parsePrize,
   parseEntryRate,
   extractEntryCountFromReactions,
+  extractBotEntry,
   parseEventForgeDateField,
 } from "./functions/api/giveaway.js";
 
@@ -446,6 +447,101 @@ const noWinnerMessages = buildMessages("2001", [
 ]);
 const noWinnerRounds = transformGiveawayData([THREAD_ACTIVE], noWinnerMessages);
 check("no winners when no trophy or pinned", noWinnerRounds[0].winners.length === 0);
+
+// ---- extractBotEntry tests ----
+console.log("\n== extractBotEntry ==");
+const botEntryMsg = {
+  id: "7001",
+  content: "",
+  author: { id: "999", global_name: "Bot", username: "bot" },
+  embeds: [{
+    title: "Entry Added",
+    fields: [
+      { name: "Player", value: "Vilence", inline: true },
+      { name: "Entries", value: "2", inline: true },
+      { name: "Added by", value: "mr flsh", inline: true },
+    ],
+  }],
+  mentions: [],
+  attachments: [],
+  reactions: [],
+};
+const be = extractBotEntry(botEntryMsg);
+check("extracts bot entry", be !== null);
+check("bot entry player", be && be.player === "Vilence");
+check("bot entry count", be && be.count === 2);
+
+check("returns null for no embeds", extractBotEntry({ embeds: [] }) === null);
+check("returns null for wrong title", extractBotEntry({ embeds: [{ title: "Loot Drop" }] }) === null);
+check("returns null for missing Player field", extractBotEntry({
+  embeds: [{ title: "Entry Added", fields: [{ name: "Entries", value: "1" }] }],
+}) === null);
+
+const be1 = extractBotEntry({
+  embeds: [{ title: "Entry Added", fields: [{ name: "Player", value: "TestPlayer" }] }],
+});
+check("defaults to 1 entry when Entries field missing", be1 && be1.count === 1);
+
+const beCapped = extractBotEntry({
+  embeds: [{ title: "Entry Added", fields: [
+    { name: "Player", value: "TestPlayer" },
+    { name: "Entries", value: "5" },
+  ]}],
+});
+check("caps at MAX_ENTRIES_PER_PERSON", beCapped && beCapped.count === 2);
+
+// ---- transformGiveawayData: bot-posted entries ----
+console.log("\n== transformGiveawayData: bot-posted entries ==");
+const botEntryMessages = buildMessages("2001", [
+  OPENING_MSG,
+  botEntryMsg,
+  SCREENSHOT_1_ENTRY,
+]);
+const botRounds = transformGiveawayData([THREAD_ACTIVE], botEntryMessages);
+check("bot entry counted alongside reaction entry", botRounds[0].entries.length === 2);
+check("totalEntries includes bot entry", botRounds[0].totalEntries === 3);
+check("totalParticipants counts both", botRounds[0].totalParticipants === 2);
+check("bot entry player name preserved", botRounds[0].entries[0].player === "Vilence");
+
+console.log("\n== bot entries: per-person cap ==");
+const botDoubleMessages = buildMessages("2001", [
+  OPENING_MSG,
+  botEntryMsg,
+  {
+    ...botEntryMsg,
+    id: "7002",
+    embeds: [{
+      title: "Entry Added",
+      fields: [
+        { name: "Player", value: "Vilence", inline: true },
+        { name: "Entries", value: "1", inline: true },
+        { name: "Added by", value: "mr flsh", inline: true },
+      ],
+    }],
+  },
+]);
+const botCapRounds = transformGiveawayData([THREAD_ACTIVE], botDoubleMessages);
+check("bot entries capped at 2 per player", botCapRounds[0].totalEntries === 2);
+check("only first bot entry counted when at cap", botCapRounds[0].entries.length === 1);
+
+console.log("\n== bot entries: case insensitive dedup ==");
+const botCaseMessages = buildMessages("2001", [
+  OPENING_MSG,
+  botEntryMsg,
+  {
+    ...botEntryMsg,
+    id: "7003",
+    embeds: [{
+      title: "Entry Added",
+      fields: [
+        { name: "Player", value: "vilence", inline: true },
+        { name: "Entries", value: "1", inline: true },
+      ],
+    }],
+  },
+]);
+const botCaseRounds = transformGiveawayData([THREAD_ACTIVE], botCaseMessages);
+check("case-insensitive player dedup for bot entries", botCaseRounds[0].totalEntries === 2);
 
 console.log(`\n${pass + fail} checks: ${pass} passed, ${fail} failed`);
 if (fail) {

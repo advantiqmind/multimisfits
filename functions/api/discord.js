@@ -126,6 +126,27 @@ const COMMANDS = [
       },
     ],
   },
+  {
+    name: "giveaway-entry",
+    description: "Manually add a player entry to the current giveaway thread",
+    type: 1,
+    options: [
+      {
+        name: "player",
+        description: "Player name (RSN or Discord name)",
+        type: 3,
+        required: true,
+      },
+      {
+        name: "entries",
+        description: "Number of entries (1 or 2)",
+        type: 4,
+        required: true,
+        min_value: 1,
+        max_value: 2,
+      },
+    ],
+  },
 ];
 
 async function getAppId(token) {
@@ -273,6 +294,21 @@ function capitalizeName(name) {
   return name.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function extractBotEntryFromEmbed(message) {
+  if (!Array.isArray(message.embeds) || !message.embeds.length) return null;
+  const embed = message.embeds[0];
+  if ((embed.title || "").trim() !== "Entry Added") return null;
+  const fields = embed.fields || [];
+  const playerField = fields.find((f) => f.name === "Player");
+  const entriesField = fields.find((f) => f.name === "Entries");
+  if (!playerField) return null;
+  const count = entriesField ? parseInt(entriesField.value, 10) : 1;
+  return {
+    player: playerField.value.trim(),
+    count: isNaN(count) ? 1 : Math.min(Math.max(count, 1), MAX_ENTRIES_PER_PERSON),
+  };
+}
+
 function extractEntryCountFromReactions(reactions) {
   if (!Array.isArray(reactions) || !reactions.length) return 0;
   let count = 0;
@@ -356,6 +392,18 @@ async function fetchGiveawayRounds(token, guildId, channelId) {
     const participantCounts = new Map();
     for (const m of messages) {
       if (m.id === thread.id) continue;
+
+      const botEntry = extractBotEntryFromEmbed(m);
+      if (botEntry) {
+        const key = "manual:" + botEntry.player.toLowerCase();
+        const existing = participantCounts.get(key) || 0;
+        const allowed = Math.min(botEntry.count, MAX_ENTRIES_PER_PERSON - existing);
+        if (allowed <= 0) continue;
+        entries.push({ player: botEntry.player, count: allowed });
+        participantCounts.set(key, existing + allowed);
+        continue;
+      }
+
       const entryCount = extractEntryCountFromReactions(m.reactions);
       if (entryCount <= 0) continue;
       const participant = m.author.global_name || m.author.username || "Unknown";
@@ -1052,6 +1100,78 @@ async function handleTopDrops(interaction, token, chestChannelId, appId) {
 }
 
 // ---------------------------------------------------------------------------
+// /giveaway-entry
+// ---------------------------------------------------------------------------
+async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId) {
+  if (!giveawayChannelId) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Giveaway channel is not configured.",
+      flags: 64,
+    });
+  }
+
+  const channel = interaction.channel || {};
+  if (channel.parent_id !== giveawayChannelId) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Use this command inside a giveaway thread.",
+      flags: 64,
+    });
+  }
+
+  const options = (interaction.data && interaction.data.options) || [];
+  const playerOpt = options.find((o) => o.name === "player");
+  const entriesOpt = options.find((o) => o.name === "entries");
+  const player = playerOpt ? playerOpt.value.trim() : "";
+  const entryCount = entriesOpt ? entriesOpt.value : 1;
+
+  if (!player) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Player name is required.",
+      flags: 64,
+    });
+  }
+
+  const addedBy = interaction.member && interaction.member.user
+    ? (interaction.member.user.global_name || interaction.member.user.username || "Leader")
+    : "Leader";
+
+  const postRes = await fetch(
+    `https://discord.com/api/v10/channels/${interaction.channel_id}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "Multi-Misfits clan website",
+      },
+      body: JSON.stringify({
+        embeds: [{
+          title: "Entry Added",
+          color: 0x2ecc71,
+          fields: [
+            { name: "Player", value: player, inline: true },
+            { name: "Entries", value: String(entryCount), inline: true },
+            { name: "Added by", value: addedBy, inline: true },
+          ],
+        }],
+      }),
+    }
+  );
+
+  if (!postRes.ok) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not post entry. Check bot permissions in this thread.",
+      flags: 64,
+    });
+  }
+
+  await patchFollowup(appId, interaction.token, {
+    content: `Added ${entryCount} ${entryCount === 1 ? "entry" : "entries"} for **${player}**.`,
+    flags: 64,
+  });
+}
+
+// ---------------------------------------------------------------------------
 // /help
 // ---------------------------------------------------------------------------
 async function handleHelp(interaction, appId) {
@@ -1326,6 +1446,11 @@ export async function onRequest(context) {
     if (name === "topdrops") {
       safeWait(handleTopDrops(interaction, token, env.CHEST_CHANNEL_ID, appId));
       return json({ type: 5 });
+    }
+
+    if (name === "giveaway-entry") {
+      safeWait(handleGiveawayEntry(interaction, token, channelId, appId));
+      return json({ type: 5, data: { flags: 64 } });
     }
 
     if (name === "help") {

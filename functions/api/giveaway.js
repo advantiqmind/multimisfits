@@ -75,6 +75,21 @@ export function extractEntryCountFromReactions(reactions) {
   return Math.min(count, MAX_ENTRIES_PER_PERSON);
 }
 
+export function extractBotEntry(message) {
+  if (!Array.isArray(message.embeds) || !message.embeds.length) return null;
+  var embed = message.embeds[0];
+  if ((embed.title || "").trim() !== "Entry Added") return null;
+  var fields = embed.fields || [];
+  var playerField = fields.find(function (f) { return f.name === "Player"; });
+  var entriesField = fields.find(function (f) { return f.name === "Entries"; });
+  if (!playerField) return null;
+  var count = entriesField ? parseInt(entriesField.value, 10) : 1;
+  return {
+    player: playerField.value.trim(),
+    count: isNaN(count) ? 1 : Math.min(Math.max(count, 1), MAX_ENTRIES_PER_PERSON),
+  };
+}
+
 function resolveMentions(text, mentions) {
   if (!text || !Array.isArray(mentions) || !mentions.length) return text;
   let t = text;
@@ -112,6 +127,22 @@ export function transformGiveawayData(threads, threadMessages) {
 
     for (const m of messages) {
       if (m.id === thread.id) continue;
+
+      const botEntry = extractBotEntry(m);
+      if (botEntry) {
+        const participantKey = "manual:" + botEntry.player.toLowerCase();
+        const existing = participantCounts.get(participantKey) || 0;
+        const allowed = Math.min(botEntry.count, MAX_ENTRIES_PER_PERSON - existing);
+        if (allowed <= 0) continue;
+        entries.push({
+          player: botEntry.player,
+          playerId: participantKey,
+          count: allowed,
+          timestamp: m.timestamp,
+        });
+        participantCounts.set(participantKey, existing + allowed);
+        continue;
+      }
 
       const entryCount = extractEntryCountFromReactions(m.reactions);
       if (entryCount <= 0) continue;
