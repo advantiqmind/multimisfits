@@ -82,8 +82,12 @@ Nothing pending.
 ## How things work
 
 ### Giveaways
+- Separate Discord forum channel (GIVEAWAY_CHANNEL_ID) from events.
 - Each round = one forum thread. Leaders react with 1/2 keycap emoji on member
   screenshots to confirm entries (max 2 per person).
+- /giveaway-entry slash command: leaders manually add entries (posts "Entry Added"
+  embed the parser reads). Restricted to leader role via Discord Integrations.
+- Bot embeds parsed by extractBotEntry(): Player + Entries fields, same per-person cap.
 - Stats auto-calculated: total entries, participants, GP raised.
 - Winner detected via trophy emoji in message: @mention > text after trophy
   (greeting words stripped, max 3 words) > message author. Pinned messages as fallback.
@@ -94,6 +98,7 @@ Nothing pending.
 - Winner toast on homepage (dismissable, localStorage per winner).
 - Giveaway threads filtered from events feed (by name containing "giveaway").
 - Tab state persists via URL hash (#giveaways).
+- Forum tags (Bond, Item, Kit, Random, Goodie Bag, GP) set in Discord for categorization.
 
 ### Events
 - Forum threads from events channel, excluding giveaway-named threads.
