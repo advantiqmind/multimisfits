@@ -111,6 +111,21 @@ const COMMANDS = [
     description: "List all available bot commands",
     type: 1,
   },
+  {
+    name: "inactives",
+    description: "Show members who haven't authenticated on the site recently",
+    type: 1,
+    options: [
+      {
+        name: "days",
+        description: "Number of days to check (default 30)",
+        type: 4,
+        required: false,
+        min_value: 1,
+        max_value: 365,
+      },
+    ],
+  },
 ];
 
 async function getAppId(token) {
@@ -682,6 +697,7 @@ async function handleStatus(interaction, env, appId) {
     { name: "Giveaways", ok: !!(env.GIVEAWAY_CHANNEL_ID) },
     { name: "Referral Tracking", ok: !!(env.REFERRAL_THREAD_ID) },
     { name: "Spotlight", ok: !!(env.SPOTLIGHT_CHANNEL_ID) },
+    { name: "Auth Gate", ok: !!(env.DB && env.DISCORD_CLIENT_ID) },
   ];
 
   const lines = checks.map((c) => `${c.ok ? "✅" : "❌"} ${c.name}`);
@@ -1055,6 +1071,159 @@ async function handleHelp(interaction, appId) {
 }
 
 // ---------------------------------------------------------------------------
+// /inactives [days]
+// ---------------------------------------------------------------------------
+async function handleInactives(interaction, env, appId) {
+  if (!env.DB) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Authentication database is not configured.",
+      flags: 64,
+    });
+  }
+
+  const options = (interaction.data && interaction.data.options) || [];
+  const daysOpt = options.find((o) => o.name === "days");
+  const days = daysOpt ? daysOpt.value : 30;
+
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  let allUsers;
+  try {
+    const result = await env.DB.prepare(
+      "SELECT discord_id, discord_username, MAX(last_auth_at) as latest_auth FROM sessions GROUP BY discord_id"
+    ).all();
+    allUsers = result.results || [];
+  } catch (e) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not query the authentication database.",
+      flags: 64,
+    });
+  }
+
+  const overdue = allUsers
+    .filter((u) => u.latest_auth < cutoff)
+    .sort((a, b) => a.latest_auth.localeCompare(b.latest_auth));
+
+  const total = allUsers.length;
+
+  if (!overdue.length) {
+    return patchFollowup(appId, interaction.token, {
+      embeds: [{
+        title: "No Inactive Members",
+        color: 0x2ecc71,
+        description: `All ${total} authenticated members have signed in within the last ${days} days.`,
+      }],
+      flags: 64,
+    });
+  }
+
+  const embed = {
+    title: `Inactive Members (${days}+ days)`,
+    color: 0xe74c3c,
+    description: `**${overdue.length}** of ${total} authenticated members have not signed in within ${days} days.`,
+    flags: 64,
+  };
+
+  const components = [{
+    type: 1,
+    components: [{
+      type: 2,
+      style: 1,
+      label: `Show List (${overdue.length})`,
+      custom_id: `inactives:${days}:0`,
+    }],
+  }];
+
+  await patchFollowup(appId, interaction.token, {
+    embeds: [embed],
+    components: components,
+    flags: 64,
+  });
+}
+
+async function handleInactivesPage(interaction, env, appId) {
+  const parts = (interaction.data.custom_id || "").split(":");
+  const days = parseInt(parts[1], 10) || 30;
+  const page = parseInt(parts[2], 10) || 0;
+  const pageSize = 25;
+
+  if (!env.DB) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Authentication database is not configured.",
+      flags: 64,
+    });
+  }
+
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  let allUsers;
+  try {
+    const result = await env.DB.prepare(
+      "SELECT discord_id, discord_username, MAX(last_auth_at) as latest_auth FROM sessions GROUP BY discord_id"
+    ).all();
+    allUsers = result.results || [];
+  } catch (e) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not query the authentication database.",
+      flags: 64,
+    });
+  }
+
+  const overdue = allUsers
+    .filter((u) => u.latest_auth < cutoff)
+    .sort((a, b) => a.latest_auth.localeCompare(b.latest_auth));
+
+  const start = page * pageSize;
+  const slice = overdue.slice(start, start + pageSize);
+  const totalPages = Math.ceil(overdue.length / pageSize);
+
+  if (!slice.length) {
+    return patchFollowup(appId, interaction.token, {
+      content: "No more results.",
+      flags: 64,
+    });
+  }
+
+  const lines = slice.map((u, i) => {
+    const lastSeen = u.latest_auth ? new Date(u.latest_auth).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "never";
+    return `**${start + i + 1}.** ${u.discord_username} -- last seen ${lastSeen}`;
+  });
+
+  const components = [];
+  const buttons = [];
+  if (page > 0) {
+    buttons.push({
+      type: 2,
+      style: 2,
+      label: "Previous",
+      custom_id: `inactives:${days}:${page - 1}`,
+    });
+  }
+  if (start + pageSize < overdue.length) {
+    buttons.push({
+      type: 2,
+      style: 1,
+      label: "Next",
+      custom_id: `inactives:${days}:${page + 1}`,
+    });
+  }
+  if (buttons.length) {
+    components.push({ type: 1, components: buttons });
+  }
+
+  await patchFollowup(appId, interaction.token, {
+    embeds: [{
+      title: `Inactive Members (${days}+ days) -- Page ${page + 1}/${totalPages}`,
+      color: 0xe74c3c,
+      description: lines.join("\n"),
+      footer: { text: `${overdue.length} total inactive` },
+    }],
+    components: components,
+    flags: 64,
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Shared: patch followup message
 // ---------------------------------------------------------------------------
 async function patchFollowup(appId, interactionToken, payload) {
@@ -1164,7 +1333,31 @@ export async function onRequest(context) {
       return json({ type: 5 });
     }
 
+    if (name === "inactives") {
+      safeWait(handleInactives(interaction, env, appId));
+      return json({ type: 5, data: { flags: 64 } });
+    }
+
     return json({ type: 4, data: { content: "Unknown command.", flags: 64 } });
+  }
+
+  if (interaction.type === 3) {
+    const customId = interaction.data && interaction.data.custom_id;
+    const appId = interaction.application_id;
+
+    if (customId && customId.startsWith("inactives:")) {
+      const safeWait2 = (promise) =>
+        context.waitUntil(
+          promise.catch((err) =>
+            patchFollowup(appId, interaction.token, {
+              content: "Something went wrong. Try again in a moment.",
+              flags: 64,
+            }).catch(() => {})
+          )
+        );
+      safeWait2(handleInactivesPage(interaction, env, appId));
+      return json({ type: 6 });
+    }
   }
 
   return json({ type: 4, data: { content: "Unhandled interaction.", flags: 64 } });

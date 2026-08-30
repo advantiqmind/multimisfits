@@ -63,17 +63,9 @@ const rosterState = {
 
 function wireDiscordLinks() {
   document.querySelectorAll("[data-discord]").forEach((el) => {
-    el.setAttribute("href", "#");
-    el.removeAttribute("target");
-    el.addEventListener("click", function (e) {
-      e.preventDefault();
-      var saved = localStorage.getItem("mm-referral");
-      if (saved) {
-        window.open(saved, "_blank", "noopener");
-      } else {
-        openReferralModal();
-      }
-    });
+    el.setAttribute("href", CONFIG.discordInvite);
+    el.setAttribute("target", "_blank");
+    el.setAttribute("rel", "noopener");
   });
 }
 

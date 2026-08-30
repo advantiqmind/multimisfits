@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Multi-Misfits | Enter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Jersey+15&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.gate-wrap{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;min-height:100dvh;padding:24px 16px;
+}
+.gate{
+  text-align:center;width:100%;max-width:440px;
+  background:linear-gradient(180deg,var(--panel),var(--panel-3));
+  border:2px solid #000;border-radius:8px;
+  box-shadow:var(--frame),0 0 60px rgba(0,0,0,.5);
+  padding:36px 28px 32px;
+}
+.gate .crest-lg{width:80px;height:93px;object-fit:contain;margin:0 auto 10px;display:block;filter:drop-shadow(0 3px 0 #000)}
+.gate h1{font-size:clamp(28px,6vw,40px);font-weight:900;line-height:.95;
+  background:linear-gradient(180deg,#fff0b0,#e0a81f);-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.gate .tagline{font-family:"Jersey 15",monospace;font-size:16px;color:var(--gold-dim);margin-top:6px}
+.gate-desc{color:var(--muted);font-size:14px;margin:18px 0 20px;line-height:1.5}
+.gate-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.gate-msg{margin-top:12px;font-family:"Jersey 15",monospace;font-size:14px;min-height:20px}
+.gate-divider{position:relative;margin:22px 0;color:var(--muted);font-family:"Jersey 15",monospace;font-size:13px}
+.gate-divider::before,.gate-divider::after{content:"";position:absolute;top:50%;width:calc(50% - 20px);height:1px;background:var(--bronze)}
+.gate-divider::before{left:0}
+.gate-divider::after{right:0}
+.gate-discord{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:"Jersey 15",monospace;font-size:16px;
+  background:linear-gradient(180deg,#5865f2,#4752c4);
+  color:#fff;border:2px solid #000;border-radius:5px;
+  padding:10px 22px;cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 0 0 1px #000;
+  text-shadow:0 1px 0 rgba(0,0,0,.3);
+  transition:transform .12s ease, filter .12s ease;
+}
+.gate-discord:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.gate-discord:active{transform:translateY(1px)}
+.gate-discord svg{flex:0 0 auto}
+.gate-hint{color:var(--muted);font-size:12px;margin:8px 0 0;font-family:"Jersey 15",monospace}
+.gate-error{color:#e04040;font-family:"Jersey 15",monospace;font-size:14px;margin-bottom:14px}
+.gate-footer{margin-top:18px;font-size:11px;color:rgba(169,155,120,.5);line-height:1.4}
+@media(max-width:600px){
+  .gate{padding:28px 18px 24px}
+  .gate-form{flex-direction:column;align-items:center}
+  .ref-input{width:100%}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="discord" viewBox="0 0 71 55"><path d="M60 4.6A58 58 0 0 0 45.5.1a41 41 0 0 0-2 4.2 54 54 0 0 0-16 0 41 41 0 0 0-2-4.2A58 58 0 0 0 11 4.6 60 60 0 0 0 .6 45.3a58 58 0 0 0 17.7 9 44 44 0 0 0 3.8-6.2 38 38 0 0 1-6-2.9l1.5-1.1a41 41 0 0 0 35 0l1.5 1.1a38 38 0 0 1-6 2.9 44 44 0 0 0 3.8 6.2 58 58 0 0 0 17.7-9A60 60 0 0 0 60 4.6ZM23.7 36.5c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.5 3.3 6.4 7.2c0 4-2.8 7.2-6.4 7.2Zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.5 3.3 6.4 7.2c0 4-2.8 7.2-6.4 7.2Z"/></symbol>
+</svg>
+
+<div class="gate-wrap">
+  <div class="gate">
+    <img class="crest-lg" src="/assets/crest.png" alt="Multi-Misfits crest">
+    <h1>MULTI-MISFITS</h1>
+    <div class="tagline">PvM &middot; Skilling &middot; Chaos &middot; Since 2025</div>
+
+    <div class="gate-error" id="gate-error" style="display:none"></div>
+
+    <p class="gate-desc">Got a referral code from a clan member? Enter it below to access the site.</p>
+
+    <div class="gate-form" id="gate-form">
+      <input type="text" id="gate-code" class="ref-input" placeholder="Enter code" maxlength="30" autocomplete="off" spellcheck="false">
+      <button class="btn join ref-submit" id="gate-submit">ENTER</button>
+    </div>
+    <div class="gate-msg" id="gate-msg"></div>
+
+    <div class="gate-divider"><span>or</span></div>
+
+    <button class="gate-discord" id="gate-discord">
+      <svg fill="currentColor" width="18" height="14"><use href="#discord"/></svg>
+      Sign in with Discord
+    </button>
+    <p class="gate-hint">Returning member? Sign in directly.</p>
+
+    <p class="gate-footer">Multi-Misfits is a fan site. Not affiliated with Jagex.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var redirect = params.get("r") || "/";
+  var errorParam = params.get("error");
+
+  if (errorParam) {
+    var errorEl = document.getElementById("gate-error");
+    var messages = {
+      referral_required: "You need a referral code to access the site for the first time.",
+      token_exchange_failed: "Discord authentication failed. Please try again.",
+      discord_error: "Could not reach Discord. Please try again.",
+      user_fetch_failed: "Could not verify your Discord account. Please try again.",
+      no_code: "Discord authentication was cancelled.",
+      access_denied: "Discord authentication was denied.",
+    };
+    errorEl.textContent = messages[errorParam] || "Something went wrong. Please try again.";
+    errorEl.style.display = "block";
+  }
+
+  var input = document.getElementById("gate-code");
+  var submit = document.getElementById("gate-submit");
+  var msg = document.getElementById("gate-msg");
+
+  function doSubmit() {
+    var code = input.value.trim();
+    if (!code) return;
+    msg.textContent = "Checking...";
+    msg.style.color = "var(--gold-dim)";
+    submit.disabled = true;
+
+    fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code: code, redirect: redirect }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.valid && data.authUrl) {
+          msg.textContent = "Code accepted! Redirecting to Discord...";
+          msg.style.color = "#3a8a3a";
+          setTimeout(function () { window.location.href = data.authUrl; }, 600);
+        } else {
+          msg.textContent = "Invalid code. Try again or ask a clan member.";
+          msg.style.color = "#e04040";
+          submit.disabled = false;
+        }
+      })
+      .catch(function () {
+        msg.textContent = "Something went wrong. Please try again.";
+        msg.style.color = "#e04040";
+        submit.disabled = false;
+      });
+  }
+
+  submit.addEventListener("click", doSubmit);
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter") doSubmit(); });
+
+  document.getElementById("gate-discord").addEventListener("click", function () {
+    window.location.href = "/api/auth/login?r=" + encodeURIComponent(redirect);
+  });
+
+  input.focus();
+})();
+</script>
+</body>
+</html>

@@ -34,8 +34,13 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - roster.html                  full roster (data-full="1")
 - ge.html                      Grand Exchange -- full-page iframe embed of 1box.online GE tool
 - events.html                  Events + Giveaways tabs (hash-based: #giveaways persists on refresh)
+- gate.html                    auth gate landing page (referral code + Discord OAuth)
 - style.css                    theme
 - app.js                       nav, toasts, Discord links, all panel rendering
+- functions/_middleware.js     auth middleware (redirects unauthenticated to gate.html)
+- functions/api/auth/login.js  POST validates referral code, returns OAuth URL; GET redirects to OAuth
+- functions/api/auth/callback.js Discord OAuth callback, creates D1 session
+- functions/api/auth/logout.js clears session cookie + D1 record
 - functions/api/wom.js         GET /api/wom  -> WOM group, cached 6h, sorted roster
 - functions/api/news.js        GET /api/news -> reads #announcements via Discord bot
 - functions/api/events.js      GET /api/events -> reads forum threads (filters out giveaway threads), cached 5min
@@ -61,6 +66,12 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
     REFERRAL_THREAD_ID       (plain, optional) <- forum thread ID for referral tracking
     DISCORD_PUBLIC_KEY       (plain) <- from Discord Developer Portal, for slash commands
+    DISCORD_CLIENT_ID        (plain)  <- OAuth2 client ID from Discord Developer Portal
+    DISCORD_CLIENT_SECRET    (secret) <- OAuth2 client secret
+    AUTH_SESSION_SECRET       (secret) <- random string for signing session cookies
+
+## Bindings (Cloudflare Pages > Settings > Functions)
+    DB  ->  D1 database "multimisfits-auth"  (auth sessions table)
 
 ## Status
 LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster,
@@ -91,12 +102,26 @@ Nothing pending.
 - [LIVE] tag in thread name forces live status regardless of dates.
 - Emoji-prefixed date lines supported (e.g. calendar emoji before When:).
 
+### Authentication gate
+- Every page except gate.html and static assets is protected by _middleware.js.
+- First visit: gate.html shows referral code input + "Sign in with Discord" for returning users.
+- New user flow: enter referral code -> POST /api/auth/login validates code, returns Discord
+  OAuth URL, sets mm_referral_ok cookie -> Discord OAuth -> /api/auth/callback exchanges code
+  for token, gets user info, checks mm_referral_ok cookie or existing D1 record -> creates
+  session in D1, sets mm_session cookie (30-day expiry) -> redirect to site.
+- Returning user flow: click "Sign in with Discord" -> GET /api/auth/login redirects to
+  Discord OAuth -> callback checks discord_id exists in D1 -> new 30-day session.
+- If D1 or DISCORD_CLIENT_ID not configured, middleware passes through (graceful degradation).
+- D1 table: sessions (discord_id, discord_username, discord_avatar, referral_code,
+  session_token, created_at, last_auth_at, expires_at).
+- OAuth redirect URL: {origin}/api/auth/callback (must be registered in Discord Developer Portal).
+- /inactives slash command: shows members who haven't authenticated in X days (default 30),
+  with paginated list (25 per page) via Discord button interactions.
+
 ### Referrals
-- POST /api/referral validates code against REFERRAL_CODES env var.
-- On valid code, bot posts an embed to a Discord forum thread (REFERRAL_THREAD_ID)
-  with code, timestamp, and running total redemptions.
-- Runs in background (waitUntil) so the user gets their invite instantly.
-- Tracking failure never blocks the referral flow.
+- POST /api/referral validates code against REFERRAL_CODES env var (still works standalone).
+- Auth login endpoint also validates referral codes and tracks redemptions.
+- Tracking failure never blocks the referral/auth flow.
 
 ### Offline indicators
 - Amber tint on panel badges when API returns unconfigured/error state.
