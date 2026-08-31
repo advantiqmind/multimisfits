@@ -17,6 +17,7 @@ export async function onRequest(context) {
   if (path.startsWith("/api/auth/")) return next();
   if (path === "/api/referral") return next();
   if (path === "/api/discord") return next();
+  if (path === "/api/loot") return next();
   if (path.startsWith("/assets/")) return next();
   if (path === "/style.css" || path === "/app.js") return next();
   if (path === "/favicon.ico" || path === "/robots.txt") return next();

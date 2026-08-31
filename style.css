@@ -495,4 +495,29 @@ nav.main a[href="/ge.html"]{display:none}
   .ga-stats{grid-template-columns:repeat(2,1fr)}
 }
 
+/* Loot Value Leaderboard */
+.lv-tag{display:inline-block;font-family:"Jersey 15",monospace;font-size:11px;color:var(--gold);background:rgba(255,203,47,.12);border:1px solid rgba(255,203,47,.3);padding:2px 8px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;vertical-align:middle}
+.lv-container{margin-top:16px}
+.lv-loading{font-family:"Jersey 15",monospace;font-size:16px;color:var(--muted)}
+.lv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.lv-stat{text-align:center;background:var(--void);border:2px solid var(--bronze);border-radius:6px;padding:12px 8px}
+.lv-stat-value{font-family:"Jersey 15",monospace;font-size:clamp(20px,4vw,26px);color:var(--gold);line-height:1}
+.lv-stat-label{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:1px;text-transform:uppercase}
+.lv-table{margin-bottom:14px}
+.lv-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px dashed rgba(255,203,47,.18)}
+.lv-row:last-child{border-bottom:0}
+.lv-rank{font-family:"Jersey 15",monospace;font-size:18px;flex:0 0 32px;text-align:center}
+.lv-rank-1 .lv-rank{color:#ffd700;text-shadow:0 0 6px rgba(255,215,0,.3)}
+.lv-rank-2 .lv-rank{color:#c0c0c0;text-shadow:0 0 4px rgba(192,192,192,.2)}
+.lv-rank-3 .lv-rank{color:#cd7f32;text-shadow:0 0 4px rgba(205,127,50,.2)}
+.lv-player{font-family:"Jersey 15",monospace;font-size:16px;color:var(--parchment);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lv-kc{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted);flex:0 0 auto}
+.lv-value{font-family:"Jersey 15",monospace;font-size:16px;color:var(--gold);flex:0 0 auto;text-align:right}
+.lv-drops-title{font-family:"Cinzel",serif;font-size:15px;color:var(--gold);margin:12px 0 8px}
+.lv-drop{display:flex;align-items:center;gap:8px;padding:6px 0;font-family:"Jersey 15",monospace;font-size:15px}
+.lv-drop-name{color:var(--parchment);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lv-drop-player{color:var(--muted);font-size:13px;flex:0 0 auto}
+.lv-drop-value{color:var(--xp);flex:0 0 auto}
+.lv-dink{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.5px}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}

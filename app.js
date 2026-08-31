@@ -747,7 +747,11 @@ function hasLiveTag(ev) {
 }
 
 function cleanName(name) {
-  return (name || "").replace(/\s*\[LIVE\]\s*/gi, " ").trim();
+  return (name || "").replace(/\s*\[LIVE\]\s*/gi, " ").replace(/\s*\[Loot Value\]\s*/gi, " ").trim();
+}
+
+function isLootValueEvent(ev) {
+  return /\[Loot Value\]/i.test(ev.name || "");
 }
 
 function computeEventStatus(ev) {
@@ -784,14 +788,19 @@ function featuredEventHtml(ev) {
     ? ` style="background:linear-gradient(to bottom,rgba(18,13,6,.82),rgba(18,13,6,.95)),url('${esc(ev.image)}') center/cover;"`
     : "";
   const metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
+  const lvTag = isLootValueEvent(ev) ? '<span class="lv-tag" style="margin-left:8px">LOOT VALUE</span>' : "";
+  const lvContainer = isLootValueEvent(ev)
+    ? `<div class="lv-container" data-event-id="${esc(ev.id)}"><p class="lv-loading">Loading leaderboard...</p></div>`
+    : "";
 
   return `<div class="ev-featured"${imgStyle}>
-    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${isLive ? "" : badge}</div>
+    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}${interested}
     </div>
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
+    ${lvContainer}
     <div class="ev-cta">
       <a class="btn join" data-discord href="#" aria-label="Join Discord for event details">
         <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
@@ -965,11 +974,12 @@ function eventCard(ev) {
     ? ` style="background:linear-gradient(to right,rgba(18,13,6,.92),rgba(18,13,6,.7)),url('${esc(ev.image)}') center/cover;"`
     : "";
   const liveClass = isLive ? " ev-card-live" : "";
+  const lvTag = isLootValueEvent(ev) ? '<span class="lv-tag">LOOT</span>' : "";
 
   return `<div class="ev-card ev-clickable${liveClass}" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
-      <h3>${esc(cleanName(ev.name))}</h3>
+      <h3>${esc(cleanName(ev.name))}${lvTag ? " " + lvTag : ""}</h3>
       <div class="ev-card-meta">${liveText || timeStr}${(liveText || timeStr) && interested ? " · " : ""}${interested}</div>
     </div>
     ${badge}
@@ -1040,6 +1050,7 @@ function renderEvents(events, { cached } = {}) {
   wireDiscordLinks();
   startCountdownTimers();
   wireEventModals();
+  loadLootLeaderboards(events);
 }
 
 function wireEventModals() {
@@ -1053,18 +1064,38 @@ function wireEventModals() {
     var dateStr = formatEventDate(ev.startTime);
     var timeStr = formatEventTime(ev.startTime);
     var badge = eventStatusBadge(effStatus);
+    var lvTag = isLootValueEvent(ev) ? '<span class="lv-tag" style="margin-left:8px">LOOT VALUE</span>' : "";
     var desc = ev.description ? formatDiscord(ev.description) : '<span style="color:var(--muted)">No description</span>';
     var imgHtml = ev.image
       ? '<img src="' + esc(ev.image) + '" alt="" style="max-width:100%;border:2px solid #000;border-radius:6px;margin-bottom:14px" loading="lazy">'
       : "";
     var replies = ev.interestedCount ? ev.interestedCount + " replies" : "";
 
+    var lvHtml = "";
+    if (isLootValueEvent(ev)) {
+      if (_lootData[ev.id]) {
+        lvHtml = '<div class="lv-container">' + lootLeaderboardHtml(_lootData[ev.id], false) + '</div>';
+      } else {
+        lvHtml = '<div class="lv-container" data-event-id="' + esc(ev.id) + '"><p class="lv-loading">Loading leaderboard...</p></div>';
+        fetch("/api/loot?event=" + encodeURIComponent(ev.id))
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(data) {
+            if (!data) return;
+            _lootData[ev.id] = data;
+            var container = body.querySelector('.lv-container[data-event-id="' + ev.id + '"]');
+            if (container) container.innerHTML = lootLeaderboardHtml(data, false);
+          })
+          .catch(function() {});
+      }
+    }
+
     body.innerHTML =
-      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + badge + '</div>' +
+      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + badge + '</div>' +
       '<div class="ev-modal-meta">' + dateStr + ' · ' + timeStr +
       (replies ? ' · ' + replies : '') + '</div>' +
       imgHtml +
       '<div class="ev-modal-desc">' + desc + '</div>' +
+      lvHtml +
       '<div style="margin-top:16px"><a class="btn join" data-discord href="#" aria-label="Join Discord">' +
       '<svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>' +
       'View on Discord</a></div>';
@@ -1179,6 +1210,76 @@ function wireGallery() {
   });
 }
 
+/* ---- loot value leaderboard ---- */
+var _lootData = {};
+
+function lootLeaderboardHtml(data, compact) {
+  if (!data || !data.leaderboard || !data.leaderboard.length) {
+    return '<p class="lv-loading">No loot data yet. Waiting for Dink reports...</p>';
+  }
+
+  var lb = data.leaderboard;
+  var stats = data.stats || {};
+  var drops = data.notableDrops || [];
+  var limit = compact ? 3 : 10;
+  var medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+
+  var html = '<div class="lv-stats">';
+  html += '<div class="lv-stat"><div class="lv-stat-value">' + (stats.totalPlayers || 0) + '</div><div class="lv-stat-label">Players</div></div>';
+  html += '<div class="lv-stat"><div class="lv-stat-value">' + (stats.totalKills || 0) + '</div><div class="lv-stat-label">Total KC</div></div>';
+  html += '<div class="lv-stat"><div class="lv-stat-value">' + formatLootValue(stats.totalValue || 0) + '</div><div class="lv-stat-label">Total Loot</div></div>';
+  html += '</div>';
+
+  html += '<div class="lv-table">';
+  for (var i = 0; i < Math.min(lb.length, limit); i++) {
+    var row = lb[i];
+    var rankClass = i < 3 ? " lv-rank-" + (i + 1) : "";
+    var rankText = i < 3 ? medals[i] : "#" + row.rank;
+    html += '<div class="lv-row' + rankClass + '">';
+    html += '<span class="lv-rank">' + rankText + '</span>';
+    html += '<span class="lv-player">' + esc(row.player) + '</span>';
+    html += '<span class="lv-kc">' + row.kills + ' KC</span>';
+    html += '<span class="lv-value">' + formatLootValue(row.total) + '</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  if (!compact && drops.length) {
+    html += '<h4 class="lv-drops-title">Notable Drops</h4>';
+    for (var j = 0; j < drops.length; j++) {
+      var drop = drops[j];
+      var qty = drop.quantity > 1 ? " x" + drop.quantity : "";
+      html += '<div class="lv-drop">';
+      html += '<span class="lv-drop-name">' + esc(drop.name + qty) + '</span>';
+      html += '<span class="lv-drop-player">' + esc(drop.player) + '</span>';
+      html += '<span class="lv-drop-value">' + formatLootValue(drop.value) + '</span>';
+      html += '</div>';
+    }
+  }
+
+  html += '<div class="lv-dink">Live via Dink</div>';
+  return html;
+}
+
+async function loadLootLeaderboards(events) {
+  var lvEvents = events.filter(isLootValueEvent);
+  if (!lvEvents.length) return;
+
+  await Promise.all(lvEvents.map(async function(ev) {
+    try {
+      var r = await fetch("/api/loot?event=" + encodeURIComponent(ev.id));
+      if (!r.ok) return;
+      var data = await r.json();
+      _lootData[ev.id] = data;
+
+      var container = document.querySelector('.lv-container[data-event-id="' + ev.id + '"]');
+      if (container) {
+        container.innerHTML = lootLeaderboardHtml(data, false);
+      }
+    } catch (e) {}
+  }));
+}
+
 /* ---- giveaway ---- */
 const GIVEAWAY_FALLBACK = [
   {
@@ -1210,6 +1311,13 @@ const GIVEAWAY_FALLBACK = [
 function formatGP(m) {
   if (m >= 1000) return (m / 1000).toFixed(m % 1000 === 0 ? 0 : 1) + "B";
   return m + "M";
+}
+
+function formatLootValue(gp) {
+  if (gp >= 1000000000) return (gp / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
+  if (gp >= 1000000) return (gp / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (gp >= 1000) return Math.round(gp / 1000) + "K";
+  return String(gp);
 }
 
 function giveawayStatsHtml(round) {
