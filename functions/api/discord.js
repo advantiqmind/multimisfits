@@ -59,6 +59,11 @@ const COMMANDS = [
     type: 1,
   },
   {
+    name: "referralreset",
+    description: "Reset the referral stats counter (records are kept)",
+    type: 1,
+  },
+  {
     name: "giveawaystats",
     description: "Show the current active giveaway round",
     type: 1,
@@ -212,6 +217,8 @@ async function handleReferralStats(interaction, token, threadId, appId, referral
       const msgs = await msgsRes.json();
       for (const m of msgs) {
         if (!Array.isArray(m.embeds) || !m.embeds.length) continue;
+        const title = (m.embeds[0].title || "").trim();
+        if (title === "Referral Stats Reset") break;
         const fields = m.embeds[0].fields || [];
         const codeField = fields.find((f) => f.name === "Code");
         if (!codeField) continue;
@@ -235,6 +242,57 @@ async function handleReferralStats(interaction, token, threadId, appId, referral
         footer: { text: `${total} total redemptions` },
       },
     ],
+  });
+}
+
+// ---------------------------------------------------------------------------
+// /referralreset
+// ---------------------------------------------------------------------------
+async function handleReferralReset(interaction, token, threadId, appId) {
+  if (!threadId) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Referral tracking thread is not configured.",
+      flags: 64,
+    });
+  }
+
+  const resetBy = interaction.member && interaction.member.user
+    ? (interaction.member.user.global_name || interaction.member.user.username || "Leader")
+    : "Leader";
+
+  const postRes = await fetch(
+    `https://discord.com/api/v10/channels/${threadId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "Multi-Misfits clan website",
+      },
+      body: JSON.stringify({
+        embeds: [{
+          title: "Referral Stats Reset",
+          color: 0xe74c3c,
+          description: "Referral counter has been reset. Previous records are preserved above.",
+          fields: [
+            { name: "Reset by", value: resetBy, inline: true },
+          ],
+          timestamp: new Date().toISOString(),
+        }],
+      }),
+    }
+  );
+
+  if (!postRes.ok) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not post reset marker. Check bot permissions.",
+      flags: 64,
+    });
+  }
+
+  await patchFollowup(appId, interaction.token, {
+    content: "Referral stats have been reset.",
+    flags: 64,
   });
 }
 
@@ -1431,6 +1489,11 @@ export async function onRequest(context) {
     if (name === "referralstats") {
       safeWait(handleReferralStats(interaction, token, threadId, appId, referralCodes));
       return json({ type: 5 });
+    }
+
+    if (name === "referralreset") {
+      safeWait(handleReferralReset(interaction, token, threadId, appId));
+      return json({ type: 5, data: { flags: 64 } });
     }
 
     if (name === "giveawaystats") {
