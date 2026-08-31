@@ -1,6 +1,7 @@
 // Cloudflare Pages Function  ->  POST|GET /api/loot
 // POST: Receives Dink (RuneLite plugin) loot webhooks, matches against
-// active [Loot Value] events by boss name, stores in D1.
+// active Loot Value events by boss name, stores in D1.
+// Also forwards drops above a configurable threshold to Discord.
 // GET:  Returns leaderboard data for a specific event.
 //
 // Required env:
@@ -9,11 +10,16 @@
 //   DISCORD_GUILD_ID      (plain)
 //   LOOT_WEBHOOK_KEY      (secret)
 //   DB                    (D1 binding)
+//
+// Optional env (forwarding proxy):
+//   LOOT_DISCORD_WEBHOOK  (secret) - Discord webhook URL for chest channel
+//   LOOT_DISCORD_MIN_VALUE (plain) - minimum total value to forward (default 150000)
 
 const EVENTS_CACHE_TTL = 300;
 const LEADERBOARD_LIMIT = 20;
 const NOTABLE_DROPS_LIMIT = 5;
 const LEADERBOARD_CACHE_TTL = 60;
+const DEFAULT_DISCORD_MIN_VALUE = 150000;
 
 function json(obj, status = 200, extra = {}) {
   return new Response(JSON.stringify(obj), {
@@ -166,6 +172,23 @@ async function ensureTable(db) {
   _tableCreated = true;
 }
 
+function maybeForwardToDiscord(context, body, totalValue) {
+  const webhookUrl = context.env.LOOT_DISCORD_WEBHOOK;
+  if (!webhookUrl) return;
+
+  const minValue = parseInt(context.env.LOOT_DISCORD_MIN_VALUE, 10)
+    || DEFAULT_DISCORD_MIN_VALUE;
+  if (totalValue < minValue) return;
+
+  context.waitUntil(
+    fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).catch(() => {})
+  );
+}
+
 async function handlePost(context) {
   const url = new URL(context.request.url);
   const key = url.searchParams.get("key");
@@ -192,11 +215,13 @@ async function handlePost(context) {
     return json({ stored: false, reason: "not_loot_or_missing_fields" });
   }
 
+  maybeForwardToDiscord(context, body, loot.totalValue);
+
   const activeEvents = await getActiveLootEvents(context.env);
   const matched = activeEvents.filter(e => matchesBoss(loot.source, e.bossFilter));
 
   if (!matched.length) {
-    return json({ stored: false, reason: "no_matching_event" });
+    return json({ stored: false, reason: "no_matching_event", forwarded: !!context.env.LOOT_DISCORD_WEBHOOK });
   }
 
   await ensureTable(db);

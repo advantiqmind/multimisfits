@@ -47,7 +47,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
 - functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
-- functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1; GET returns leaderboard
+- functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
 - functions/api/discord.js    Discord interactions endpoint (slash commands); GET = register commands
 - assets/ranks/*.png           rank icons (official, upscaled 2x nearest)
@@ -70,6 +70,8 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     DISCORD_CLIENT_ID        (plain)  <- OAuth2 client ID from Discord Developer Portal
     DISCORD_CLIENT_SECRET    (secret) <- OAuth2 client secret
     LOOT_WEBHOOK_KEY         (secret) <- auth key for Dink loot webhooks (?key=VALUE)
+    LOOT_DISCORD_WEBHOOK     (secret, optional) <- Discord webhook URL for chest channel (forwarding proxy)
+    LOOT_DISCORD_MIN_VALUE   (plain, optional)  <- min total value to forward to Discord (default 150000)
 
 ## Bindings (Cloudflare Pages > Settings > Functions)
     DB  ->  D1 database "multimisfits-auth"  (sessions + loot_entries tables)
@@ -127,10 +129,11 @@ Nothing pending.
 - Leaderboard shows medals for top 3, KC per player, total loot value.
 - Notable drops section shows highest individual item values.
 - "Live via Dink" badge at bottom of leaderboard.
-- Member Dink setup: paste two URLs in Loot Webhook Override (one per line):
-  1. Their existing Discord webhook URL (so loot still posts to Discord)
-  2. https://multimisfits.dev/api/loot?key=SECRET
-- Dink's override replaces the primary URL, so both URLs needed in the override box.
+- Forwarding proxy: site receives ALL drops (Dink min value = 1), stores for events,
+  and forwards drops >= LOOT_DISCORD_MIN_VALUE (default 150k) to Discord chest channel.
+  Members only need one URL in Dink: https://multimisfits.pages.dev/api/loot?key=SECRET
+  Set LOOT_DISCORD_WEBHOOK to the chest channel's Discord webhook URL.
+  Forwarding is fire-and-forget via context.waitUntil (does not block the response).
 - Auth key stored in LOOT_WEBHOOK_KEY env var. /api/loot bypasses auth middleware.
 - Leaderboard cached 1min at Cloudflare edge. Active events mapping cached 5min.
 
