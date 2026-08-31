@@ -370,7 +370,7 @@ async function loadRoster() {
   const body = document.getElementById("roster-body");
   if (!body) return;
   const cols = body.dataset.full === "1" ? 3 : 2;
-  body.innerHTML = `<tr><td colspan="${cols}" class="roster-msg">Loading roster…</td></tr>`;
+  body.innerHTML = `<tr><td colspan="${cols}" class="roster-msg">Loading leaderboard…</td></tr>`;
   try {
     const r = await fetch("/api/wom", { headers: { accept: "application/json" } });
     if (!r.ok) throw new Error("bad status " + r.status);

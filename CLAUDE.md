@@ -31,7 +31,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 ## Files
 - index.html                   homepage (hero, news, events, achievements, roster, gallery)
 - guides.html / faq.html       content pages (FAQ has real content; Guides is "coming soon")
-- roster.html                  full roster (data-full="1")
+- roster.html                  leaderboard page (full clan roster from WOM, data-full="1")
 - ge.html                      Grand Exchange -- full-page iframe embed of 1box.online GE tool
 - events.html                  Events + Giveaways tabs (hash-based: #giveaways persists on refresh)
 - gate.html                    auth gate landing page (referral code + Discord OAuth)
