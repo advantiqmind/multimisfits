@@ -8,16 +8,7 @@
 
 const CACHE_TTL = 300; // 5 minutes
 
-function stripDiscord(s) {
-  return String(s || "")
-    .replace(/<a?:\w+:\d+>/g, "")
-    .replace(/<@!?\d+>/g, "").replace(/<@&\d+>/g, "").replace(/<#\d+>/g, "")
-    .replace(/<t:\d+(?::[tTdDfFR])?>/g, "")
-    .replace(/@(everyone|here)/gi, "")
-    .replace(/https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/\d+\/\d+(?:\/\d+)?/g, "")
-    .trim();
-}
-
+// Channel message text is never exposed: only the image + who posted it.
 export function parseSpotlight(messages) {
   for (const m of Array.isArray(messages) ? messages : []) {
     const attachments = Array.isArray(m.attachments) ? m.attachments : [];
@@ -32,14 +23,12 @@ export function parseSpotlight(messages) {
     const imageUrl = image ? image.url : (embedImage ? embedImage.image.url : null);
     if (!imageUrl) continue;
 
-    const caption = stripDiscord((m.content || "").trim());
     const author = m.author
       ? (m.author.global_name || m.author.username || "Unknown")
       : "Unknown";
 
     return {
       image: imageUrl,
-      caption: caption.split("\n")[0].slice(0, 200) || "",
       author: author,
       timestamp: m.timestamp || null,
     };

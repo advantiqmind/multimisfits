@@ -61,9 +61,9 @@ const checks = [
     return r && r.image === "https://cdn.discordapp.com/attachments/123/456/tbow.png";
   })()],
 
-  ["extracts caption from content", (() => {
+  ["never exposes message text", (() => {
     var r = parseSpotlight(messages);
-    return r && r.caption === "Twisted bow drop at CoX!";
+    return r && !("caption" in r) && !("content" in r);
   })()],
 
   ["extracts author global_name", (() => {
@@ -86,9 +86,9 @@ const checks = [
     return r && r.image === "https://cdn.example.com/embed.png";
   })()],
 
-  ["strips Discord tokens from caption", (() => {
+  ["message with Discord tokens still yields image only", (() => {
     var r = parseSpotlight(discordGarbageMessages);
-    return r && !r.caption.includes("<:") && !r.caption.includes("<@") && !r.caption.includes("@everyone");
+    return r && r.image === "https://cdn.discordapp.com/attachments/1/2/drop.jpg" && !("caption" in r);
   })()],
 
   ["handles empty array", parseSpotlight([]) === null],

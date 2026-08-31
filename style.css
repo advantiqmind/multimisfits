@@ -385,7 +385,6 @@ a.shot:hover img{transform:scale(1.05)}
 .spotlight-img img{width:100%;height:100%;object-fit:cover;display:block}
 .spotlight-info{flex:1 1 auto;min-width:0}
 .spotlight-label{font-family:"Jersey 15",monospace;font-size:14px;color:var(--gold-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
-.spotlight-caption{font-family:"Cinzel",serif;font-size:18px;color:var(--gold);line-height:1.3;margin-bottom:6px;text-shadow:1px 1px 0 #000}
 .spotlight-meta{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted)}
 
 /* ---------- lightbox ---------- */
@@ -436,7 +435,6 @@ nav.main a[href="/ge.html"]{display:none}
   .shots-gallery{grid-template-columns:repeat(2,1fr)}
   .spotlight{flex-direction:column;gap:10px;padding:10px}
   .spotlight-img{width:100%;max-width:100%}
-  .spotlight-caption{font-size:15px}
   .ach-thumb{width:44px;height:44px}
   .ev-grid{grid-template-columns:1fr}
   .panel > .head a.more{padding:10px 0}

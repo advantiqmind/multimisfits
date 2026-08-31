@@ -45,7 +45,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/news.js        GET /api/news -> reads #announcements via Discord bot
 - functions/api/events.js      GET /api/events -> reads forum threads (filters out giveaway threads), cached 5min
 - functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
-- functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
+- functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image only (message text never shown; just image + posted-by)
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
 - functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
