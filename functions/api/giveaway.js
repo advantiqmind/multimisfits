@@ -17,7 +17,8 @@ function snowflakeToDate(id) {
 }
 
 export function parseEventForgeDateField(content, field) {
-  const re = new RegExp(field + ":\\s*(.+)", "i");
+  // \b so "Ends?" can't match inside words like "Weekend:"
+  const re = new RegExp("\\b" + field + ":\\s*(.+)", "i");
   const m = content.match(re);
   if (!m) return null;
   let s = m[1].trim();
@@ -123,65 +124,61 @@ export function transformGiveawayData(threads, threadMessages) {
     const image = attachments.find(a => (a.content_type || "").startsWith("image/"));
 
     const whenDate = parseEventForgeDateField(content, "When");
-    const endsDate = parseEventForgeDateField(content, "Ends");
+    const endsDate = parseEventForgeDateField(content, "Ends?");
 
     const prize = parsePrize(content);
     const gpPerEntry = parseEntryRate(content);
 
+    // One participant per lowercase player name: reaction entries and manual
+    // /giveaway-entry embeds for the same person merge into a single row,
+    // with the combined total clamped to [0, MAX_ENTRIES_PER_PERSON].
     const entries = [];
-    const participantCounts = new Map();
-    const botPlayerNames = new Map();
+    const participants = new Map();
+
+    function getParticipant(key) {
+      let p = participants.get(key);
+      if (!p) {
+        p = { name: null, playerId: null, reactionCount: 0, manualSum: 0, timestamp: null };
+        participants.set(key, p);
+      }
+      return p;
+    }
 
     for (const m of messages) {
       if (m.id === thread.id) continue;
 
       const botEntry = extractBotEntry(m);
       if (botEntry) {
-        const participantKey = "manual:" + botEntry.player.toLowerCase();
-        const existing = participantCounts.get(participantKey) || 0;
-        participantCounts.set(participantKey, existing + botEntry.count);
-        if (!botPlayerNames.has(participantKey)) {
-          botPlayerNames.set(participantKey, botEntry.player);
-        }
+        const p = getParticipant(botEntry.player.toLowerCase());
+        p.manualSum += botEntry.count;
+        if (!p.name) p.name = botEntry.player;
         continue;
       }
 
       const entryCount = extractEntryCountFromReactions(m.reactions);
       if (entryCount <= 0) continue;
 
-      const participant = m.author.global_name || m.author.username || "Unknown";
-      const participantId = m.author.id;
-
-      const existing = participantCounts.get(participantId) || 0;
-      const allowed = Math.min(entryCount, MAX_ENTRIES_PER_PERSON - existing);
-      if (allowed <= 0) continue;
-
-      entries.push({
-        player: participant,
-        playerId: participantId,
-        count: allowed,
-        timestamp: m.timestamp,
-      });
-
-      participantCounts.set(participantId, existing + allowed);
+      const name = m.author.global_name || m.author.username || "Unknown";
+      const p = getParticipant(name.toLowerCase());
+      p.reactionCount = Math.min(p.reactionCount + entryCount, MAX_ENTRIES_PER_PERSON);
+      p.name = name;
+      p.playerId = m.author.id;
+      if (!p.timestamp) p.timestamp = m.timestamp;
     }
 
-    for (const [key, rawSum] of participantCounts) {
-      if (!key.startsWith("manual:")) continue;
-      const clamped = Math.min(Math.max(rawSum, 0), MAX_ENTRIES_PER_PERSON);
-      participantCounts.set(key, clamped);
-      if (clamped > 0) {
-        entries.push({
-          player: botPlayerNames.get(key) || key.slice(7),
-          playerId: key,
-          count: clamped,
-          timestamp: null,
-        });
-      }
+    for (const [key, p] of participants) {
+      const total = Math.min(Math.max(p.reactionCount + p.manualSum, 0), MAX_ENTRIES_PER_PERSON);
+      if (total <= 0) continue;
+      entries.push({
+        player: p.name || key,
+        playerId: p.playerId || "manual:" + key,
+        count: total,
+        timestamp: p.timestamp,
+      });
     }
 
     const totalEntries = entries.reduce((sum, e) => sum + e.count, 0);
-    const totalParticipants = participantCounts.size;
+    const totalParticipants = participants.size;
     const gpRaised = totalEntries * gpPerEntry;
 
     const winners = [];

@@ -287,9 +287,8 @@ const multiPostMessages = buildMessages("2001", [
   },
 ]);
 const cappedRounds = transformGiveawayData([THREAD_ACTIVE], multiPostMessages);
-check("two entry records for same person", cappedRounds[0].entries.length === 2);
-check("first post gives 1 entry", cappedRounds[0].entries[0].count === 1);
-check("second post gives 2 entries (under cap of 5)", cappedRounds[0].entries[1].count === 2);
+check("posts by same person merge into one record", cappedRounds[0].entries.length === 1);
+check("merged record totals both posts", cappedRounds[0].entries[0].count === 3);
 check("totalEntries is 3", cappedRounds[0].totalEntries === 3);
 check("only 1 unique participant", cappedRounds[0].totalParticipants === 1);
 
@@ -315,9 +314,66 @@ const overCapMessages = buildMessages("2001", [
   },
 ]);
 const overCapRounds = transformGiveawayData([THREAD_ACTIVE], overCapMessages);
-check("both posts counted under cap of 5", overCapRounds[0].entries.length === 2);
-check("first entry count is 2", overCapRounds[0].entries[0].count === 2);
+check("both posts merge into one record", overCapRounds[0].entries.length === 1);
+check("merged count is 3 (under cap of 5)", overCapRounds[0].entries[0].count === 3);
 check("totalEntries is 3", overCapRounds[0].totalEntries === 3);
+
+// ---- reaction + manual bot entry merge for same person ----
+console.log("\n== reaction + manual entry merge (case-insensitive) ==");
+const mixedMergeMessages = buildMessages("2001", [
+  OPENING_MSG,
+  {
+    id: "6101",
+    content: "screenshot",
+    author: { id: "300", global_name: "madewell91", username: "madewell91" },
+    mentions: [],
+    attachments: [],
+    reactions: [{ emoji: { name: "1️⃣" }, count: 1 }],
+  },
+  {
+    id: "6102",
+    content: "",
+    author: { id: "999", global_name: "Bot", username: "bot" },
+    embeds: [{ title: "Entry Added", fields: [
+      { name: "Player", value: "Madewell91", inline: true },
+      { name: "Entries", value: "1", inline: true },
+      { name: "Added by", value: "mr flsh", inline: true },
+    ]}],
+    mentions: [], attachments: [], reactions: [],
+  },
+]);
+const mixedMergeRounds = transformGiveawayData([THREAD_ACTIVE], mixedMergeMessages);
+check("reaction and manual entry merge into one record", mixedMergeRounds[0].entries.length === 1);
+check("merged total is 2", mixedMergeRounds[0].entries[0].count === 2);
+check("uses Discord display name", mixedMergeRounds[0].entries[0].player === "madewell91");
+check("counts as one participant", mixedMergeRounds[0].totalParticipants === 1);
+
+console.log("\n== manual subtract reduces reaction entry ==");
+const mixedSubMessages = buildMessages("2001", [
+  OPENING_MSG,
+  {
+    id: "6201",
+    content: "screenshot",
+    author: { id: "300", global_name: "madewell91", username: "madewell91" },
+    mentions: [],
+    attachments: [],
+    reactions: [{ emoji: { name: "2️⃣" }, count: 1 }],
+  },
+  {
+    id: "6202",
+    content: "",
+    author: { id: "999", global_name: "Bot", username: "bot" },
+    embeds: [{ title: "Entry Removed", fields: [
+      { name: "Player", value: "MADEWELL91", inline: true },
+      { name: "Entries", value: "1", inline: true },
+      { name: "Removed by", value: "mr flsh", inline: true },
+    ]}],
+    mentions: [], attachments: [], reactions: [],
+  },
+]);
+const mixedSubRounds = transformGiveawayData([THREAD_ACTIVE], mixedSubMessages);
+check("subtract applies to reaction entry (2 - 1 = 1)", mixedSubRounds[0].totalEntries === 1);
+check("still one record", mixedSubRounds[0].entries.length === 1);
 
 // ---- trophy winner detection edge cases ----
 console.log("\n== trophy winner: pinned fallback (no trophy) ==");
@@ -516,10 +572,10 @@ const botEntryMessages = buildMessages("2001", [
   SCREENSHOT_1_ENTRY,
 ]);
 const botRounds = transformGiveawayData([THREAD_ACTIVE], botEntryMessages);
-check("bot entry counted alongside reaction entry", botRounds[0].entries.length === 2);
+check("bot entry merges with same person's reaction entry", botRounds[0].entries.length === 1);
 check("totalEntries includes bot entry", botRounds[0].totalEntries === 3);
-check("totalParticipants counts both", botRounds[0].totalParticipants === 2);
-check("bot entry player name preserved", botRounds[0].entries[0].player === "Vilence");
+check("merged person counted once", botRounds[0].totalParticipants === 1);
+check("player name preserved", botRounds[0].entries[0].player === "Vilence");
 
 console.log("\n== bot entries: accumulation (add/subtract) ==");
 const botDoubleMessages = buildMessages("2001", [

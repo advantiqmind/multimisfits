@@ -17,7 +17,8 @@ function snowflakeToDate(id) {
 }
 
 export function parseEventForgeDateField(content, field) {
-  const re = new RegExp(field + ":\\s*(.+)", "i");
+  // \b so "Ends?" can't match inside words like "Weekend:"
+  const re = new RegExp("\\b" + field + ":\\s*(.+)", "i");
   const m = content.match(re);
   if (!m) return null;
   let s = m[1].trim();
@@ -67,7 +68,7 @@ export function transformThreads(threads, openingMessages, tagMap) {
     const image = attachments.find((a) => (a.content_type || "").startsWith("image/"));
 
     const whenDate = parseEventForgeDateField(content, "When");
-    const endsDate = parseEventForgeDateField(content, "Ends");
+    const endsDate = parseEventForgeDateField(content, "Ends?");
     const description = resolveMentions(content, msgMentions);
 
     const appliedIds = Array.isArray(t.applied_tags) ? t.applied_tags : [];

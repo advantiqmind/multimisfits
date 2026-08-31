@@ -97,6 +97,10 @@ Nothing pending.
   giveaway. Open to all members (no Discord Integrations override needed).
 - Bot embeds parsed by extractBotEntry(): Player + Entries fields, accumulation
   with sum-then-clamp. "Entry Removed" returns negative count for subtraction.
+- Reaction entries and manual bot entries merge per person by lowercase player
+  name (Discord display name vs Player field), one row each, combined total
+  clamped to [0, MAX_ENTRIES_PER_PERSON]. Leaders must type the name as shown
+  on Discord (case does not matter) for the merge to apply.
 - Stats auto-calculated: total entries, participants, GP raised.
 - Winner detected via trophy emoji in message: @mention > text after trophy
   (greeting words stripped, max 3 words) > message author. Pinned messages as fallback.
@@ -139,7 +143,7 @@ Nothing pending.
 
 ### Events
 - Forum threads from events channel, excluding giveaway-named threads.
-- EventForge date parsing: `When:` and `Ends:` lines (plain text or Discord timestamps).
+- EventForge date parsing: `When:` and `Ends:`/`End:` lines (plain text or Discord timestamps).
 - [LIVE] tag in thread name forces live status regardless of dates.
 - Emoji-prefixed date lines supported (e.g. calendar emoji before When:).
 - Discord forum tags (e.g. Entry, PVM, Loot Value) resolved from channel available_tags

@@ -197,6 +197,34 @@ ok.push([
   "Ends with Discord timestamp token",
   parseEventForgeDateField("Ends: <t:1725058800:F>", "Ends") != null,
 ]);
+ok.push([
+  "End without s parses via Ends? pattern",
+  parseEventForgeDateField("End: Sunday, August 30, 2026 at 10:00 PM", "Ends?") != null,
+]);
+ok.push([
+  "Ends still parses via Ends? pattern",
+  parseEventForgeDateField("Ends: Sunday, August 30, 2026 at 10:00 PM", "Ends?") != null,
+]);
+ok.push([
+  "Ends? does not match inside Weekend:",
+  parseEventForgeDateField("Weekend: fun for all", "Ends?") == null,
+]);
+
+// End: (no s) in transformThreads
+const endNoSThreads = [{
+  id: "2005", name: "BARROWS ALL WEEKEND", parent_id: "9999", message_count: 5,
+  thread_metadata: { archived: false, create_timestamp: "2026-08-24T20:00:00Z" },
+}];
+const endNoSMessages = [{
+  id: "2005",
+  content: "How it works\nWhen: Friday, August 28, 2026 at 3:00 PM\nEnd: Sunday, August 30, 2026 at 10:00 PM",
+  attachments: [],
+}];
+const endNoSOut = transformThreads(endNoSThreads, endNoSMessages);
+ok.push([
+  "End: line (no s) populates endTime",
+  endNoSOut[0].endTime != null && new Date(endNoSOut[0].endTime).getDate() === 30,
+]);
 
 // EventForge dates in transformThreads (plain text)
 const forgeThreads = [{
