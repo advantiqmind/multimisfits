@@ -133,7 +133,7 @@ const COMMANDS = [
   },
   {
     name: "giveaway-entry",
-    description: "Manually add a player entry to the current giveaway thread",
+    description: "Add or subtract entries for a player in the current giveaway",
     type: 1,
     options: [
       {
@@ -144,11 +144,24 @@ const COMMANDS = [
       },
       {
         name: "entries",
-        description: "Set total entries for this player (0 to remove)",
+        description: "Entries to add (negative to subtract)",
         type: 4,
         required: true,
-        min_value: 0,
+        min_value: -5,
         max_value: 5,
+      },
+    ],
+  },
+  {
+    name: "giveaway-check",
+    description: "Check a player's entry count in the current giveaway",
+    type: 1,
+    options: [
+      {
+        name: "player",
+        description: "Player name or @mention to look up",
+        type: 3,
+        required: true,
       },
     ],
   },
@@ -360,8 +373,12 @@ function extractBotEntryFromEmbed(message) {
   const fields = embed.fields || [];
   const playerField = fields.find((f) => f.name === "Player");
   if (!playerField) return null;
-  if (title === "Entry Removed") return { player: playerField.value.trim(), count: 0 };
   const entriesField = fields.find((f) => f.name === "Entries");
+  if (title === "Entry Removed") {
+    let removeCount = entriesField ? parseInt(entriesField.value, 10) : MAX_ENTRIES_PER_PERSON;
+    if (isNaN(removeCount) || removeCount < 1) removeCount = MAX_ENTRIES_PER_PERSON;
+    return { player: playerField.value.trim(), count: -Math.min(removeCount, MAX_ENTRIES_PER_PERSON) };
+  }
   const count = entriesField ? parseInt(entriesField.value, 10) : 1;
   return {
     player: playerField.value.trim(),
@@ -450,16 +467,17 @@ async function fetchGiveawayRounds(token, guildId, channelId) {
 
     const entries = [];
     const participantCounts = new Map();
+    const botPlayerNames = new Map();
     for (const m of messages) {
       if (m.id === thread.id) continue;
 
       const botEntry = extractBotEntryFromEmbed(m);
       if (botEntry) {
         const key = "manual:" + botEntry.player.toLowerCase();
-        if (participantCounts.has(key)) continue;
-        participantCounts.set(key, botEntry.count);
-        if (botEntry.count > 0) {
-          entries.push({ player: botEntry.player, count: botEntry.count });
+        const existing = participantCounts.get(key) || 0;
+        participantCounts.set(key, existing + botEntry.count);
+        if (!botPlayerNames.has(key)) {
+          botPlayerNames.set(key, botEntry.player);
         }
         continue;
       }
@@ -473,6 +491,15 @@ async function fetchGiveawayRounds(token, guildId, channelId) {
       if (allowed <= 0) continue;
       entries.push({ player: participant, count: allowed });
       participantCounts.set(participantId, existing + allowed);
+    }
+
+    for (const [key, rawSum] of participantCounts) {
+      if (!key.startsWith("manual:")) continue;
+      const clamped = Math.min(Math.max(rawSum, 0), MAX_ENTRIES_PER_PERSON);
+      participantCounts.set(key, clamped);
+      if (clamped > 0) {
+        entries.push({ player: botPlayerNames.get(key) || key.slice(7), count: clamped });
+      }
     }
 
     const totalEntries = entries.reduce((sum, e) => sum + e.count, 0);
@@ -1212,21 +1239,27 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
     } catch (e) { /* keep raw mention as fallback */ }
   }
 
+  if (entryCount === 0) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Use a positive number to add entries or negative to subtract.",
+      flags: 64,
+    });
+  }
+
   const addedBy = interaction.member && interaction.member.user
     ? (interaction.member.user.global_name || interaction.member.user.username || "Leader")
     : "Leader";
 
-  const isRemoval = entryCount === 0;
+  const isRemoval = entryCount < 0;
+  const displayCount = Math.abs(entryCount);
   const embedTitle = isRemoval ? "Entry Removed" : "Entry Added";
   const embedColor = isRemoval ? 0xe74c3c : 0x2ecc71;
 
   const fields = [
     { name: "Player", value: player, inline: true },
+    { name: "Entries", value: String(displayCount), inline: true },
+    { name: isRemoval ? "Removed by" : "Added by", value: addedBy, inline: true },
   ];
-  if (!isRemoval) {
-    fields.push({ name: "Entries", value: String(entryCount), inline: true });
-  }
-  fields.push({ name: isRemoval ? "Removed by" : "Added by", value: addedBy, inline: true });
 
   const postRes = await fetch(
     `https://discord.com/api/v10/channels/${interaction.channel_id}/messages`,
@@ -1248,10 +1281,135 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
     });
   }
 
+  const entryWord = displayCount === 1 ? "entry" : "entries";
   const msg = isRemoval
-    ? `Removed entries for **${player}**.`
-    : `Set **${player}** to ${entryCount} ${entryCount === 1 ? "entry" : "entries"}.`;
+    ? `Removed **${displayCount}** ${entryWord} from **${player}**.`
+    : `Added **${displayCount}** ${entryWord} for **${player}**.`;
   await patchFollowup(appId, interaction.token, { content: msg, flags: 64 });
+}
+
+// ---------------------------------------------------------------------------
+// /giveaway-check
+// ---------------------------------------------------------------------------
+async function handleGiveawayCheck(interaction, token, guildId, giveawayChannelId, appId) {
+  if (!giveawayChannelId) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Giveaway channel is not configured.",
+      flags: 64,
+    });
+  }
+
+  const options = (interaction.data && interaction.data.options) || [];
+  const playerOpt = options.find((o) => o.name === "player");
+  let player = playerOpt ? playerOpt.value.trim() : "";
+  let mentionId = null;
+
+  if (!player) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Player name is required.",
+      flags: 64,
+    });
+  }
+
+  const mentionMatch = player.match(/^<@!?(\d+)>$/);
+  if (mentionMatch) {
+    mentionId = mentionMatch[1];
+    try {
+      const memberRes = await fetch(
+        `https://discord.com/api/v10/guilds/${guildId}/members/${mentionId}`,
+        {
+          headers: {
+            Authorization: `Bot ${token}`,
+            "User-Agent": "Multi-Misfits clan website",
+          },
+        }
+      );
+      if (memberRes.ok) {
+        const member = await memberRes.json();
+        player = member.nick
+          || (member.user && (member.user.global_name || member.user.username))
+          || player;
+      }
+    } catch (e) { /* keep raw mention as fallback */ }
+  }
+
+  const authHeaders = {
+    Authorization: `Bot ${token}`,
+    "User-Agent": "Multi-Misfits clan website",
+  };
+
+  let activeThread = null;
+  try {
+    const activeRes = await fetch(
+      `https://discord.com/api/v10/guilds/${guildId}/threads/active`,
+      { headers: authHeaders }
+    );
+    if (activeRes.ok) {
+      const data = await activeRes.json();
+      const threads = (data.threads || []).filter((t) => t.parent_id === giveawayChannelId);
+      if (threads.length) {
+        threads.sort((a, b) => {
+          const da = (a.thread_metadata && a.thread_metadata.create_timestamp) || snowflakeToDate(a.id).toISOString();
+          const db = (b.thread_metadata && b.thread_metadata.create_timestamp) || snowflakeToDate(b.id).toISOString();
+          return db.localeCompare(da);
+        });
+        activeThread = threads[0];
+      }
+    }
+  } catch (e) { /* fall through */ }
+
+  if (!activeThread) {
+    return patchFollowup(appId, interaction.token, {
+      content: "No active giveaway round found.",
+    });
+  }
+
+  let messages = [];
+  try {
+    const msgsRes = await fetch(
+      `https://discord.com/api/v10/channels/${activeThread.id}/messages?limit=100`,
+      { headers: authHeaders }
+    );
+    if (msgsRes.ok) messages = await msgsRes.json();
+  } catch (e) { /* empty */ }
+
+  let botTotal = 0;
+  const playerLower = player.toLowerCase();
+  for (const m of messages) {
+    if (m.id === activeThread.id) continue;
+    const be = extractBotEntryFromEmbed(m);
+    if (be && be.player.toLowerCase() === playerLower) {
+      botTotal += be.count;
+    }
+  }
+  botTotal = Math.min(Math.max(botTotal, 0), MAX_ENTRIES_PER_PERSON);
+
+  let reactionTotal = 0;
+  for (const m of messages) {
+    if (m.id === activeThread.id) continue;
+    if (extractBotEntryFromEmbed(m)) continue;
+    const match = mentionId
+      ? (m.author && m.author.id === mentionId)
+      : ((m.author.global_name || m.author.username || "").toLowerCase() === playerLower);
+    if (!match) continue;
+    const rc = extractEntryCountFromReactions(m.reactions);
+    if (rc > 0) reactionTotal += rc;
+  }
+  reactionTotal = Math.min(reactionTotal, MAX_ENTRIES_PER_PERSON);
+
+  const total = Math.min(botTotal + reactionTotal, MAX_ENTRIES_PER_PERSON);
+
+  await patchFollowup(appId, interaction.token, {
+    embeds: [{
+      title: "Entry Check",
+      color: 0x3498db,
+      fields: [
+        { name: "Player", value: player, inline: true },
+        { name: "Entries", value: String(total), inline: true },
+        { name: "Giveaway", value: (activeThread.name || "Current").slice(0, 100), inline: false },
+      ],
+    }],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1539,6 +1697,11 @@ export async function onRequest(context) {
     if (name === "giveaway-entry") {
       safeWait(handleGiveawayEntry(interaction, token, channelId, appId));
       return json({ type: 5, data: { flags: 64 } });
+    }
+
+    if (name === "giveaway-check") {
+      safeWait(handleGiveawayCheck(interaction, token, guildId, channelId, appId));
+      return json({ type: 5 });
     }
 
     if (name === "help") {

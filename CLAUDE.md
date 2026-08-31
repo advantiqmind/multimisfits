@@ -85,9 +85,14 @@ Nothing pending.
 - Separate Discord forum channel (GIVEAWAY_CHANNEL_ID) from events.
 - Each round = one forum thread. Leaders react with 1/2 keycap emoji on member
   screenshots to confirm entries (max 2 per person).
-- /giveaway-entry slash command: leaders manually add entries (posts "Entry Added"
-  embed the parser reads). Restricted to leader role via Discord Integrations.
-- Bot embeds parsed by extractBotEntry(): Player + Entries fields, same per-person cap.
+- /giveaway-entry slash command: leaders add or subtract entries (-5 to +5).
+  Posts "Entry Added" or "Entry Removed" embed. Restricted to leader role via
+  Discord Integrations. Accumulation mode: all bot embeds for a player are summed,
+  final total clamped to [0, MAX_ENTRIES_PER_PERSON].
+- /giveaway-check slash command: look up a player's entry count in the current
+  giveaway. Open to all members (no Discord Integrations override needed).
+- Bot embeds parsed by extractBotEntry(): Player + Entries fields, accumulation
+  with sum-then-clamp. "Entry Removed" returns negative count for subtraction.
 - Stats auto-calculated: total entries, participants, GP raised.
 - Winner detected via trophy emoji in message: @mention > text after trophy
   (greeting words stripped, max 3 words) > message author. Pinned messages as fallback.

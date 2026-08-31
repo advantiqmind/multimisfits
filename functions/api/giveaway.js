@@ -83,8 +83,12 @@ export function extractBotEntry(message) {
   var fields = embed.fields || [];
   var playerField = fields.find(function (f) { return f.name === "Player"; });
   if (!playerField) return null;
-  if (title === "Entry Removed") return { player: playerField.value.trim(), count: 0 };
   var entriesField = fields.find(function (f) { return f.name === "Entries"; });
+  if (title === "Entry Removed") {
+    var removeCount = entriesField ? parseInt(entriesField.value, 10) : MAX_ENTRIES_PER_PERSON;
+    if (isNaN(removeCount) || removeCount < 1) removeCount = MAX_ENTRIES_PER_PERSON;
+    return { player: playerField.value.trim(), count: -Math.min(removeCount, MAX_ENTRIES_PER_PERSON) };
+  }
   var count = entriesField ? parseInt(entriesField.value, 10) : 1;
   return {
     player: playerField.value.trim(),
@@ -126,6 +130,7 @@ export function transformGiveawayData(threads, threadMessages) {
 
     const entries = [];
     const participantCounts = new Map();
+    const botPlayerNames = new Map();
 
     for (const m of messages) {
       if (m.id === thread.id) continue;
@@ -133,15 +138,10 @@ export function transformGiveawayData(threads, threadMessages) {
       const botEntry = extractBotEntry(m);
       if (botEntry) {
         const participantKey = "manual:" + botEntry.player.toLowerCase();
-        if (participantCounts.has(participantKey)) continue;
-        participantCounts.set(participantKey, botEntry.count);
-        if (botEntry.count > 0) {
-          entries.push({
-            player: botEntry.player,
-            playerId: participantKey,
-            count: botEntry.count,
-            timestamp: m.timestamp,
-          });
+        const existing = participantCounts.get(participantKey) || 0;
+        participantCounts.set(participantKey, existing + botEntry.count);
+        if (!botPlayerNames.has(participantKey)) {
+          botPlayerNames.set(participantKey, botEntry.player);
         }
         continue;
       }
@@ -164,6 +164,20 @@ export function transformGiveawayData(threads, threadMessages) {
       });
 
       participantCounts.set(participantId, existing + allowed);
+    }
+
+    for (const [key, rawSum] of participantCounts) {
+      if (!key.startsWith("manual:")) continue;
+      const clamped = Math.min(Math.max(rawSum, 0), MAX_ENTRIES_PER_PERSON);
+      participantCounts.set(key, clamped);
+      if (clamped > 0) {
+        entries.push({
+          player: botPlayerNames.get(key) || key.slice(7),
+          playerId: key,
+          count: clamped,
+          timestamp: null,
+        });
+      }
     }
 
     const totalEntries = entries.reduce((sum, e) => sum + e.count, 0);

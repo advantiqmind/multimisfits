@@ -496,8 +496,17 @@ const beRemoved = extractBotEntry({
     { name: "Removed by", value: "Leader" },
   ]}],
 });
-check("Entry Removed returns count 0", beRemoved && beRemoved.count === 0);
+check("Entry Removed returns negative count", beRemoved && beRemoved.count === -5);
 check("Entry Removed preserves player", beRemoved && beRemoved.player === "TestPlayer");
+
+const beRemovedN = extractBotEntry({
+  embeds: [{ title: "Entry Removed", fields: [
+    { name: "Player", value: "TestPlayer" },
+    { name: "Entries", value: "2" },
+    { name: "Removed by", value: "Leader" },
+  ]}],
+});
+check("Entry Removed with Entries field returns -N", beRemovedN && beRemovedN.count === -2);
 
 // ---- transformGiveawayData: bot-posted entries ----
 console.log("\n== transformGiveawayData: bot-posted entries ==");
@@ -512,7 +521,7 @@ check("totalEntries includes bot entry", botRounds[0].totalEntries === 3);
 check("totalParticipants counts both", botRounds[0].totalParticipants === 2);
 check("bot entry player name preserved", botRounds[0].entries[0].player === "Vilence");
 
-console.log("\n== bot entries: latest wins (set behavior) ==");
+console.log("\n== bot entries: accumulation (add/subtract) ==");
 const botDoubleMessages = buildMessages("2001", [
   OPENING_MSG,
   {
@@ -530,8 +539,9 @@ const botDoubleMessages = buildMessages("2001", [
   botEntryMsg,
 ]);
 const botCapRounds = transformGiveawayData([THREAD_ACTIVE], botDoubleMessages);
-check("latest bot entry wins (first in list = newest)", botCapRounds[0].totalEntries === 1);
-check("only latest bot entry counted", botCapRounds[0].entries.length === 1);
+check("bot entries accumulate (1 + 2 = 3)", botCapRounds[0].totalEntries === 3);
+check("single entry record for accumulated player", botCapRounds[0].entries.length === 1);
+check("accumulated count is 3", botCapRounds[0].entries[0].count === 3);
 
 console.log("\n== bot entries: case insensitive dedup ==");
 const botCaseMessages = buildMessages("2001", [
@@ -550,9 +560,10 @@ const botCaseMessages = buildMessages("2001", [
   },
 ]);
 const botCaseRounds = transformGiveawayData([THREAD_ACTIVE], botCaseMessages);
-check("case-insensitive player dedup for bot entries", botCaseRounds[0].totalEntries === 2);
+check("case-insensitive accumulation (2 + 1 = 3)", botCaseRounds[0].totalEntries === 3);
+check("single entry record for case-insensitive match", botCaseRounds[0].entries.length === 1);
 
-console.log("\n== bot entries: Entry Removed sets to 0 ==");
+console.log("\n== bot entries: subtract zeroes out player ==");
 const botRemovedMessages = buildMessages("2001", [
   OPENING_MSG,
   {
@@ -571,6 +582,56 @@ const botRemovedRounds = transformGiveawayData([THREAD_ACTIVE], botRemovedMessag
 check("Entry Removed zeroes out player", botRemovedRounds[0].totalEntries === 0);
 check("removed player not in entries list", botRemovedRounds[0].entries.length === 0);
 check("removed player still counted as participant", botRemovedRounds[0].totalParticipants === 1);
+
+console.log("\n== bot entries: add then subtract ==");
+const addSubMessages = buildMessages("2001", [
+  OPENING_MSG,
+  {
+    id: "7020",
+    content: "",
+    author: { id: "999", global_name: "Bot", username: "bot" },
+    embeds: [{ title: "Entry Added", fields: [
+      { name: "Player", value: "Vilence", inline: true },
+      { name: "Entries", value: "2", inline: true },
+      { name: "Added by", value: "mr flsh", inline: true },
+    ]}],
+    mentions: [], attachments: [], reactions: [],
+  },
+  {
+    id: "7021",
+    content: "",
+    author: { id: "999", global_name: "Bot", username: "bot" },
+    embeds: [{ title: "Entry Removed", fields: [
+      { name: "Player", value: "Vilence", inline: true },
+      { name: "Entries", value: "1", inline: true },
+      { name: "Removed by", value: "mr flsh", inline: true },
+    ]}],
+    mentions: [], attachments: [], reactions: [],
+  },
+]);
+const addSubRounds = transformGiveawayData([THREAD_ACTIVE], addSubMessages);
+check("add 2 then subtract 1 = 1 entry", addSubRounds[0].totalEntries === 1);
+check("player in entries list", addSubRounds[0].entries.length === 1);
+check("entry count is 1", addSubRounds[0].entries[0].count === 1);
+
+console.log("\n== bot entries: over-subtract clamps at 0 ==");
+const overSubMessages = buildMessages("2001", [
+  OPENING_MSG,
+  {
+    id: "7030",
+    content: "",
+    author: { id: "999", global_name: "Bot", username: "bot" },
+    embeds: [{ title: "Entry Removed", fields: [
+      { name: "Player", value: "Vilence", inline: true },
+      { name: "Entries", value: "3", inline: true },
+      { name: "Removed by", value: "mr flsh", inline: true },
+    ]}],
+    mentions: [], attachments: [], reactions: [],
+  },
+]);
+const overSubRounds = transformGiveawayData([THREAD_ACTIVE], overSubMessages);
+check("subtract with no prior add = 0 entries", overSubRounds[0].totalEntries === 0);
+check("player not in entries list", overSubRounds[0].entries.length === 0);
 
 console.log(`\n${pass + fail} checks: ${pass} passed, ${fail} failed`);
 if (fail) {
