@@ -758,6 +758,17 @@ function isLootValueEvent(ev) {
   return false;
 }
 
+function eventThemeClass(ev) {
+  var tags = ev.tags || [];
+  for (var i = 0; i < tags.length; i++) {
+    var t = tags[i].toLowerCase();
+    if (t === "pvp" || t === "wilderness" || t === "wildy") return "ev-wild";
+    if (t === "social" || t === "skilling") return "ev-social";
+    if (t === "pvm" || t === "pve" || t === "bossing") return "ev-pvm";
+  }
+  return "";
+}
+
 function computeEventStatus(ev) {
   if (ev.status === "completed" && !hasLiveTag(ev)) return "completed";
   if (hasLiveTag(ev)) return "live";
@@ -797,7 +808,8 @@ function featuredEventHtml(ev) {
     ? `<div class="lv-container" data-event-id="${esc(ev.id)}"><p class="lv-loading">Loading leaderboard...</p></div>`
     : "";
 
-  return `<div class="ev-featured"${imgStyle}>
+  var theme = eventThemeClass(ev);
+  return `<div class="ev-featured${theme ? " " + theme : ""}"${imgStyle}>
     <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${metaText}</span>
@@ -979,8 +991,9 @@ function eventCard(ev) {
     : "";
   const liveClass = isLive ? " ev-card-live" : "";
   const lvTag = isLootValueEvent(ev) ? '<span class="lv-tag">LOOT</span>' : "";
+  const theme = eventThemeClass(ev);
 
-  return `<div class="ev-card ev-clickable${liveClass}" data-ev-id="${esc(ev.id)}"${bgStyle}>
+  return `<div class="ev-card ev-clickable${liveClass}${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
       <h3>${esc(cleanName(ev.name))}${lvTag ? " " + lvTag : ""}</h3>
@@ -1069,6 +1082,12 @@ function wireEventModals() {
     var timeStr = formatEventTime(ev.startTime);
     var badge = eventStatusBadge(effStatus);
     var lvTag = isLootValueEvent(ev) ? '<span class="lv-tag" style="margin-left:8px">LOOT VALUE</span>' : "";
+    var modal = overlay.querySelector(".ev-modal");
+    if (modal) {
+      modal.classList.remove("ev-wild", "ev-social", "ev-pvm");
+      var theme = eventThemeClass(ev);
+      if (theme) modal.classList.add(theme);
+    }
     var desc = ev.description ? formatDiscord(ev.description) : '<span style="color:var(--muted)">No description</span>';
     var imgHtml = ev.image
       ? '<img src="' + esc(ev.image) + '" alt="" style="max-width:100%;border:2px solid #000;border-radius:6px;margin-bottom:14px" loading="lazy">'
