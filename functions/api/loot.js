@@ -69,16 +69,34 @@ async function fetchActiveLootEvents(env) {
 
   let threads;
   try {
-    const res = await fetch(
-      `https://discord.com/api/v10/guilds/${guildId}/threads/active`,
-      { headers }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
+    const [activeRes, channelRes] = await Promise.all([
+      fetch(
+        `https://discord.com/api/v10/guilds/${guildId}/threads/active`,
+        { headers }
+      ),
+      fetch(
+        `https://discord.com/api/v10/channels/${channelId}`,
+        { headers }
+      ),
+    ]);
+    if (!activeRes.ok) return [];
+    const data = await activeRes.json();
+
+    let lootTagId = null;
+    if (channelRes.ok) {
+      const channelData = await channelRes.json();
+      const lootTag = (channelData.available_tags || []).find(
+        tag => tag.name.toLowerCase() === "loot value"
+      );
+      if (lootTag) lootTagId = lootTag.id;
+    }
+
     threads = (data.threads || []).filter(
       t => t.parent_id === channelId &&
-        /\[Loot Value\]/i.test(t.name || "") &&
-        !(t.thread_metadata && t.thread_metadata.archived)
+        !(t.thread_metadata && t.thread_metadata.archived) &&
+        lootTagId &&
+        Array.isArray(t.applied_tags) &&
+        t.applied_tags.includes(lootTagId)
     );
   } catch {
     return [];

@@ -45,7 +45,7 @@ function resolveMentions(text, mentions) {
   return t;
 }
 
-export function transformThreads(threads, openingMessages) {
+export function transformThreads(threads, openingMessages, tagMap) {
   const msgMap = new Map();
   for (const m of Array.isArray(openingMessages) ? openingMessages : []) {
     if (m && m.id) msgMap.set(m.id, m);
@@ -70,6 +70,11 @@ export function transformThreads(threads, openingMessages) {
     const endsDate = parseEventForgeDateField(content, "Ends");
     const description = resolveMentions(content, msgMentions);
 
+    const appliedIds = Array.isArray(t.applied_tags) ? t.applied_tags : [];
+    const tags = tagMap
+      ? appliedIds.map(id => tagMap.get(id)).filter(Boolean)
+      : [];
+
     events.push({
       id: t.id,
       name: (t.name || "Event").slice(0, 200),
@@ -80,6 +85,7 @@ export function transformThreads(threads, openingMessages) {
       status,
       interestedCount: t.message_count || 0,
       image: image ? image.url : null,
+      tags,
     });
   }
 
@@ -186,23 +192,35 @@ export async function onRequest(context) {
   });
   threads = threads.slice(0, MAX_THREADS);
 
+  let tagMap = new Map();
   let openingMessages;
   try {
-    openingMessages = await Promise.all(
-      threads.map((t) =>
+    const [channelRes, ...msgResults] = await Promise.all([
+      fetch(
+        `https://discord.com/api/v10/channels/${channelId}`,
+        { headers }
+      ),
+      ...threads.map((t) =>
         fetch(
           `https://discord.com/api/v10/channels/${t.id}/messages/${t.id}`,
           { headers }
         )
           .then((r) => (r.ok ? r.json() : null))
           .catch(() => null)
-      )
-    );
+      ),
+    ]);
+    openingMessages = msgResults;
+    if (channelRes.ok) {
+      const channelData = await channelRes.json();
+      for (const tag of (channelData.available_tags || [])) {
+        tagMap.set(tag.id, tag.name);
+      }
+    }
   } catch (e) {
     openingMessages = [];
   }
 
-  const events = transformThreads(threads, openingMessages);
+  const events = transformThreads(threads, openingMessages, tagMap);
   const res = json({ configured: true, events }, 200, {
     "Cache-Control": `public, max-age=${CACHE_TTL}`,
   });

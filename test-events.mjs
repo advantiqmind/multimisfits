@@ -286,6 +286,47 @@ ok.push([
   metaOut[0].description.includes("Bring your gear!"),
 ]);
 
+// Tag resolution tests
+const tagMap = new Map([["tag_001", "Loot Value"], ["tag_002", "PVM"], ["tag_003", "Entry"]]);
+const tagThreads = [
+  {
+    id: "2501", name: "Barrows Loot Race", parent_id: "9999", message_count: 5,
+    thread_metadata: { archived: false, create_timestamp: "2026-08-26T12:00:00Z" },
+    applied_tags: ["tag_001", "tag_002"],
+  },
+  {
+    id: "2502", name: "PVP Tournament", parent_id: "9999", message_count: 3,
+    thread_metadata: { archived: false, create_timestamp: "2026-08-25T12:00:00Z" },
+    applied_tags: ["tag_002"],
+  },
+  {
+    id: "2503", name: "No Tags Event", parent_id: "9999", message_count: 1,
+    thread_metadata: { archived: false, create_timestamp: "2026-08-24T12:00:00Z" },
+  },
+];
+const tagMessages = [
+  { id: "2501", content: "Barrows loot race!", attachments: [] },
+  { id: "2502", content: "PVP event!", attachments: [] },
+  { id: "2503", content: "No tags here.", attachments: [] },
+];
+const tagOut = transformThreads(tagThreads, tagMessages, tagMap);
+ok.push([
+  "tags resolved from applied_tags via tagMap",
+  JSON.stringify(tagOut.find(e => e.id === "2501").tags) === JSON.stringify(["Loot Value", "PVM"]),
+]);
+ok.push([
+  "single tag resolved correctly",
+  JSON.stringify(tagOut.find(e => e.id === "2502").tags) === JSON.stringify(["PVM"]),
+]);
+ok.push([
+  "missing applied_tags gives empty tags array",
+  JSON.stringify(tagOut.find(e => e.id === "2503").tags) === JSON.stringify([]),
+]);
+ok.push([
+  "no tagMap gives empty tags arrays",
+  transformThreads(tagThreads, tagMessages).every(e => JSON.stringify(e.tags) === "[]"),
+]);
+
 // Mention resolution tests
 const mentionThreads = [{
   id: "3001", name: "Test Event", parent_id: "9999", message_count: 3,

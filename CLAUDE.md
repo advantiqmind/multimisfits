@@ -115,12 +115,14 @@ Nothing pending.
   - Single boss: `Boss: Chambers of Xeric`
   - Multiple: `Boss: Chambers of Xeric, Theatre of Blood`
   - All bosses: `Boss: any` or omit the line entirely.
-- Endpoint checks active `[Loot Value]` event threads (cached 5min), matches boss, stores in D1.
+- Loot Value events identified by the "Loot Value" Discord forum tag (not thread name).
+  Backend fetches channel available_tags to resolve tag IDs. Frontend receives tag names
+  in the event's `tags` array from /api/events.
+- Endpoint checks active events with the "Loot Value" tag (cached 5min), matches boss, stores in D1.
 - D1 table `loot_entries` auto-created on first use (id, event_id, player, source, kill_count,
   items JSON, total_value, created_at).
 - GET /api/loot?event=THREAD_ID returns leaderboard (top 20), stats, notable drops (top 5 items).
-- Frontend renders leaderboard on featured event + event modal for `[Loot Value]` events.
-- `[Loot Value]` stripped from display name (like `[LIVE]`).
+- Frontend renders leaderboard on featured event + event modal for Loot Value tagged events.
 - Event cards show "LOOT" tag. Featured + modal show "LOOT VALUE" tag.
 - Leaderboard shows medals for top 3, KC per player, total loot value.
 - Notable drops section shows highest individual item values.
@@ -137,6 +139,8 @@ Nothing pending.
 - EventForge date parsing: `When:` and `Ends:` lines (plain text or Discord timestamps).
 - [LIVE] tag in thread name forces live status regardless of dates.
 - Emoji-prefixed date lines supported (e.g. calendar emoji before When:).
+- Discord forum tags (e.g. Entry, PVM, Loot Value) resolved from channel available_tags
+  and included in each event's `tags` array.
 
 ### Authentication gate
 - Every page except gate.html and static assets is protected by _middleware.js.

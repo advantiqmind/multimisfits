@@ -747,11 +747,15 @@ function hasLiveTag(ev) {
 }
 
 function cleanName(name) {
-  return (name || "").replace(/\s*\[LIVE\]\s*/gi, " ").replace(/\s*\[Loot Value\]\s*/gi, " ").trim();
+  return (name || "").replace(/\s*\[LIVE\]\s*/gi, " ").trim();
 }
 
 function isLootValueEvent(ev) {
-  return /\[Loot Value\]/i.test(ev.name || "");
+  var tags = ev.tags || [];
+  for (var i = 0; i < tags.length; i++) {
+    if (tags[i].toLowerCase() === "loot value") return true;
+  }
+  return false;
 }
 
 function computeEventStatus(ev) {
