@@ -92,7 +92,8 @@ export async function onRequest(context) {
   var discordUsername = user.global_name || user.username || "Unknown";
   var discordAvatar = user.avatar || null;
 
-  var hasReferral = getCookie(request, "mm_referral_ok") === "1";
+  var referralCookie = getCookie(request, "mm_referral_ok");
+  var hasReferral = !!referralCookie;
 
   var existing = await env.DB.prepare(
     "SELECT id FROM sessions WHERE discord_id = ? LIMIT 1"
@@ -113,7 +114,7 @@ export async function onRequest(context) {
 
   var referralCode = null;
   if (hasReferral) {
-    referralCode = "used";
+    referralCode = decodeURIComponent(referralCookie).toUpperCase() || "UNKNOWN";
   }
 
   await env.DB.prepare(
@@ -129,6 +130,14 @@ export async function onRequest(context) {
     expires.toISOString()
   ).run();
 
+  if (hasReferral && referralCode) {
+    var botToken = env.DISCORD_BOT_TOKEN;
+    var threadId = env.REFERRAL_THREAD_ID;
+    if (botToken && threadId) {
+      context.waitUntil(notifyReferral(botToken, threadId, referralCode, discordUsername));
+    }
+  }
+
   var cookieMaxAge = 30 * 24 * 60 * 60;
   var redirect = state || "/";
   if (redirect.startsWith("http") || redirect.includes("..")) redirect = "/";
@@ -141,4 +150,49 @@ export async function onRequest(context) {
       ["Set-Cookie", "mm_referral_ok=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"],
     ],
   });
+}
+
+async function notifyReferral(token, threadId, code, username) {
+  try {
+    var authHeaders = {
+      Authorization: "Bot " + token,
+      "User-Agent": "Multi-Misfits clan website",
+    };
+
+    var msgsRes = await fetch(
+      "https://discord.com/api/v10/channels/" + threadId + "/messages?limit=100",
+      { headers: authHeaders }
+    );
+    var codeCount = 0;
+    if (msgsRes.ok) {
+      var msgs = await msgsRes.json();
+      for (var i = 0; i < msgs.length; i++) {
+        var m = msgs[i];
+        if (!Array.isArray(m.embeds) || !m.embeds.length) continue;
+        var fields = m.embeds[0].fields || [];
+        var codeField = fields.find(function (f) { return f.name === "Code"; });
+        if (codeField && codeField.value === code) codeCount++;
+      }
+    }
+
+    await fetch(
+      "https://discord.com/api/v10/channels/" + threadId + "/messages",
+      {
+        method: "POST",
+        headers: { Authorization: "Bot " + token, "Content-Type": "application/json", "User-Agent": "Multi-Misfits clan website" },
+        body: JSON.stringify({
+          embeds: [{
+            title: "Referral Code Redeemed",
+            color: 0x2ecc71,
+            fields: [
+              { name: "User", value: username, inline: true },
+              { name: "Code", value: code, inline: true },
+              { name: "Time", value: new Date().toUTCString(), inline: true },
+              { name: "Total Redemptions", value: String(codeCount + 1), inline: true },
+            ],
+          }],
+        }),
+      }
+    );
+  } catch (e) { /* tracking failure should never break the auth flow */ }
 }

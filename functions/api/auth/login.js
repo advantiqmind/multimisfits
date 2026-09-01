@@ -61,59 +61,9 @@ export async function onRequest(context) {
   var redirect3 = body.redirect || "/";
   var authUrl = buildOAuthUrl(clientId, redirectUri, redirect3);
 
-  var token = env.DISCORD_BOT_TOKEN;
-  var threadId = env.REFERRAL_THREAD_ID;
-  if (token && threadId) {
-    context.waitUntil(notifyReferral(token, threadId, submitted));
-  }
-
   return json(
     { valid: true, authUrl: authUrl },
     200,
-    { "Set-Cookie": "mm_referral_ok=1; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax" }
+    { "Set-Cookie": "mm_referral_ok=" + encodeURIComponent(submitted) + "; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax" }
   );
-}
-
-async function notifyReferral(token, threadId, code) {
-  try {
-    var authHeaders = {
-      Authorization: "Bot " + token,
-      "User-Agent": "Multi-Misfits clan website",
-    };
-
-    var msgsRes = await fetch(
-      "https://discord.com/api/v10/channels/" + threadId + "/messages?limit=100",
-      { headers: authHeaders }
-    );
-    var codeCount = 0;
-    if (msgsRes.ok) {
-      var msgs = await msgsRes.json();
-      for (var i = 0; i < msgs.length; i++) {
-        var m = msgs[i];
-        if (!Array.isArray(m.embeds) || !m.embeds.length) continue;
-        var fields = m.embeds[0].fields || [];
-        var codeField = fields.find(function (f) { return f.name === "Code"; });
-        if (codeField && codeField.value === code) codeCount++;
-      }
-    }
-
-    await fetch(
-      "https://discord.com/api/v10/channels/" + threadId + "/messages",
-      {
-        method: "POST",
-        headers: { Authorization: "Bot " + token, "Content-Type": "application/json", "User-Agent": "Multi-Misfits clan website" },
-        body: JSON.stringify({
-          embeds: [{
-            title: "Referral Code Redeemed",
-            color: 0x2ecc71,
-            fields: [
-              { name: "Code", value: code, inline: true },
-              { name: "Time", value: new Date().toUTCString(), inline: true },
-              { name: "Total Redemptions", value: String(codeCount + 1), inline: true },
-            ],
-          }],
-        }),
-      }
-    );
-  } catch (e) { /* tracking failure should never break the auth flow */ }
 }
