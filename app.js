@@ -883,6 +883,7 @@ function renderHomeEvents(events) {
   if (!body) return;
   var liveEvs = events.filter(function(e) { return computeEventStatus(e) === "live"; });
   var upcomingEvs = events.filter(function(e) { return computeEventStatus(e) === "scheduled"; });
+  upcomingEvs.sort(function(a, b) { return new Date(a.startTime) - new Date(b.startTime); });
   var show = liveEvs.concat(upcomingEvs).slice(0, 3);
   if (!show.length) return;
   body.innerHTML = show.map(homeEventCard).join("");
@@ -1062,6 +1063,10 @@ function renderEvents(events, { cached } = {}) {
   live.sort(function(a, b) {
     if (a.endTime && b.endTime) return new Date(a.endTime) - new Date(b.endTime);
     return new Date(b.startTime) - new Date(a.startTime);
+  });
+
+  upcoming.sort(function(a, b) {
+    return new Date(a.startTime) - new Date(b.startTime);
   });
 
   var featured = live[0] || upcoming[0];
