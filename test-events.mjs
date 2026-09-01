@@ -1,4 +1,4 @@
-import { transformThreads, parseEventForgeDateField, teamFromEmoji, extractTeamEmbed, parseTeams } from "./functions/api/events.js";
+import { transformThreads, parseEventForgeDateField, teamFromEmoji, extractTeamEmbed, parseTeams, isCheckmark, extractParticipantEmbed, parseParticipants } from "./functions/api/events.js";
 
 const threads = [
   {
@@ -456,6 +456,98 @@ ok.push(["transformThreads: teams populated from threadMessages", (() => {
   ]]]);
   const result = transformThreads(t, m, null, tm);
   return result[0].teams && result[0].teams.a && result[0].teams.a[0] === "Flash";
+})()]);
+
+// isCheckmark tests
+ok.push(["isCheckmark: green check emoji", isCheckmark("✅") === true]);
+ok.push(["isCheckmark: random emoji returns false", isCheckmark("😀") === false]);
+ok.push(["isCheckmark: null returns false", isCheckmark(null) === false]);
+ok.push(["isCheckmark: empty string returns false", isCheckmark("") === false]);
+ok.push(["isCheckmark: team A emoji is not checkmark", isCheckmark("🅰") === false]);
+
+// extractParticipantEmbed tests
+ok.push(["extractParticipantEmbed: Participant Added", (() => {
+  const r = extractParticipantEmbed({ embeds: [{ title: "Participant Added", fields: [{ name: "Player", value: "Flash" }] }] });
+  return r && r.player === "Flash" && r.added === true;
+})()]);
+ok.push(["extractParticipantEmbed: Participant Removed", (() => {
+  const r = extractParticipantEmbed({ embeds: [{ title: "Participant Removed", fields: [{ name: "Player", value: "Flash" }] }] });
+  return r && r.player === "Flash" && r.added === false;
+})()]);
+ok.push(["extractParticipantEmbed: ignores non-participant embed", extractParticipantEmbed({ embeds: [{ title: "Team Assigned" }] }) === null]);
+ok.push(["extractParticipantEmbed: no embeds", extractParticipantEmbed({ embeds: [] }) === null]);
+ok.push(["extractParticipantEmbed: missing embeds array", extractParticipantEmbed({}) === null]);
+ok.push(["extractParticipantEmbed: missing Player field", extractParticipantEmbed({ embeds: [{ title: "Participant Added", fields: [{ name: "Team", value: "A" }] }] }) === null]);
+
+// parseParticipants tests
+ok.push(["parseParticipants: checkmark reaction adds participant", (() => {
+  const msgs = [
+    { id: "100", author: { global_name: "Alice" }, reactions: [{ emoji: { name: "✅" } }] },
+  ];
+  const p = parseParticipants(msgs);
+  return p && p.length === 1 && p[0] === "Alice";
+})()]);
+ok.push(["parseParticipants: bot embed adds participant", (() => {
+  const msgs = [
+    { id: "100", embeds: [{ title: "Participant Added", fields: [{ name: "Player", value: "Flash" }] }] },
+  ];
+  const p = parseParticipants(msgs);
+  return p && p.length === 1 && p[0] === "Flash";
+})()]);
+ok.push(["parseParticipants: bot embed removal clears participant", (() => {
+  const msgs = [
+    { id: "100", embeds: [{ title: "Participant Added", fields: [{ name: "Player", value: "Flash" }] }] },
+    { id: "200", embeds: [{ title: "Participant Removed", fields: [{ name: "Player", value: "Flash" }] }] },
+  ];
+  return parseParticipants(msgs) === null;
+})()]);
+ok.push(["parseParticipants: bot embed overrides reaction (case-insensitive)", (() => {
+  const msgs = [
+    { id: "100", author: { global_name: "flash" }, reactions: [{ emoji: { name: "✅" } }] },
+    { id: "200", embeds: [{ title: "Participant Removed", fields: [{ name: "Player", value: "Flash" }] }] },
+  ];
+  return parseParticipants(msgs) === null;
+})()]);
+ok.push(["parseParticipants: sorted alphabetically", (() => {
+  const msgs = [
+    { id: "100", author: { global_name: "Charlie" }, reactions: [{ emoji: { name: "✅" } }] },
+    { id: "101", author: { global_name: "Alice" }, reactions: [{ emoji: { name: "✅" } }] },
+  ];
+  const p = parseParticipants(msgs);
+  return p && p[0] === "Alice" && p[1] === "Charlie";
+})()]);
+ok.push(["parseParticipants: empty messages returns null", parseParticipants([]) === null]);
+ok.push(["parseParticipants: null returns null", parseParticipants(null) === null]);
+ok.push(["parseParticipants: non-checkmark reaction ignored", (() => {
+  const msgs = [
+    { id: "100", author: { global_name: "Alice" }, reactions: [{ emoji: { name: "😀" } }] },
+  ];
+  return parseParticipants(msgs) === null;
+})()]);
+ok.push(["parseParticipants: uses username fallback", (() => {
+  const msgs = [
+    { id: "100", author: { username: "bob123" }, reactions: [{ emoji: { name: "✅" } }] },
+  ];
+  const p = parseParticipants(msgs);
+  return p && p[0] === "bob123";
+})()]);
+
+// transformThreads with participants
+ok.push(["transformThreads: participants null when no participant data", (() => {
+  const t = [{ id: "6001", name: "No Participants", parent_id: "9999", message_count: 1, thread_metadata: { archived: false, create_timestamp: "2026-08-26T12:00:00Z" } }];
+  const m = [{ id: "6001", content: "Just an event", attachments: [] }];
+  const result = transformThreads(t, m, null, new Map([["6001", [{ id: "6001", content: "Just an event" }]]]));
+  return result[0].participants === null;
+})()]);
+ok.push(["transformThreads: participants populated from threadMessages", (() => {
+  const t = [{ id: "6002", name: "Participant Event", parent_id: "9999", message_count: 3, thread_metadata: { archived: false, create_timestamp: "2026-08-26T12:00:00Z" } }];
+  const m = [{ id: "6002", content: "Join up!", attachments: [] }];
+  const tm = new Map([["6002", [
+    { id: "6002", content: "Join up!" },
+    { id: "6003", author: { global_name: "Flash" }, reactions: [{ emoji: { name: "✅" } }] },
+  ]]]);
+  const result = transformThreads(t, m, null, tm);
+  return result[0].participants && result[0].participants.length === 1 && result[0].participants[0] === "Flash";
 })()]);
 
 console.log("\nchecks:");

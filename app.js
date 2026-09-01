@@ -824,6 +824,27 @@ function teamRosterHtml(teams) {
   return '<div class="team-roster"><div class="team-roster-label">Teams</div><div class="team-grid">' + blocks + '</div></div>';
 }
 
+function participantCountHtml(participants) {
+  if (!participants || !participants.length) return "";
+  return '<span class="ev-participants"><span class="ev-participants-icon">&#10003;</span>' + participants.length + ' participating</span>';
+}
+
+function participantBadgeHtml(participants) {
+  if (!participants || !participants.length) return "";
+  return '<span class="badge-participants">&#10003; ' + participants.length + ' participant' + (participants.length === 1 ? '' : 's') + '</span>';
+}
+
+function participantListHtml(participants) {
+  if (!participants || !participants.length) return "";
+  var chips = "";
+  for (var i = 0; i < participants.length; i++) chips += '<span class="participant-chip">' + esc(participants[i]) + '</span>';
+  return '<div class="participant-list">' +
+    '<div class="participant-list-header" onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'.participant-list-toggle\').textContent=this.nextElementSibling.classList.contains(\'hidden\')?\'SHOW\':\'HIDE\'">' +
+    '<span class="participant-list-label">Participants (' + participants.length + ')</span>' +
+    '<span class="participant-list-toggle">SHOW</span></div>' +
+    '<div class="participant-list-names hidden">' + chips + '</div></div>';
+}
+
 function featuredEventHtml(ev) {
   var effStatus = computeEventStatus(ev);
   const badge = eventStatusBadge(effStatus);
@@ -850,8 +871,10 @@ function featuredEventHtml(ev) {
   var theme = eventThemeClass(ev);
   var teamBadge = teamBadgeHtml(ev.teams);
   var teamRoster = teamRosterHtml(ev.teams);
+  var partBadge = participantBadgeHtml(ev.participants);
+  var partList = participantListHtml(ev.participants);
   return `<div class="ev-featured${theme ? " " + theme : ""}"${imgStyle}>
-    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${teamBadge}${isLive ? "" : badge}</div>
+    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${teamBadge}${partBadge}${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}${interested}
@@ -859,6 +882,7 @@ function featuredEventHtml(ev) {
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
     ${lvContainer}
     ${teamRoster}
+    ${partList}
     <div class="ev-cta">
       <a class="btn join" data-discord href="#" aria-label="Join Discord for event details">
         <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
@@ -1037,11 +1061,13 @@ function eventCard(ev) {
   const theme = eventThemeClass(ev);
 
   var teamDots = teamDotsHtml(ev.teams);
+  var partCount = ev.participants && ev.participants.length ? ev.participants.length + " joined" : "";
+  var metaParts = [liveText || timeStr, interested, partCount].filter(Boolean).join(" · ");
   return `<div class="ev-card ev-clickable${liveClass}${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
       <h3>${esc(cleanName(ev.name))}${lvTag ? " " + lvTag : ""}</h3>
-      <div class="ev-card-meta">${liveText || timeStr}${(liveText || timeStr) && interested ? " · " : ""}${interested}</div>
+      <div class="ev-card-meta">${metaParts}</div>
     </div>
     ${teamDots}${badge}
   </div>`;
@@ -1162,14 +1188,17 @@ function wireEventModals() {
 
     var teamBadge = teamBadgeHtml(ev.teams);
     var teamRoster = teamRosterHtml(ev.teams);
+    var partBadge = participantBadgeHtml(ev.participants);
+    var partList = participantListHtml(ev.participants);
     body.innerHTML =
-      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + teamBadge + badge + '</div>' +
+      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + teamBadge + partBadge + badge + '</div>' +
       '<div class="ev-modal-meta">' + dateStr + ' · ' + timeStr +
       (replies ? ' · ' + replies : '') + '</div>' +
       imgHtml +
       '<div class="ev-modal-desc">' + desc + '</div>' +
       lvHtml +
       teamRoster +
+      partList +
       '<div style="margin-top:16px"><a class="btn join" data-discord href="#" aria-label="Join Discord">' +
       '<svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>' +
       'View on Discord</a></div>';

@@ -165,6 +165,21 @@ Nothing pending.
 - Website display: colored team dots on event cards, "TEAMS" badge + team roster
   in featured events and modals. All theme-aware (default, wilderness, PVM, social).
 
+### Event Participants
+- Participation is OPTIONAL. Events without participant data look exactly the same as before.
+- Members react with green checkmark (U+2705) on messages in event threads to signal participation.
+- Leaders can manually add/remove participants via slash commands.
+- Bot embeds ("Participant Added"/"Participant Removed" with Player field) override reactions.
+- Processed chronologically by snowflake ID; later actions override earlier ones.
+- A player appears once; Participant Removed clears their entry.
+- API response `participants` field: null when no participants, or sorted array of player names.
+- Slash commands: /participant-add (player string), /participant-remove (player string),
+  /participant-list (shows all participants). Add/remove restricted to leaders via
+  Discord Integrations; /participant-list open to all.
+- Bot embed colors: Participant Added = 0x2ecc71 (green), Participant Removed = 0xe74c3c (red).
+- Website display: participant count on event cards ("X joined"), "PARTICIPANTS" badge +
+  expandable name list (click to SHOW/HIDE) in featured events and modals.
+
 ### Authentication gate
 - Every page except gate.html and static assets is protected by _middleware.js.
 - First visit: gate.html shows referral code input + "Sign in with Discord" for returning users.

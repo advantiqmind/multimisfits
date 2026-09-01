@@ -221,6 +221,27 @@ const COMMANDS = [
     description: "Show all team assignments for this event",
     type: 1,
   },
+  {
+    name: "participant-add",
+    description: "Manually add a participant to this event",
+    type: 1,
+    options: [
+      { name: "player", description: "Player name (as shown on Discord)", type: 3, required: true },
+    ],
+  },
+  {
+    name: "participant-remove",
+    description: "Remove a participant from this event",
+    type: 1,
+    options: [
+      { name: "player", description: "Player name to remove", type: 3, required: true },
+    ],
+  },
+  {
+    name: "participant-list",
+    description: "Show all participants for this event",
+    type: 1,
+  },
 ];
 
 async function getAppId(token) {
@@ -1709,6 +1730,160 @@ async function handleTeamList(interaction, token, eventsChannelId, appId) {
 }
 
 // ---------------------------------------------------------------------------
+// Participant helpers (inline, same as events.js pattern)
+// ---------------------------------------------------------------------------
+function isCheckmarkEmoji(name) {
+  if (!name) return false;
+  return name.codePointAt(0) === 0x2705;
+}
+
+function extractParticipantEmbed(message) {
+  if (!Array.isArray(message.embeds) || !message.embeds.length) return null;
+  const embed = message.embeds[0];
+  const title = (embed.title || "").trim();
+  if (title !== "Participant Added" && title !== "Participant Removed") return null;
+  const fields = embed.fields || [];
+  const playerField = fields.find(f => f.name === "Player");
+  if (!playerField) return null;
+  return { player: playerField.value.trim(), added: title === "Participant Added" };
+}
+
+function parseParticipantsFromMessages(messages) {
+  if (!Array.isArray(messages) || !messages.length) return new Map();
+  const sorted = messages.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const participants = new Map();
+  for (const m of sorted) {
+    const embed = extractParticipantEmbed(m);
+    if (embed) {
+      const key = embed.player.toLowerCase();
+      if (embed.added) participants.set(key, embed.player);
+      else participants.delete(key);
+      continue;
+    }
+    if (!Array.isArray(m.reactions) || !m.reactions.length) continue;
+    if (!m.author) continue;
+    for (const r of m.reactions) {
+      if (isCheckmarkEmoji(r.emoji && r.emoji.name)) {
+        const author = m.author.global_name || m.author.username || "Unknown";
+        participants.set(author.toLowerCase(), author);
+        break;
+      }
+    }
+  }
+  return participants;
+}
+
+// ---------------------------------------------------------------------------
+// /participant-add
+// ---------------------------------------------------------------------------
+async function handleParticipantAdd(interaction, token, eventsChannelId, appId) {
+  if (!eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Events channel is not configured.", flags: 64 });
+  }
+  const channel = interaction.channel || {};
+  if (channel.parent_id !== eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Use this command inside an event thread.", flags: 64 });
+  }
+  const options = (interaction.data && interaction.data.options) || [];
+  const playerOpt = options.find(o => o.name === "player");
+  if (!playerOpt) {
+    return patchFollowup(appId, interaction.token, { content: "Player name is required.", flags: 64 });
+  }
+  const authHeaders = { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" };
+  let playerName = playerOpt.value.trim();
+  const guildId = interaction.guild_id;
+  if (guildId) playerName = await resolvePlayerMention(playerName, guildId, token);
+
+  await fetch(`https://discord.com/api/v10/channels/${interaction.channel_id}/messages`, {
+    method: "POST",
+    headers: { ...authHeaders, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      embeds: [{
+        title: "Participant Added",
+        color: 0x2ecc71,
+        fields: [{ name: "Player", value: playerName, inline: true }],
+        footer: { text: `Added by ${interaction.member?.user?.global_name || interaction.member?.user?.username || "leader"}` },
+      }],
+    }),
+  });
+  await patchFollowup(appId, interaction.token, { content: `Added **${playerName}** as a participant.`, flags: 64 });
+}
+
+// ---------------------------------------------------------------------------
+// /participant-remove
+// ---------------------------------------------------------------------------
+async function handleParticipantRemove(interaction, token, eventsChannelId, appId) {
+  if (!eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Events channel is not configured.", flags: 64 });
+  }
+  const channel = interaction.channel || {};
+  if (channel.parent_id !== eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Use this command inside an event thread.", flags: 64 });
+  }
+  const options = (interaction.data && interaction.data.options) || [];
+  const playerOpt = options.find(o => o.name === "player");
+  if (!playerOpt) {
+    return patchFollowup(appId, interaction.token, { content: "Player name is required.", flags: 64 });
+  }
+  const authHeaders = { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" };
+  let playerName = playerOpt.value.trim();
+  const guildId = interaction.guild_id;
+  if (guildId) playerName = await resolvePlayerMention(playerName, guildId, token);
+
+  await fetch(`https://discord.com/api/v10/channels/${interaction.channel_id}/messages`, {
+    method: "POST",
+    headers: { ...authHeaders, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      embeds: [{
+        title: "Participant Removed",
+        color: 0xe74c3c,
+        fields: [{ name: "Player", value: playerName, inline: true }],
+        footer: { text: `Removed by ${interaction.member?.user?.global_name || interaction.member?.user?.username || "leader"}` },
+      }],
+    }),
+  });
+  await patchFollowup(appId, interaction.token, { content: `Removed **${playerName}** from participants.`, flags: 64 });
+}
+
+// ---------------------------------------------------------------------------
+// /participant-list
+// ---------------------------------------------------------------------------
+async function handleParticipantList(interaction, token, eventsChannelId, appId) {
+  if (!eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Events channel is not configured.", flags: 64 });
+  }
+  const channel = interaction.channel || {};
+  if (channel.parent_id !== eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Use this command inside an event thread.", flags: 64 });
+  }
+  const authHeaders = { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" };
+  let messages = [];
+  try {
+    const msgsRes = await fetch(
+      `https://discord.com/api/v10/channels/${interaction.channel_id}/messages?limit=100`,
+      { headers: authHeaders }
+    );
+    if (msgsRes.ok) messages = await msgsRes.json();
+    if (!Array.isArray(messages)) messages = [];
+  } catch (e) {}
+  const participants = parseParticipantsFromMessages(messages);
+  if (participants.size === 0) {
+    return patchFollowup(appId, interaction.token, {
+      embeds: [{ title: "Event Participants", color: 0x95a5a6, description: "No participants yet." }],
+    });
+  }
+  const names = Array.from(participants.values()).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  await patchFollowup(appId, interaction.token, {
+    embeds: [{
+      title: "Event Participants",
+      color: 0x2ecc71,
+      description: names.join("\n"),
+      footer: { text: `${names.length} participant${names.length === 1 ? "" : "s"}` },
+    }],
+  });
+}
+
+// ---------------------------------------------------------------------------
 // /help
 // ---------------------------------------------------------------------------
 async function handleHelp(interaction, appId) {
@@ -2018,6 +2193,21 @@ export async function onRequest(context) {
 
     if (name === "team-list") {
       safeWait(handleTeamList(interaction, token, eventsChannelId, appId));
+      return json({ type: 5 });
+    }
+
+    if (name === "participant-add") {
+      safeWait(handleParticipantAdd(interaction, token, eventsChannelId, appId));
+      return json({ type: 5, data: { flags: 64 } });
+    }
+
+    if (name === "participant-remove") {
+      safeWait(handleParticipantRemove(interaction, token, eventsChannelId, appId));
+      return json({ type: 5, data: { flags: 64 } });
+    }
+
+    if (name === "participant-list") {
+      safeWait(handleParticipantList(interaction, token, eventsChannelId, appId));
       return json({ type: 5 });
     }
 

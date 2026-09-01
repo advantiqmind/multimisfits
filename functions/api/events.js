@@ -113,6 +113,58 @@ export function parseTeams(messages) {
   return result;
 }
 
+export function isCheckmark(name) {
+  if (!name) return false;
+  const cp = name.codePointAt(0);
+  return cp === 0x2705;
+}
+
+export function extractParticipantEmbed(message) {
+  if (!Array.isArray(message.embeds) || !message.embeds.length) return null;
+  const embed = message.embeds[0];
+  const title = (embed.title || "").trim();
+  if (title !== "Participant Added" && title !== "Participant Removed") return null;
+  const fields = embed.fields || [];
+  const playerField = fields.find(f => f.name === "Player");
+  if (!playerField) return null;
+  return {
+    player: playerField.value.trim(),
+    added: title === "Participant Added",
+  };
+}
+
+export function parseParticipants(messages) {
+  if (!Array.isArray(messages) || !messages.length) return null;
+  const sorted = messages.slice().sort((a, b) => {
+    if (a.id < b.id) return -1;
+    if (a.id > b.id) return 1;
+    return 0;
+  });
+  const participants = new Map();
+  for (const m of sorted) {
+    const embed = extractParticipantEmbed(m);
+    if (embed) {
+      const key = embed.player.toLowerCase();
+      if (embed.added) participants.set(key, embed.player);
+      else participants.delete(key);
+      continue;
+    }
+    if (!Array.isArray(m.reactions) || !m.reactions.length) continue;
+    if (!m.author) continue;
+    for (const r of m.reactions) {
+      if (isCheckmark(r.emoji && r.emoji.name)) {
+        const author = m.author.global_name || m.author.username || "Unknown";
+        participants.set(author.toLowerCase(), author);
+        break;
+      }
+    }
+  }
+  if (participants.size === 0) return null;
+  const result = Array.from(participants.values());
+  result.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  return result;
+}
+
 export function transformThreads(threads, openingMessages, tagMap, threadMessages) {
   const msgMap = new Map();
   for (const m of Array.isArray(openingMessages) ? openingMessages : []) {
@@ -145,6 +197,7 @@ export function transformThreads(threads, openingMessages, tagMap, threadMessage
 
     const allMsgs = threadMessages && threadMessages.get(t.id);
     const teams = allMsgs ? parseTeams(allMsgs) : null;
+    const participants = allMsgs ? parseParticipants(allMsgs) : null;
 
     events.push({
       id: t.id,
@@ -158,6 +211,7 @@ export function transformThreads(threads, openingMessages, tagMap, threadMessage
       image: image ? image.url : null,
       tags,
       teams,
+      participants,
     });
   }
 
