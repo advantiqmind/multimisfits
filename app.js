@@ -889,7 +889,7 @@ function featuredEventHtml(ev) {
   var teamBadge = teamBadgeHtml(ev.teams);
   var teamRoster = teamRosterHtml(ev.teams);
   var partBtn = participantBtnHtml(ev.participants, ev.id, theme);
-  return `<div class="ev-featured${theme ? " " + theme : ""}"${imgStyle}>
+  return `<div class="ev-featured${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${imgStyle}>
     <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${teamBadge}${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${metaText}</span>
@@ -1247,11 +1247,10 @@ function wireEventModals() {
 
   var featured = document.querySelector(".ev-featured");
   if (featured) {
-    var fev = _eventsData.find(function (e) { return computeEventStatus(e) === "live"; }) ||
-              _eventsData.find(function (e) { return computeEventStatus(e) === "scheduled"; });
+    var featId = featured.getAttribute("data-ev-id");
+    var fev = featId ? _eventsData.find(function (e) { return e.id === featId; }) : null;
     if (fev) {
       featured.classList.add("ev-clickable");
-      featured.setAttribute("data-ev-id", fev.id);
       featured.addEventListener("click", function (e) {
         if (e.target.closest("a") || e.target.closest("[data-part-ev]")) return;
         openModal(fev);
