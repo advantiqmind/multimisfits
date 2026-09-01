@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Achievements | Multi-Misfits</title>
+<title>Loot Wheel | Multi-Misfits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Jersey+15&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="app.js" defer></script>
-
+<script src="wheel.js" defer></script>
 </head>
 <body>
 
@@ -45,16 +45,51 @@
 </header>
 
 <main>
-<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">Achievements</h1><div class="tagline">Live from the chest channel</div></section>
+<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">Loot Wheel</h1><div class="tagline">Spin for glory. Load an event to pull in everyone who joined.</div></section>
 
   <div class="grid">
     <section class="panel col-2">
-      <div class="head"><h2><span class="rune"></span>Clan Achievements <span class="badge" id="ach-full-badge">from chest (sample)</span></h2></div>
+      <div class="head"><h2><span class="rune"></span>The Wheel <span class="badge" id="wheel-badge">local</span></h2></div>
       <div class="body">
-        <div id="ach-full-body">
-          <p class="ev-loading">Loading achievements&hellip;</p>
+        <div class="wheel-layout">
+
+          <div class="wheel-section">
+            <div class="wheel-wrap">
+              <canvas id="wheel"></canvas>
+            </div>
+            <div class="wheel-actions">
+              <button id="spinBtn" class="wheel-spin-btn" disabled>SPIN</button>
+              <button id="popoutBtn" class="wheel-popout-btn" title="Pop out wheel">&#x29C9;</button>
+            </div>
+          </div>
+
+          <div class="wheel-entry-panel">
+            <div class="wheel-source-row">
+              <label for="eventSelect" class="wheel-label">Event</label>
+              <select id="eventSelect">
+                <option value="">Loading events...</option>
+              </select>
+              <button id="loadEventBtn" class="wheel-add-btn">Load</button>
+            </div>
+            <div class="wheel-prize-row">
+              <label for="prizeInput" class="wheel-label">Prize</label>
+              <input type="text" id="prizeInput" placeholder="e.g. 10M GP, Dragon Claws..." maxlength="60" autocomplete="off">
+            </div>
+            <div class="wheel-panel-header">
+              <h3>Entries</h3>
+              <span id="entryCount" class="wheel-entry-count">0</span>
+            </div>
+            <div class="wheel-add-row">
+              <input type="text" id="nameInput" placeholder="Add a name..." maxlength="32" autocomplete="off">
+              <button id="addBtn" class="wheel-add-btn">Add</button>
+            </div>
+            <div id="entryList" class="wheel-entry-list"></div>
+            <div class="wheel-entry-footer">
+              <button id="clearBtn" class="wheel-clear-btn">Clear All</button>
+            </div>
+          </div>
+
         </div>
-        <div class="roster-pagination" id="ach-pagination"></div>
       </div>
     </section>
   </div>
@@ -62,24 +97,26 @@
 </main>
 
 <footer>
-  <div class="foot-cta">
-    <h2>Ready to stop soloing?</h2>
-    <p>Recruiting happens in Discord. Hop in, say hi, and a rank will sort you out. That's it.</p>
-    <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true" style="width:18px;height:14px;vertical-align:-1px;margin-right:8px"><use href="#discord"/></svg>JOIN THE CLAN</a>
-  </div>
   <div class="foot-links">
     <a href="/">Home</a><a href="/events.html">Events</a><a href="/achievements.html">Achievements</a><a href="/gallery.html">Gallery</a>
     <a href="/faq.html">FAQ</a><a href="/roster.html">Leaderboard</a><a href="/ge.html">Grand Exchange</a><a data-discord href="#">Discord</a>
   </div>
   <div class="disclaimer">
     Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
-    RuneScape and Old School RuneScape are trademarks of Jagex Ltd. · Leaderboard is live from Wise Old Man; news, events &amp; media are samples pending Discord hookup.
+    RuneScape and Old School RuneScape are trademarks of Jagex Ltd.
   </div>
 </footer>
 
-<div id="lightbox-overlay" class="lightbox-overlay">
-  <button class="lightbox-close" aria-label="Close">&times;</button>
-  <img class="lightbox-img" src="" alt="">
+<div id="winnerModal" class="wheel-modal" hidden>
+  <div class="wheel-modal-body">
+    <div class="wheel-modal-badge">WINNER</div>
+    <div id="prizeLine" class="wheel-prize-line"></div>
+    <div id="winnerName" class="wheel-winner-name"></div>
+    <div class="wheel-modal-actions">
+      <button id="modalRemove" class="wheel-modal-btn remove">Remove &amp; Close</button>
+      <button id="modalClose" class="wheel-modal-btn">Close</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>

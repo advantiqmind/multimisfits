@@ -857,7 +857,8 @@ function openParticipantModal(ev) {
   for (var i = 0; i < p.length; i++) chips += '<span class="participant-chip">' + esc(p[i]) + '</span>';
   body.innerHTML =
     '<div class="part-modal-header"><h3>Participants</h3><span class="part-modal-count">' + p.length + '</span></div>' +
-    '<div class="participant-list-names">' + chips + '</div>';
+    '<div class="participant-list-names">' + chips + '</div>' +
+    (p.length ? '<div class="part-modal-actions"><a class="btn-wheel" href="/wheel.html?event=' + encodeURIComponent(ev.id) + '">&#127920; Spin the Wheel</a></div>' : '');
   overlay.classList.add("open");
   document.body.style.overflow = "hidden";
 }

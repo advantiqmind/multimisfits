@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loot Wheel | Multi-Misfits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Jersey+15&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="wheel.js" defer></script>
+<style>
+  .wheel-popout-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 20px;
+  }
+  .wheel-popout-page .wheel-wrap { max-width: 540px; }
+</style>
+</head>
+<body>
+<div class="wheel-popout-page">
+  <div class="wheel-section">
+    <div class="wheel-wrap">
+      <canvas id="wheel"></canvas>
+    </div>
+    <button id="spinBtn" class="wheel-spin-btn" disabled>SPIN</button>
+  </div>
+</div>
+
+<div id="winnerModal" class="wheel-modal" hidden>
+  <div class="wheel-modal-body">
+    <div class="wheel-modal-badge">WINNER</div>
+    <div id="prizeLine" class="wheel-prize-line"></div>
+    <div id="winnerName" class="wheel-winner-name"></div>
+    <div class="wheel-modal-actions">
+      <button id="modalClose" class="wheel-modal-btn">Close</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
