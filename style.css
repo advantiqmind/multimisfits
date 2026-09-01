@@ -545,7 +545,7 @@ nav.main a[href="/ge.html"]{display:none}
 
 /* ---------- participant button + popup ---------- */
 .ev-cta{margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.btn-participants{font-family:"Jersey 15",monospace;font-size:18px;padding:11px 18px;color:var(--parchment);letter-spacing:1px;background:linear-gradient(180deg,rgba(74,208,74,.15),rgba(74,208,74,.06));border:1px solid rgba(74,208,74,.3);border-radius:6px;cursor:pointer;transition:background .15s,border-color .15s}
+.btn-participants{font-family:"Jersey 15",monospace;font-size:18px;padding:11px 18px;color:var(--parchment);letter-spacing:1px;background:linear-gradient(180deg,rgba(74,208,74,.15),rgba(74,208,74,.06));border:1px solid rgba(74,208,74,.3);border-radius:6px;cursor:pointer;transition:background .15s,border-color .15s;margin-left:auto}
 .btn-participants:hover{background:linear-gradient(180deg,rgba(74,208,74,.25),rgba(74,208,74,.12));border-color:rgba(74,208,74,.5)}
 .btn-participants.ev-wild{background:linear-gradient(180deg,rgba(224,64,64,.15),rgba(224,64,64,.06));border-color:rgba(224,64,64,.3)}
 .btn-participants.ev-wild:hover{background:linear-gradient(180deg,rgba(224,64,64,.25),rgba(224,64,64,.12));border-color:rgba(224,64,64,.5)}
