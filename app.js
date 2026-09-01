@@ -858,7 +858,12 @@ function openParticipantModal(ev) {
   body.innerHTML =
     '<div class="part-modal-header"><h3>Participants</h3><span class="part-modal-count">' + p.length + '</span></div>' +
     '<div class="participant-list-names">' + chips + '</div>' +
-    (p.length ? '<div class="part-modal-actions"><a class="btn-wheel" href="/wheel.html?event=' + encodeURIComponent(ev.id) + '">&#127920; Spin the Wheel</a></div>' : '');
+    (p.length ? '<div class="part-modal-actions"><a class="btn-wheel" href="/wheel.html?event=' + encodeURIComponent(ev.id) + '">' +
+      '<svg viewBox="0 0 16 16" aria-hidden="true" style="width:15px;height:15px;vertical-align:-2px;margin-right:7px;fill:none;stroke:currentColor;stroke-width:1.5">' +
+      '<circle cx="8" cy="8" r="6.5"/>' +
+      '<path d="M8 1.5v13M2.4 4.75l11.2 6.5M2.4 11.25l11.2-6.5"/>' +
+      '<circle cx="8" cy="8" r="1.6" style="fill:currentColor;stroke:none"/>' +
+      '</svg>Spin the Wheel</a></div>' : '');
   overlay.classList.add("open");
   document.body.style.overflow = "hidden";
 }
