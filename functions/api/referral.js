@@ -49,7 +49,7 @@ export async function onRequest(context) {
   }
 
   const validCodes = codesRaw.split(",").map((c) => c.trim().toUpperCase()).filter(Boolean);
-  if (!(context.env && context.env.DISABLE_LAUNCH)) validCodes.push("LAUNCH");
+  if (!(context.env && context.env.DISABLE_LAUNCH)) validCodes.push("MISFITS");
   const isValid = validCodes.includes(submitted);
 
   if (!isValid) {
