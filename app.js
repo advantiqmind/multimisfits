@@ -783,6 +783,47 @@ function eventStatusBadge(status) {
   return '<span class="ev-status ev-upcoming">UPCOMING</span>';
 }
 
+function teamDotsHtml(teams) {
+  if (!teams) return "";
+  var letters = ["a","b","c","d"];
+  var dots = "";
+  for (var i = 0; i < letters.length; i++) {
+    if (teams[letters[i]] && teams[letters[i]].length) dots += '<span class="team-dot ' + letters[i] + '"></span>';
+  }
+  return dots ? '<div class="ev-card-teams">' + dots + '</div>' : "";
+}
+
+function teamBadgeHtml(teams) {
+  if (!teams) return "";
+  var letters = ["a","b","c","d"];
+  var dots = "";
+  var total = 0;
+  for (var i = 0; i < letters.length; i++) {
+    if (teams[letters[i]] && teams[letters[i]].length) {
+      dots += '<span style="background:var(--team-' + letters[i] + ')"></span>';
+      total += teams[letters[i]].length;
+    }
+  }
+  if (!dots) return "";
+  return '<span class="badge-teams"><span class="dots">' + dots + '</span>' + total + ' players</span>';
+}
+
+function teamRosterHtml(teams) {
+  if (!teams) return "";
+  var letters = ["a","b","c","d"];
+  var labels = {a:"Team A",b:"Team B",c:"Team C",d:"Team D"};
+  var blocks = "";
+  for (var i = 0; i < letters.length; i++) {
+    var t = letters[i];
+    if (!teams[t] || !teams[t].length) continue;
+    var items = "";
+    for (var j = 0; j < teams[t].length; j++) items += "<li>" + esc(teams[t][j]) + "</li>";
+    blocks += '<div class="team-block team-' + t + '"><div class="team-name">' + labels[t] + ' <span class="team-count">(' + teams[t].length + ')</span></div><ul class="team-players">' + items + '</ul></div>';
+  }
+  if (!blocks) return "";
+  return '<div class="team-roster"><div class="team-roster-label">Teams</div><div class="team-grid">' + blocks + '</div></div>';
+}
+
 function featuredEventHtml(ev) {
   var effStatus = computeEventStatus(ev);
   const badge = eventStatusBadge(effStatus);
@@ -807,14 +848,17 @@ function featuredEventHtml(ev) {
     : "";
 
   var theme = eventThemeClass(ev);
+  var teamBadge = teamBadgeHtml(ev.teams);
+  var teamRoster = teamRosterHtml(ev.teams);
   return `<div class="ev-featured${theme ? " " + theme : ""}"${imgStyle}>
-    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${isLive ? "" : badge}</div>
+    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${teamBadge}${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}${interested}
     </div>
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
     ${lvContainer}
+    ${teamRoster}
     <div class="ev-cta">
       <a class="btn join" data-discord href="#" aria-label="Join Discord for event details">
         <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
@@ -991,13 +1035,14 @@ function eventCard(ev) {
   const lvTag = isLootValueEvent(ev) ? '<span class="lv-tag">LOOT</span>' : "";
   const theme = eventThemeClass(ev);
 
+  var teamDots = teamDotsHtml(ev.teams);
   return `<div class="ev-card ev-clickable${liveClass}${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
       <h3>${esc(cleanName(ev.name))}${lvTag ? " " + lvTag : ""}</h3>
       <div class="ev-card-meta">${liveText || timeStr}${(liveText || timeStr) && interested ? " · " : ""}${interested}</div>
     </div>
-    ${badge}
+    ${teamDots}${badge}
   </div>`;
 }
 
@@ -1110,13 +1155,16 @@ function wireEventModals() {
       }
     }
 
+    var teamBadge = teamBadgeHtml(ev.teams);
+    var teamRoster = teamRosterHtml(ev.teams);
     body.innerHTML =
-      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + badge + '</div>' +
+      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + teamBadge + badge + '</div>' +
       '<div class="ev-modal-meta">' + dateStr + ' · ' + timeStr +
       (replies ? ' · ' + replies : '') + '</div>' +
       imgHtml +
       '<div class="ev-modal-desc">' + desc + '</div>' +
       lvHtml +
+      teamRoster +
       '<div style="margin-top:16px"><a class="btn join" data-discord href="#" aria-label="Join Discord">' +
       '<svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>' +
       'View on Discord</a></div>';

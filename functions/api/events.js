@@ -46,7 +46,74 @@ function resolveMentions(text, mentions) {
   return t;
 }
 
-export function transformThreads(threads, openingMessages, tagMap) {
+export function teamFromEmoji(name) {
+  if (!name) return null;
+  const cp = name.codePointAt(0);
+  if (cp === 0x1F170) return "a";
+  if (cp === 0x1F171) return "b";
+  if (cp === 0x1F1E8) return "c";
+  if (cp === 0x1F1E9) return "d";
+  return null;
+}
+
+export function extractTeamEmbed(message) {
+  if (!Array.isArray(message.embeds) || !message.embeds.length) return null;
+  const embed = message.embeds[0];
+  const title = (embed.title || "").trim();
+  if (title !== "Team Assigned" && title !== "Team Removed") return null;
+  const fields = embed.fields || [];
+  const playerField = fields.find(f => f.name === "Player");
+  if (!playerField) return null;
+  if (title === "Team Removed") {
+    return { player: playerField.value.trim(), team: null };
+  }
+  const teamField = fields.find(f => f.name === "Team");
+  if (!teamField) return null;
+  const letter = teamField.value.trim().slice(-1).toLowerCase();
+  if (!"abcd".includes(letter)) return null;
+  return { player: playerField.value.trim(), team: letter };
+}
+
+export function parseTeams(messages) {
+  if (!Array.isArray(messages) || !messages.length) return null;
+  const sorted = messages.slice().sort((a, b) => {
+    if (a.id < b.id) return -1;
+    if (a.id > b.id) return 1;
+    return 0;
+  });
+  const assignments = new Map();
+  for (const m of sorted) {
+    const embed = extractTeamEmbed(m);
+    if (embed) {
+      const key = embed.player.toLowerCase();
+      if (embed.team === null) assignments.delete(key);
+      else assignments.set(key, { name: embed.player, team: embed.team });
+      continue;
+    }
+    if (!Array.isArray(m.reactions) || !m.reactions.length) continue;
+    if (!m.author) continue;
+    for (const r of m.reactions) {
+      const team = teamFromEmoji(r.emoji && r.emoji.name);
+      if (team) {
+        const author = m.author.global_name || m.author.username || "Unknown";
+        assignments.set(author.toLowerCase(), { name: author, team });
+        break;
+      }
+    }
+  }
+  if (assignments.size === 0) return null;
+  const result = {};
+  for (const [, entry] of assignments) {
+    if (!result[entry.team]) result[entry.team] = [];
+    result[entry.team].push(entry.name);
+  }
+  for (const t of Object.keys(result)) {
+    result[t].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  }
+  return result;
+}
+
+export function transformThreads(threads, openingMessages, tagMap, threadMessages) {
   const msgMap = new Map();
   for (const m of Array.isArray(openingMessages) ? openingMessages : []) {
     if (m && m.id) msgMap.set(m.id, m);
@@ -76,6 +143,9 @@ export function transformThreads(threads, openingMessages, tagMap) {
       ? appliedIds.map(id => tagMap.get(id)).filter(Boolean)
       : [];
 
+    const allMsgs = threadMessages && threadMessages.get(t.id);
+    const teams = allMsgs ? parseTeams(allMsgs) : null;
+
     events.push({
       id: t.id,
       name: (t.name || "Event").slice(0, 200),
@@ -87,6 +157,7 @@ export function transformThreads(threads, openingMessages, tagMap) {
       interestedCount: t.message_count || 0,
       image: image ? image.url : null,
       tags,
+      teams,
     });
   }
 
@@ -195,22 +266,33 @@ export async function onRequest(context) {
 
   let tagMap = new Map();
   let openingMessages;
+  const threadMessages = new Map();
   try {
-    const [channelRes, ...msgResults] = await Promise.all([
+    const [channelRes, ...threadResults] = await Promise.all([
       fetch(
         `https://discord.com/api/v10/channels/${channelId}`,
         { headers }
       ),
-      ...threads.map((t) =>
-        fetch(
-          `https://discord.com/api/v10/channels/${t.id}/messages/${t.id}`,
-          { headers }
-        )
-          .then((r) => (r.ok ? r.json() : null))
-          .catch(() => null)
-      ),
+      ...threads.map(async (t) => {
+        const [openingRes, msgsRes] = await Promise.all([
+          fetch(
+            `https://discord.com/api/v10/channels/${t.id}/messages/${t.id}`,
+            { headers }
+          ).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+          fetch(
+            `https://discord.com/api/v10/channels/${t.id}/messages?limit=100`,
+            { headers }
+          ).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        ]);
+        const allMsgs = Array.isArray(msgsRes) ? [...msgsRes] : [];
+        if (openingRes && !allMsgs.find(m => m.id === openingRes.id)) {
+          allMsgs.push(openingRes);
+        }
+        threadMessages.set(t.id, allMsgs);
+        return openingRes;
+      }),
     ]);
-    openingMessages = msgResults;
+    openingMessages = threadResults;
     if (channelRes.ok) {
       const channelData = await channelRes.json();
       for (const tag of (channelData.available_tags || [])) {
@@ -221,7 +303,7 @@ export async function onRequest(context) {
     openingMessages = [];
   }
 
-  const events = transformThreads(threads, openingMessages, tagMap);
+  const events = transformThreads(threads, openingMessages, tagMap, threadMessages);
   const res = json({ configured: true, events }, 200, {
     "Cache-Control": `public, max-age=${CACHE_TTL}`,
   });

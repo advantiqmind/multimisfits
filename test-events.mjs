@@ -1,4 +1,4 @@
-import { transformThreads, parseEventForgeDateField } from "./functions/api/events.js";
+import { transformThreads, parseEventForgeDateField, teamFromEmoji, extractTeamEmbed, parseTeams } from "./functions/api/events.js";
 
 const threads = [
   {
@@ -382,6 +382,81 @@ ok.push([
   "raw mention tag removed",
   !mentionOut[0].description.includes("<@555>"),
 ]);
+
+// teamFromEmoji tests
+ok.push(["teamFromEmoji: A emoji", teamFromEmoji("🅰") === "a"]);
+ok.push(["teamFromEmoji: B emoji", teamFromEmoji("🅱") === "b"]);
+ok.push(["teamFromEmoji: C emoji", teamFromEmoji("🇨") === "c"]);
+ok.push(["teamFromEmoji: D emoji", teamFromEmoji("🇩") === "d"]);
+ok.push(["teamFromEmoji: null for random emoji", teamFromEmoji("😀") === null]);
+ok.push(["teamFromEmoji: null for empty", teamFromEmoji("") === null]);
+ok.push(["teamFromEmoji: null for null", teamFromEmoji(null) === null]);
+
+// extractTeamEmbed tests
+ok.push(["extractTeamEmbed: Team Assigned", (() => {
+  const r = extractTeamEmbed({ embeds: [{ title: "Team Assigned", fields: [{ name: "Player", value: "Flash" }, { name: "Team", value: "Team A" }] }] });
+  return r && r.player === "Flash" && r.team === "a";
+})()]);
+ok.push(["extractTeamEmbed: Team Removed", (() => {
+  const r = extractTeamEmbed({ embeds: [{ title: "Team Removed", fields: [{ name: "Player", value: "Flash" }] }] });
+  return r && r.player === "Flash" && r.team === null;
+})()]);
+ok.push(["extractTeamEmbed: ignores non-team embed", extractTeamEmbed({ embeds: [{ title: "Entry Added" }] }) === null]);
+ok.push(["extractTeamEmbed: no embeds", extractTeamEmbed({ embeds: [] }) === null]);
+ok.push(["extractTeamEmbed: missing embeds array", extractTeamEmbed({}) === null]);
+
+// parseTeams tests
+ok.push(["parseTeams: reactions assign teams", (() => {
+  const msgs = [
+    { id: "100", author: { global_name: "Alice" }, reactions: [{ emoji: { name: "🅰" } }] },
+    { id: "101", author: { global_name: "Bob" }, reactions: [{ emoji: { name: "🅱" } }] },
+  ];
+  const t = parseTeams(msgs);
+  return t && t.a && t.a[0] === "Alice" && t.b && t.b[0] === "Bob";
+})()]);
+ok.push(["parseTeams: bot embed overrides reaction", (() => {
+  const msgs = [
+    { id: "100", author: { global_name: "Alice" }, reactions: [{ emoji: { name: "🅰" } }] },
+    { id: "200", embeds: [{ title: "Team Assigned", fields: [{ name: "Player", value: "Alice" }, { name: "Team", value: "Team B" }] }] },
+  ];
+  const t = parseTeams(msgs);
+  return t && !t.a && t.b && t.b[0] === "Alice";
+})()]);
+ok.push(["parseTeams: Team Removed clears assignment", (() => {
+  const msgs = [
+    { id: "100", embeds: [{ title: "Team Assigned", fields: [{ name: "Player", value: "Alice" }, { name: "Team", value: "Team A" }] }] },
+    { id: "200", embeds: [{ title: "Team Removed", fields: [{ name: "Player", value: "Alice" }] }] },
+  ];
+  return parseTeams(msgs) === null;
+})()]);
+ok.push(["parseTeams: empty messages returns null", parseTeams([]) === null]);
+ok.push(["parseTeams: null returns null", parseTeams(null) === null]);
+ok.push(["parseTeams: players sorted alphabetically", (() => {
+  const msgs = [
+    { id: "100", author: { global_name: "Charlie" }, reactions: [{ emoji: { name: "🅰" } }] },
+    { id: "101", author: { global_name: "Alice" }, reactions: [{ emoji: { name: "🅰" } }] },
+  ];
+  const t = parseTeams(msgs);
+  return t && t.a[0] === "Alice" && t.a[1] === "Charlie";
+})()]);
+
+// transformThreads with teams
+ok.push(["transformThreads: teams field null when no team data", (() => {
+  const t = [{ id: "5001", name: "No Teams", parent_id: "9999", message_count: 1, thread_metadata: { archived: false, create_timestamp: "2026-08-26T12:00:00Z" } }];
+  const m = [{ id: "5001", content: "Just an event", attachments: [] }];
+  const result = transformThreads(t, m, null, new Map([["5001", [{ id: "5001", content: "Just an event" }]]]));
+  return result[0].teams === null;
+})()]);
+ok.push(["transformThreads: teams populated from threadMessages", (() => {
+  const t = [{ id: "5002", name: "Team Event", parent_id: "9999", message_count: 3, thread_metadata: { archived: false, create_timestamp: "2026-08-26T12:00:00Z" } }];
+  const m = [{ id: "5002", content: "Teams event!", attachments: [] }];
+  const tm = new Map([["5002", [
+    { id: "5002", content: "Teams event!" },
+    { id: "5003", author: { global_name: "Flash" }, reactions: [{ emoji: { name: "🅰" } }] },
+  ]]]);
+  const result = transformThreads(t, m, null, tm);
+  return result[0].teams && result[0].teams.a && result[0].teams.a[0] === "Flash";
+})()]);
 
 console.log("\nchecks:");
 let pass = true;

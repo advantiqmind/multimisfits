@@ -149,6 +149,22 @@ Nothing pending.
 - Discord forum tags (e.g. Entry, PVM, Loot Value) resolved from channel available_tags
   and included in each event's `tags` array.
 
+### Event Teams
+- Teams are OPTIONAL. Events without team data look exactly the same as before.
+- Leaders assign members to teams (A/B/C/D) via regional indicator emoji reactions
+  on member messages in event threads, or via slash commands.
+- Team emoji: A = U+1F170, B = U+1F171, C = U+1F1E8, D = U+1F1E9.
+- Team colors: A=#e04040 (red), B=#4a90d9 (blue), C=#4ad04a (green), D=#e8a832 (amber).
+- Bot embeds ("Team Assigned"/"Team Removed" with Player + Team fields) override reactions.
+- Processed chronologically by snowflake ID; later assignments override earlier ones.
+- A player can only be on one team; Team Removed clears their assignment.
+- API response `teams` field: null when no teams, or `{ a: ["Name1"], b: ["Name2"], ... }`.
+- Slash commands: /team-assign (player + team A/B/C/D), /team-remove (player),
+  /team-check (player lookup), /team-list (all teams). Restricted to leaders via
+  Discord Integrations (except team-check and team-list which are open).
+- Website display: colored team dots on event cards, "TEAMS" badge + team roster
+  in featured events and modals. All theme-aware (default, wilderness, PVM, social).
+
 ### Authentication gate
 - Every page except gate.html and static assets is protected by _middleware.js.
 - First visit: gate.html shows referral code input + "Sign in with Discord" for returning users.

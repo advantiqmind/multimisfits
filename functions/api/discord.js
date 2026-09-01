@@ -165,6 +165,62 @@ const COMMANDS = [
       },
     ],
   },
+  {
+    name: "team-assign",
+    description: "Assign a player to an event team",
+    type: 1,
+    options: [
+      {
+        name: "player",
+        description: "Player name or @mention",
+        type: 3,
+        required: true,
+      },
+      {
+        name: "team",
+        description: "Team to assign",
+        type: 3,
+        required: true,
+        choices: [
+          { name: "Team A", value: "A" },
+          { name: "Team B", value: "B" },
+          { name: "Team C", value: "C" },
+          { name: "Team D", value: "D" },
+        ],
+      },
+    ],
+  },
+  {
+    name: "team-remove",
+    description: "Remove a player from their event team",
+    type: 1,
+    options: [
+      {
+        name: "player",
+        description: "Player name or @mention",
+        type: 3,
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "team-check",
+    description: "Check which team a player is on",
+    type: 1,
+    options: [
+      {
+        name: "player",
+        description: "Player name or @mention",
+        type: 3,
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "team-list",
+    description: "Show all team assignments for this event",
+    type: 1,
+  },
 ];
 
 async function getAppId(token) {
@@ -1413,6 +1469,246 @@ async function handleGiveawayCheck(interaction, token, guildId, giveawayChannelI
 }
 
 // ---------------------------------------------------------------------------
+// Team helpers (inlined -- can't import across functions)
+// ---------------------------------------------------------------------------
+const TEAM_COLORS = { A: 0xe04040, B: 0x4a90d9, C: 0x4ad04a, D: 0xe8a832 };
+
+function teamFromEmoji(name) {
+  if (!name) return null;
+  const cp = name.codePointAt(0);
+  if (cp === 0x1F170) return "a";
+  if (cp === 0x1F171) return "b";
+  if (cp === 0x1F1E8) return "c";
+  if (cp === 0x1F1E9) return "d";
+  return null;
+}
+
+function extractTeamEmbed(message) {
+  if (!Array.isArray(message.embeds) || !message.embeds.length) return null;
+  const embed = message.embeds[0];
+  const title = (embed.title || "").trim();
+  if (title !== "Team Assigned" && title !== "Team Removed") return null;
+  const fields = embed.fields || [];
+  const playerField = fields.find(f => f.name === "Player");
+  if (!playerField) return null;
+  if (title === "Team Removed") return { player: playerField.value.trim(), team: null };
+  const teamField = fields.find(f => f.name === "Team");
+  if (!teamField) return null;
+  const letter = teamField.value.trim().slice(-1).toLowerCase();
+  if (!"abcd".includes(letter)) return null;
+  return { player: playerField.value.trim(), team: letter };
+}
+
+function parseTeamsFromMessages(messages) {
+  if (!Array.isArray(messages) || !messages.length) return new Map();
+  const sorted = messages.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const assignments = new Map();
+  for (const m of sorted) {
+    const embed = extractTeamEmbed(m);
+    if (embed) {
+      const key = embed.player.toLowerCase();
+      if (embed.team === null) assignments.delete(key);
+      else assignments.set(key, { name: embed.player, team: embed.team });
+      continue;
+    }
+    if (!Array.isArray(m.reactions) || !m.reactions.length) continue;
+    if (!m.author) continue;
+    for (const r of m.reactions) {
+      const team = teamFromEmoji(r.emoji && r.emoji.name);
+      if (team) {
+        const author = m.author.global_name || m.author.username || "Unknown";
+        assignments.set(author.toLowerCase(), { name: author, team });
+        break;
+      }
+    }
+  }
+  return assignments;
+}
+
+async function resolvePlayerMention(player, guildId, token) {
+  const mentionMatch = player.match(/^<@!?(\d+)>$/);
+  if (!mentionMatch) return player;
+  try {
+    const res = await fetch(
+      `https://discord.com/api/v10/guilds/${guildId}/members/${mentionMatch[1]}`,
+      { headers: { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" } }
+    );
+    if (res.ok) {
+      const member = await res.json();
+      return member.nick || (member.user && (member.user.global_name || member.user.username)) || player;
+    }
+  } catch (e) {}
+  return player;
+}
+
+// ---------------------------------------------------------------------------
+// /team-assign
+// ---------------------------------------------------------------------------
+async function handleTeamAssign(interaction, token, eventsChannelId, appId) {
+  if (!eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Events channel is not configured.", flags: 64 });
+  }
+  const channel = interaction.channel || {};
+  if (channel.parent_id !== eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Use this command inside an event thread.", flags: 64 });
+  }
+  const options = (interaction.data && interaction.data.options) || [];
+  const playerOpt = options.find(o => o.name === "player");
+  const teamOpt = options.find(o => o.name === "team");
+  let player = playerOpt ? playerOpt.value.trim() : "";
+  const team = teamOpt ? teamOpt.value : "";
+  if (!player || !team) {
+    return patchFollowup(appId, interaction.token, { content: "Player and team are required.", flags: 64 });
+  }
+  player = await resolvePlayerMention(player, interaction.guild_id, token);
+  const assignedBy = interaction.member && interaction.member.user
+    ? (interaction.member.user.global_name || interaction.member.user.username || "Leader") : "Leader";
+  const color = TEAM_COLORS[team] || 0x3498db;
+  const postRes = await fetch(
+    `https://discord.com/api/v10/channels/${interaction.channel_id}/messages`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bot ${token}`, "Content-Type": "application/json", "User-Agent": "Multi-Misfits clan website" },
+      body: JSON.stringify({ embeds: [{ title: "Team Assigned", color, fields: [
+        { name: "Player", value: player, inline: true },
+        { name: "Team", value: `Team ${team}`, inline: true },
+        { name: "Assigned by", value: assignedBy, inline: true },
+      ] }] }),
+    }
+  );
+  if (!postRes.ok) {
+    return patchFollowup(appId, interaction.token, { content: "Could not post team assignment. Check bot permissions.", flags: 64 });
+  }
+  await patchFollowup(appId, interaction.token, { content: `**${player}** assigned to **Team ${team}**.`, flags: 64 });
+}
+
+// ---------------------------------------------------------------------------
+// /team-remove
+// ---------------------------------------------------------------------------
+async function handleTeamRemove(interaction, token, eventsChannelId, appId) {
+  if (!eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Events channel is not configured.", flags: 64 });
+  }
+  const channel = interaction.channel || {};
+  if (channel.parent_id !== eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Use this command inside an event thread.", flags: 64 });
+  }
+  const options = (interaction.data && interaction.data.options) || [];
+  const playerOpt = options.find(o => o.name === "player");
+  let player = playerOpt ? playerOpt.value.trim() : "";
+  if (!player) {
+    return patchFollowup(appId, interaction.token, { content: "Player name is required.", flags: 64 });
+  }
+  player = await resolvePlayerMention(player, interaction.guild_id, token);
+  const removedBy = interaction.member && interaction.member.user
+    ? (interaction.member.user.global_name || interaction.member.user.username || "Leader") : "Leader";
+  const postRes = await fetch(
+    `https://discord.com/api/v10/channels/${interaction.channel_id}/messages`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bot ${token}`, "Content-Type": "application/json", "User-Agent": "Multi-Misfits clan website" },
+      body: JSON.stringify({ embeds: [{ title: "Team Removed", color: 0x95a5a6, fields: [
+        { name: "Player", value: player, inline: true },
+        { name: "Removed by", value: removedBy, inline: true },
+      ] }] }),
+    }
+  );
+  if (!postRes.ok) {
+    return patchFollowup(appId, interaction.token, { content: "Could not post team removal. Check bot permissions.", flags: 64 });
+  }
+  await patchFollowup(appId, interaction.token, { content: `**${player}** removed from their team.`, flags: 64 });
+}
+
+// ---------------------------------------------------------------------------
+// /team-check
+// ---------------------------------------------------------------------------
+async function handleTeamCheck(interaction, token, guildId, eventsChannelId, appId) {
+  if (!eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Events channel is not configured.", flags: 64 });
+  }
+  const channel = interaction.channel || {};
+  if (channel.parent_id !== eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Use this command inside an event thread.", flags: 64 });
+  }
+  const options = (interaction.data && interaction.data.options) || [];
+  const playerOpt = options.find(o => o.name === "player");
+  let player = playerOpt ? playerOpt.value.trim() : "";
+  if (!player) {
+    return patchFollowup(appId, interaction.token, { content: "Player name is required.", flags: 64 });
+  }
+  player = await resolvePlayerMention(player, guildId, token);
+  const authHeaders = { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" };
+  let messages = [];
+  try {
+    const msgsRes = await fetch(
+      `https://discord.com/api/v10/channels/${interaction.channel_id}/messages?limit=100`,
+      { headers: authHeaders }
+    );
+    if (msgsRes.ok) messages = await msgsRes.json();
+    if (!Array.isArray(messages)) messages = [];
+  } catch (e) {}
+  const assignments = parseTeamsFromMessages(messages);
+  const entry = assignments.get(player.toLowerCase());
+  if (entry) {
+    await patchFollowup(appId, interaction.token, {
+      embeds: [{ title: "Team Check", color: TEAM_COLORS[entry.team.toUpperCase()] || 0x3498db, fields: [
+        { name: "Player", value: entry.name, inline: true },
+        { name: "Team", value: `Team ${entry.team.toUpperCase()}`, inline: true },
+      ] }],
+    });
+  } else {
+    await patchFollowup(appId, interaction.token, {
+      embeds: [{ title: "Team Check", color: 0x95a5a6, description: `**${player}** is not assigned to any team.` }],
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// /team-list
+// ---------------------------------------------------------------------------
+async function handleTeamList(interaction, token, eventsChannelId, appId) {
+  if (!eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Events channel is not configured.", flags: 64 });
+  }
+  const channel = interaction.channel || {};
+  if (channel.parent_id !== eventsChannelId) {
+    return patchFollowup(appId, interaction.token, { content: "Use this command inside an event thread.", flags: 64 });
+  }
+  const authHeaders = { Authorization: `Bot ${token}`, "User-Agent": "Multi-Misfits clan website" };
+  let messages = [];
+  try {
+    const msgsRes = await fetch(
+      `https://discord.com/api/v10/channels/${interaction.channel_id}/messages?limit=100`,
+      { headers: authHeaders }
+    );
+    if (msgsRes.ok) messages = await msgsRes.json();
+    if (!Array.isArray(messages)) messages = [];
+  } catch (e) {}
+  const assignments = parseTeamsFromMessages(messages);
+  if (assignments.size === 0) {
+    return patchFollowup(appId, interaction.token, {
+      embeds: [{ title: "Event Teams", color: 0x95a5a6, description: "No team assignments yet." }],
+    });
+  }
+  const grouped = {};
+  for (const [, entry] of assignments) {
+    const t = entry.team.toUpperCase();
+    if (!grouped[t]) grouped[t] = [];
+    grouped[t].push(entry.name);
+  }
+  const labels = { A: "Team A", B: "Team B", C: "Team C", D: "Team D" };
+  const fields = [];
+  for (const t of ["A", "B", "C", "D"]) {
+    if (grouped[t] && grouped[t].length) {
+      fields.push({ name: `${labels[t]} (${grouped[t].length})`, value: grouped[t].join("\n"), inline: true });
+    }
+  }
+  await patchFollowup(appId, interaction.token, {
+    embeds: [{ title: "Event Teams", color: 0x3498db, fields, footer: { text: `${assignments.size} players assigned` } }],
+  });
+}
+
+// ---------------------------------------------------------------------------
 // /help
 // ---------------------------------------------------------------------------
 async function handleHelp(interaction, appId) {
@@ -1608,6 +1904,7 @@ export async function onRequest(context) {
   const guildId = env.DISCORD_GUILD_ID;
   const threadId = env.REFERRAL_THREAD_ID;
   const channelId = env.GIVEAWAY_CHANNEL_ID;
+  const eventsChannelId = env.EVENTS_CHANNEL_ID;
   const referralCodes = env.REFERRAL_CODES;
 
   if (context.request.method === "GET") {
@@ -1701,6 +1998,26 @@ export async function onRequest(context) {
 
     if (name === "giveaway-check") {
       safeWait(handleGiveawayCheck(interaction, token, guildId, channelId, appId));
+      return json({ type: 5 });
+    }
+
+    if (name === "team-assign") {
+      safeWait(handleTeamAssign(interaction, token, eventsChannelId, appId));
+      return json({ type: 5, data: { flags: 64 } });
+    }
+
+    if (name === "team-remove") {
+      safeWait(handleTeamRemove(interaction, token, eventsChannelId, appId));
+      return json({ type: 5, data: { flags: 64 } });
+    }
+
+    if (name === "team-check") {
+      safeWait(handleTeamCheck(interaction, token, guildId, eventsChannelId, appId));
+      return json({ type: 5 });
+    }
+
+    if (name === "team-list") {
+      safeWait(handleTeamList(interaction, token, eventsChannelId, appId));
       return json({ type: 5 });
     }
 

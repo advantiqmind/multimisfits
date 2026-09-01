@@ -12,6 +12,7 @@
   --muted:#a99b78;
   --xp:#4ad04a;
   --blood:#b23a30;
+  --team-a:#e04040;--team-b:#4a90d9;--team-c:#4ad04a;--team-d:#e8a832;
   --shadow:0 6px 18px rgba(0,0,0,.55);
   --frame: inset 0 0 0 2px var(--bronze), inset 0 0 24px rgba(0,0,0,.55), 0 3px 0 #000, var(--shadow);
 }
@@ -520,6 +521,29 @@ nav.main a[href="/ge.html"]{display:none}
 .lv-drop-value{color:var(--xp);flex:0 0 auto}
 .lv-dink{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.5px}
 
+/* ---------- team indicators ---------- */
+.ev-card-teams{display:flex;gap:4px;flex:0 0 auto;margin-right:2px}
+.team-dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.4);box-shadow:0 0 4px rgba(0,0,0,.3)}
+.team-dot.a{background:var(--team-a)}.team-dot.b{background:var(--team-b)}.team-dot.c{background:var(--team-c)}.team-dot.d{background:var(--team-d)}
+.badge-teams{display:inline-flex;align-items:center;gap:5px;font-family:"Jersey 15",monospace;font-size:12px;color:var(--parchment);letter-spacing:1px;text-transform:uppercase;background:rgba(255,203,47,.06);border:1px solid rgba(255,203,47,.15);padding:3px 10px;border-radius:3px}
+.badge-teams .dots{display:flex;gap:3px}
+.badge-teams .dots span{width:7px;height:7px;border-radius:50%;border:1px solid rgba(0,0,0,.3)}
+.team-roster{margin-top:20px;border-top:1px solid rgba(107,83,54,.3);padding-top:18px}
+.team-roster-label{font-family:"Cinzel",serif;font-weight:700;font-size:15px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin:0 0 14px}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.team-block{background:rgba(0,0,0,.35);border:1px solid rgba(107,83,54,.25);border-radius:6px;padding:12px;position:relative;overflow:hidden}
+.team-block::before{content:"";position:absolute;top:0;left:0;width:3px;height:100%}
+.team-block.team-a::before{background:var(--team-a)}.team-block.team-b::before{background:var(--team-b)}.team-block.team-c::before{background:var(--team-c)}.team-block.team-d::before{background:var(--team-d)}
+.team-block.team-a{border-color:rgba(224,64,64,.2)}.team-block.team-b{border-color:rgba(74,144,217,.2)}.team-block.team-c{border-color:rgba(74,208,74,.2)}.team-block.team-d{border-color:rgba(232,168,50,.2)}
+.team-name{font-family:"Jersey 15",monospace;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.team-block.team-a .team-name{color:var(--team-a)}.team-block.team-b .team-name{color:var(--team-b)}.team-block.team-c .team-name{color:var(--team-c)}.team-block.team-d .team-name{color:var(--team-d)}
+.team-count{font-size:11px;opacity:.6;font-weight:normal}
+.team-players{list-style:none;margin:0;padding:0}
+.team-players li{font-family:"Jersey 15",monospace;font-size:14px;color:var(--parchment);padding:3px 0;padding-left:10px;border-bottom:1px solid rgba(107,83,54,.1);position:relative}
+.team-players li:last-child{border-bottom:none}
+.team-players li::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%}
+.team-block.team-a .team-players li::before{background:var(--team-a);opacity:.5}.team-block.team-b .team-players li::before{background:var(--team-b);opacity:.5}.team-block.team-c .team-players li::before{background:var(--team-c);opacity:.5}.team-block.team-d .team-players li::before{background:var(--team-d);opacity:.5}
+
 /* ---------- event themes ---------- */
 /* Wilderness / PVP */
 .ev-card.ev-wild{background:#1e0c0c;border-left:3px solid #8b2020;box-shadow:inset 0 0 20px rgba(139,32,32,.15)}
@@ -574,5 +598,10 @@ nav.main a[href="/ge.html"]{display:none}
 .ev-modal.ev-pvm .ev-modal-header h3{color:#ffcb2f}
 .ev-modal.ev-pvm .ev-modal-meta{color:#8a7aaa}
 .ev-modal.ev-pvm .ev-modal-desc{color:#d0c4e0}
+
+/* ---------- team theme overrides ---------- */
+.ev-wild .team-roster{border-top-color:rgba(139,32,32,.25)}.ev-wild .team-roster-label{color:#ff8866}.ev-wild .team-players li{border-bottom-color:rgba(139,32,32,.1)}
+.ev-social .team-roster{border-top-color:rgba(45,107,79,.25)}.ev-social .team-roster-label{color:#6af0a0}.ev-social .team-players li{border-bottom-color:rgba(45,107,79,.1)}
+.ev-pvm .team-roster{border-top-color:rgba(107,63,160,.25)}.ev-pvm .team-roster-label{color:#c090ff}.ev-pvm .team-players li{border-bottom-color:rgba(107,63,160,.1)}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
