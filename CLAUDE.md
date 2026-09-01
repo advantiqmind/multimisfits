@@ -135,7 +135,7 @@ Nothing pending.
 - "Live via Dink" badge at bottom of leaderboard.
 - Forwarding proxy: site receives ALL drops (Dink min value = 1), stores for events,
   and forwards drops >= LOOT_DISCORD_MIN_VALUE (default 150k) to Discord chest channel.
-  Members only need one URL in Dink: https://multimisfits.pages.dev/api/loot?key=SECRET
+  Members only need one URL in Dink: https://multimisfits.us/api/loot?key=SECRET
   Set LOOT_DISCORD_WEBHOOK to the chest channel's Discord webhook URL.
   Forwarding is fire-and-forget via context.waitUntil (does not block the response).
 - Auth key stored in LOOT_WEBHOOK_KEY env var. /api/loot bypasses auth middleware.
