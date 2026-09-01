@@ -47,6 +47,13 @@
 .gate-discord svg{flex:0 0 auto}
 .gate-hint{color:var(--muted);font-size:12px;margin:8px 0 0;font-family:"Jersey 15",monospace}
 .gate-error{color:#e04040;font-family:"Jersey 15",monospace;font-size:14px;margin-bottom:14px}
+.gate-guest{
+  display:inline-block;margin-top:20px;
+  font-family:"Jersey 15",monospace;font-size:12px;
+  color:rgba(169,155,120,.35);text-decoration:none;
+  transition:color .2s;
+}
+.gate-guest:hover{color:rgba(169,155,120,.6)}
 .gate-footer{margin-top:18px;font-size:11px;color:rgba(169,155,120,.5);line-height:1.4}
 @media(max-width:600px){
   .gate{padding:28px 18px 24px}
@@ -83,6 +90,8 @@
       Sign in with Discord
     </button>
     <p class="gate-hint">Returning member? Sign in directly.</p>
+
+    <a class="gate-guest" id="gate-guest" href="#">or just browse the site</a>
 
     <p class="gate-footer">Multi-Misfits is a fan site. Not affiliated with Jagex.</p>
   </div>
@@ -148,6 +157,12 @@
 
   document.getElementById("gate-discord").addEventListener("click", function () {
     window.location.href = "/api/auth/login?r=" + encodeURIComponent(redirect);
+  });
+
+  document.getElementById("gate-guest").addEventListener("click", function (e) {
+    e.preventDefault();
+    document.cookie = "mm_guest=1; Path=/; Max-Age=" + (365 * 24 * 60 * 60) + "; Secure; SameSite=Lax";
+    window.location.href = redirect;
   });
 
   input.focus();

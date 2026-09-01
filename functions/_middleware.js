@@ -24,13 +24,16 @@ export async function onRequest(context) {
   if (/\.(css|js|png|jpg|jpeg|webp|gif|svg|ico|woff|woff2|ttf|eot|map)$/i.test(path)) return next();
 
   var sessionToken = getCookie(request, "mm_session");
-  if (!sessionToken) {
+  var isGuest = getCookie(request, "mm_guest") === "1";
+  if (!sessionToken && !isGuest) {
     var redir = path !== "/" ? "?r=" + encodeURIComponent(path + url.search) : "";
     return new Response(null, {
       status: 302,
       headers: { Location: "/gate.html" + redir },
     });
   }
+
+  if (isGuest && !sessionToken) return next();
 
   try {
     var now = new Date().toISOString();

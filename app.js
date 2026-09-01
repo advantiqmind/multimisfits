@@ -61,11 +61,25 @@ const rosterState = {
   page: 1,
 };
 
+function isGuest() {
+  return document.cookie.split(";").some(function (c) { return c.trim().startsWith("mm_guest="); });
+}
+
 function wireDiscordLinks() {
+  var guest = isGuest();
   document.querySelectorAll("[data-discord]").forEach((el) => {
-    el.setAttribute("href", CONFIG.discordInvite);
-    el.setAttribute("target", "_blank");
-    el.setAttribute("rel", "noopener");
+    if (guest) {
+      el.setAttribute("href", "#");
+      el.removeAttribute("target");
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        window.location.href = "/gate.html?r=" + encodeURIComponent(window.location.pathname);
+      });
+    } else {
+      el.setAttribute("href", CONFIG.discordInvite);
+      el.setAttribute("target", "_blank");
+      el.setAttribute("rel", "noopener");
+    }
   });
 }
 
