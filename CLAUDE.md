@@ -35,6 +35,8 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - ge.html                      Grand Exchange -- full-page iframe embed of 1box.online GE tool
 - events.html                  Events + Giveaways tabs (hash-based: #giveaways persists on refresh)
 - gate.html                    auth gate landing page (referral code + Discord OAuth)
+- wheel.html / wheel.js        Loot Wheel page (spin for a winner; loads event participants)
+- wheel-popout.html            popout wheel window (canvas + spin only, synced via BroadcastChannel)
 - style.css                    theme
 - app.js                       nav, toasts, Discord links, all panel rendering
 - functions/_middleware.js     auth middleware (redirects unauthenticated to gate.html)
@@ -185,6 +187,21 @@ Nothing pending.
 - Website display: participant count on event cards ("X joined"), themed participant button
   in CTA row next to RSVP. Clicking opens a popup modal (z-index 90) with participant chips.
   Modal themed per event type (default green, ev-wild red, ev-social green, ev-pvm purple).
+
+### Loot Wheel
+- wheel.html: client-side prize wheel ported from the 1BOX wheel (1box.online copy untouched).
+- Protected by the normal auth gate like every other page; members only, no extra config.
+- Entries stored in localStorage (key mm-wheel-v1) as {name, count}; manual add, +/- counts,
+  remove, clear all. Prize text shown in the winner modal. Winner can be removed and respun.
+- Participant auto-load: fetches /api/events (same origin, session cookie), events with a
+  non-empty participants array appear in the Event dropdown; Load fills entries (1 slot each,
+  confirm before replacing existing entries).
+- Deep link: /wheel.html?event=THREAD_ID auto-loads that event's participants on arrival.
+  The participant modal on events pages has a "Spin the Wheel" button linking there.
+- Popout (wheel-popout.html) mirrors the wheel for streaming; synced via BroadcastChannel
+  "mm-loot-wheel" + storage events. Nav link "Wheel" on all pages.
+- All wheel CSS is namespaced .wheel-* in style.css; graceful fallback if /api/events fails
+  (dropdown shows "Events unavailable", manual entry still works).
 
 ### Authentication gate
 - Every page except gate.html and static assets is protected by _middleware.js.
