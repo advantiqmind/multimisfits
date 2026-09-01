@@ -824,25 +824,28 @@ function teamRosterHtml(teams) {
   return '<div class="team-roster"><div class="team-roster-label">Teams</div><div class="team-grid">' + blocks + '</div></div>';
 }
 
-function participantCountHtml(participants) {
+function participantBtnHtml(participants, evId, theme) {
   if (!participants || !participants.length) return "";
-  return '<span class="ev-participants"><span class="ev-participants-icon">&#10003;</span>' + participants.length + ' participating</span>';
+  return '<button class="btn-participants' + (theme ? " " + theme : "") + '" data-part-ev="' + esc(evId) + '">&#10003; ' + participants.length + ' Joined</button>';
 }
 
-function participantBadgeHtml(participants) {
-  if (!participants || !participants.length) return "";
-  return '<span class="badge-participants">&#10003; ' + participants.length + ' participant' + (participants.length === 1 ? '' : 's') + '</span>';
-}
-
-function participantListHtml(participants) {
-  if (!participants || !participants.length) return "";
+function openParticipantModal(ev) {
+  var overlay = document.getElementById("part-modal-overlay");
+  if (!overlay) return;
+  var modal = overlay.querySelector(".part-modal");
+  var body = overlay.querySelector(".part-modal-body");
+  if (!modal || !body) return;
+  modal.classList.remove("ev-wild", "ev-social", "ev-pvm");
+  var theme = eventThemeClass(ev);
+  if (theme) modal.classList.add(theme);
   var chips = "";
-  for (var i = 0; i < participants.length; i++) chips += '<span class="participant-chip">' + esc(participants[i]) + '</span>';
-  return '<div class="participant-list">' +
-    '<div class="participant-list-header" onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'.participant-list-toggle\').textContent=this.nextElementSibling.classList.contains(\'hidden\')?\'SHOW\':\'HIDE\'">' +
-    '<span class="participant-list-label">Participants (' + participants.length + ')</span>' +
-    '<span class="participant-list-toggle">SHOW</span></div>' +
-    '<div class="participant-list-names hidden">' + chips + '</div></div>';
+  var p = ev.participants || [];
+  for (var i = 0; i < p.length; i++) chips += '<span class="participant-chip">' + esc(p[i]) + '</span>';
+  body.innerHTML =
+    '<div class="part-modal-header"><h3>Participants</h3><span class="part-modal-count">' + p.length + '</span></div>' +
+    '<div class="participant-list-names">' + chips + '</div>';
+  overlay.classList.add("open");
+  document.body.style.overflow = "hidden";
 }
 
 function featuredEventHtml(ev) {
@@ -871,10 +874,9 @@ function featuredEventHtml(ev) {
   var theme = eventThemeClass(ev);
   var teamBadge = teamBadgeHtml(ev.teams);
   var teamRoster = teamRosterHtml(ev.teams);
-  var partBadge = participantBadgeHtml(ev.participants);
-  var partList = participantListHtml(ev.participants);
+  var partBtn = participantBtnHtml(ev.participants, ev.id, theme);
   return `<div class="ev-featured${theme ? " " + theme : ""}"${imgStyle}>
-    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${teamBadge}${partBadge}${isLive ? "" : badge}</div>
+    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${teamBadge}${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}${interested}
@@ -882,12 +884,12 @@ function featuredEventHtml(ev) {
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
     ${lvContainer}
     ${teamRoster}
-    ${partList}
     <div class="ev-cta">
       <a class="btn join" data-discord href="#" aria-label="Join Discord for event details">
         <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
         RSVP on Discord
       </a>
+      ${partBtn}
     </div>
   </div>`;
 }
@@ -1141,6 +1143,7 @@ function renderEvents(events, { cached } = {}) {
   wireDiscordLinks();
   startCountdownTimers();
   wireEventModals();
+  wireParticipantModal();
   loadLootLeaderboards(events);
 }
 
@@ -1188,20 +1191,19 @@ function wireEventModals() {
 
     var teamBadge = teamBadgeHtml(ev.teams);
     var teamRoster = teamRosterHtml(ev.teams);
-    var partBadge = participantBadgeHtml(ev.participants);
-    var partList = participantListHtml(ev.participants);
+    var theme = eventThemeClass(ev);
+    var partBtn = participantBtnHtml(ev.participants, ev.id, theme);
     body.innerHTML =
-      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + teamBadge + partBadge + badge + '</div>' +
+      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + teamBadge + badge + '</div>' +
       '<div class="ev-modal-meta">' + dateStr + ' · ' + timeStr +
       (replies ? ' · ' + replies : '') + '</div>' +
       imgHtml +
       '<div class="ev-modal-desc">' + desc + '</div>' +
       lvHtml +
       teamRoster +
-      partList +
-      '<div style="margin-top:16px"><a class="btn join" data-discord href="#" aria-label="Join Discord">' +
+      '<div class="ev-cta" style="margin-top:16px"><a class="btn join" data-discord href="#" aria-label="Join Discord">' +
       '<svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>' +
-      'View on Discord</a></div>';
+      'View on Discord</a>' + partBtn + '</div>';
 
     overlay.classList.add("open");
     document.body.style.overflow = "hidden";
@@ -1237,11 +1239,41 @@ function wireEventModals() {
       featured.classList.add("ev-clickable");
       featured.setAttribute("data-ev-id", fev.id);
       featured.addEventListener("click", function (e) {
-        if (e.target.closest("a")) return;
+        if (e.target.closest("a") || e.target.closest("[data-part-ev]")) return;
         openModal(fev);
       });
     }
   }
+}
+
+function wireParticipantModal() {
+  var overlay = document.getElementById("part-modal-overlay");
+  if (!overlay) return;
+  var closeBtn = overlay.querySelector(".part-modal-close");
+
+  function close() {
+    overlay.classList.remove("open");
+    if (!document.querySelector(".ev-modal-overlay.open")) {
+      document.body.style.overflow = "";
+    }
+  }
+
+  closeBtn.addEventListener("click", close);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) close();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && overlay.classList.contains("open")) close();
+  });
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-part-ev]");
+    if (!btn) return;
+    e.stopPropagation();
+    var id = btn.getAttribute("data-part-ev");
+    var ev = _eventsData.find(function (x) { return x.id === id; });
+    if (ev) openParticipantModal(ev);
+  });
 }
 
 function startCountdownTimers() {

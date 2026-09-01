@@ -133,30 +133,27 @@ export function extractParticipantEmbed(message) {
   };
 }
 
-export function parseParticipants(messages) {
-  if (!Array.isArray(messages) || !messages.length) return null;
-  const sorted = messages.slice().sort((a, b) => {
-    if (a.id < b.id) return -1;
-    if (a.id > b.id) return 1;
-    return 0;
-  });
+export function parseParticipants(messages, reactors) {
   const participants = new Map();
-  for (const m of sorted) {
-    const embed = extractParticipantEmbed(m);
-    if (embed) {
+  if (Array.isArray(reactors)) {
+    for (const u of reactors) {
+      if (!u || u.bot) continue;
+      const name = u.global_name || u.username || "Unknown";
+      participants.set(name.toLowerCase(), name);
+    }
+  }
+  if (Array.isArray(messages) && messages.length) {
+    const sorted = messages.slice().sort((a, b) => {
+      if (a.id < b.id) return -1;
+      if (a.id > b.id) return 1;
+      return 0;
+    });
+    for (const m of sorted) {
+      const embed = extractParticipantEmbed(m);
+      if (!embed) continue;
       const key = embed.player.toLowerCase();
       if (embed.added) participants.set(key, embed.player);
       else participants.delete(key);
-      continue;
-    }
-    if (!Array.isArray(m.reactions) || !m.reactions.length) continue;
-    if (!m.author) continue;
-    for (const r of m.reactions) {
-      if (isCheckmark(r.emoji && r.emoji.name)) {
-        const author = m.author.global_name || m.author.username || "Unknown";
-        participants.set(author.toLowerCase(), author);
-        break;
-      }
     }
   }
   if (participants.size === 0) return null;
@@ -165,7 +162,7 @@ export function parseParticipants(messages) {
   return result;
 }
 
-export function transformThreads(threads, openingMessages, tagMap, threadMessages) {
+export function transformThreads(threads, openingMessages, tagMap, threadMessages, threadReactors) {
   const msgMap = new Map();
   for (const m of Array.isArray(openingMessages) ? openingMessages : []) {
     if (m && m.id) msgMap.set(m.id, m);
@@ -197,7 +194,8 @@ export function transformThreads(threads, openingMessages, tagMap, threadMessage
 
     const allMsgs = threadMessages && threadMessages.get(t.id);
     const teams = allMsgs ? parseTeams(allMsgs) : null;
-    const participants = allMsgs ? parseParticipants(allMsgs) : null;
+    const reactors = threadReactors && threadReactors.get(t.id);
+    const participants = (allMsgs || reactors) ? parseParticipants(allMsgs, reactors) : null;
 
     events.push({
       id: t.id,
@@ -321,6 +319,7 @@ export async function onRequest(context) {
   let tagMap = new Map();
   let openingMessages;
   const threadMessages = new Map();
+  const threadReactors = new Map();
   try {
     const [channelRes, ...threadResults] = await Promise.all([
       fetch(
@@ -328,7 +327,7 @@ export async function onRequest(context) {
         { headers }
       ),
       ...threads.map(async (t) => {
-        const [openingRes, msgsRes] = await Promise.all([
+        const [openingRes, msgsRes, reactorsRes] = await Promise.all([
           fetch(
             `https://discord.com/api/v10/channels/${t.id}/messages/${t.id}`,
             { headers }
@@ -337,12 +336,19 @@ export async function onRequest(context) {
             `https://discord.com/api/v10/channels/${t.id}/messages?limit=100`,
             { headers }
           ).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+          fetch(
+            `https://discord.com/api/v10/channels/${t.id}/messages/${t.id}/reactions/${encodeURIComponent("✅")}?limit=100`,
+            { headers }
+          ).then((r) => (r.ok ? r.json() : [])).catch(() => []),
         ]);
         const allMsgs = Array.isArray(msgsRes) ? [...msgsRes] : [];
         if (openingRes && !allMsgs.find(m => m.id === openingRes.id)) {
           allMsgs.push(openingRes);
         }
         threadMessages.set(t.id, allMsgs);
+        if (Array.isArray(reactorsRes) && reactorsRes.length) {
+          threadReactors.set(t.id, reactorsRes);
+        }
         return openingRes;
       }),
     ]);
@@ -357,7 +363,7 @@ export async function onRequest(context) {
     openingMessages = [];
   }
 
-  const events = transformThreads(threads, openingMessages, tagMap, threadMessages);
+  const events = transformThreads(threads, openingMessages, tagMap, threadMessages, threadReactors);
   const res = json({ configured: true, events }, 200, {
     "Cache-Control": `public, max-age=${CACHE_TTL}`,
   });

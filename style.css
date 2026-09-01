@@ -274,7 +274,6 @@ th.sortable.sort-desc::after{content:"▼";opacity:1;color:var(--gold)}
 .ev-countdown{color:var(--gold);font-size:clamp(16px,4vw,24px);background:var(--void);padding:6px 14px;border-radius:5px;border:2px solid var(--bronze)}
 .ev-interested{color:var(--muted);font-size:16px}
 .ev-desc{color:var(--parchment);font-size:15px;line-height:1.7;max-width:700px;margin-bottom:18px}
-.ev-cta{margin-top:4px}
 .dc-h1{font-family:"Cinzel",serif;font-size:22px;font-weight:800;color:var(--gold);margin:14px 0 6px}
 .dc-h2{font-family:"Cinzel",serif;font-size:18px;font-weight:700;color:var(--gold);margin:12px 0 4px}
 .dc-h3{font-family:"Cinzel",serif;font-size:15px;font-weight:700;color:var(--parchment);margin:10px 0 4px}
@@ -544,22 +543,38 @@ nav.main a[href="/ge.html"]{display:none}
 .team-players li::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%}
 .team-block.team-a .team-players li::before{background:var(--team-a);opacity:.5}.team-block.team-b .team-players li::before{background:var(--team-b);opacity:.5}.team-block.team-c .team-players li::before{background:var(--team-c);opacity:.5}.team-block.team-d .team-players li::before{background:var(--team-d);opacity:.5}
 
-/* ---------- participant indicators ---------- */
-.ev-participants{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
-.ev-participants:hover{color:var(--parchment)}
-.ev-participants-icon{color:var(--xp);font-size:16px}
-.badge-participants{display:inline-flex;align-items:center;gap:5px;font-family:"Jersey 15",monospace;font-size:12px;color:var(--parchment);letter-spacing:1px;text-transform:uppercase;background:rgba(74,208,74,.06);border:1px solid rgba(74,208,74,.15);padding:3px 10px;border-radius:3px}
-.participant-list{margin-top:16px;border-top:1px solid rgba(107,83,54,.3);padding-top:14px}
-.participant-list-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:0}
-.participant-list-header:hover .participant-list-label{color:var(--parchment)}
-.participant-list-label{font-family:"Cinzel",serif;font-weight:700;font-size:14px;color:var(--gold-dim);letter-spacing:2px;text-transform:uppercase;transition:color .15s}
-.participant-list-toggle{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);letter-spacing:1px}
-.participant-list-names{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
-.participant-list-names.hidden{display:none}
-.participant-chip{font-family:"Jersey 15",monospace;font-size:13px;color:var(--parchment);background:rgba(0,0,0,.35);border:1px solid rgba(107,83,54,.2);border-radius:4px;padding:4px 10px}
-.ev-wild .participant-list{border-top-color:rgba(139,32,32,.25)}.ev-wild .participant-list-label{color:#ff8866}
-.ev-social .participant-list{border-top-color:rgba(45,107,79,.25)}.ev-social .participant-list-label{color:#6af0a0}
-.ev-pvm .participant-list{border-top-color:rgba(107,63,160,.25)}.ev-pvm .participant-list-label{color:#c090ff}
+/* ---------- participant button + popup ---------- */
+.ev-cta{margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn-participants{font-family:"Jersey 15",monospace;font-size:18px;padding:11px 18px;color:var(--parchment);letter-spacing:1px;background:linear-gradient(180deg,rgba(74,208,74,.15),rgba(74,208,74,.06));border:1px solid rgba(74,208,74,.3);border-radius:6px;cursor:pointer;transition:background .15s,border-color .15s}
+.btn-participants:hover{background:linear-gradient(180deg,rgba(74,208,74,.25),rgba(74,208,74,.12));border-color:rgba(74,208,74,.5)}
+.btn-participants.ev-wild{background:linear-gradient(180deg,rgba(224,64,64,.15),rgba(224,64,64,.06));border-color:rgba(224,64,64,.3)}
+.btn-participants.ev-wild:hover{background:linear-gradient(180deg,rgba(224,64,64,.25),rgba(224,64,64,.12));border-color:rgba(224,64,64,.5)}
+.btn-participants.ev-social{background:linear-gradient(180deg,rgba(74,232,138,.15),rgba(74,232,138,.06));border-color:rgba(74,232,138,.3)}
+.btn-participants.ev-social:hover{background:linear-gradient(180deg,rgba(74,232,138,.25),rgba(74,232,138,.12));border-color:rgba(74,232,138,.5)}
+.btn-participants.ev-pvm{background:linear-gradient(180deg,rgba(192,144,255,.15),rgba(192,144,255,.06));border-color:rgba(192,144,255,.3)}
+.btn-participants.ev-pvm:hover{background:linear-gradient(180deg,rgba(192,144,255,.25),rgba(192,144,255,.12));border-color:rgba(192,144,255,.5)}
+.part-modal-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.part-modal-overlay.open{opacity:1;pointer-events:auto}
+.part-modal{position:relative;background:linear-gradient(180deg,var(--panel),var(--panel-3));border:2px solid #000;box-shadow:var(--frame),0 0 40px rgba(0,0,0,.6);border-radius:8px;width:90%;max-width:420px;max-height:70vh;overflow-y:auto;padding:24px 22px}
+.part-modal-close{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--parchment);font-size:28px;cursor:pointer;line-height:1;padding:8px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.part-modal-close:hover{color:var(--gold)}
+.part-modal-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.part-modal-header h3{font-family:"Cinzel",serif;font-size:20px;color:var(--gold);margin:0;letter-spacing:2px;text-transform:uppercase}
+.part-modal-count{font-family:"Jersey 15",monospace;font-size:16px;color:var(--muted);background:rgba(74,208,74,.1);border:1px solid rgba(74,208,74,.2);border-radius:4px;padding:2px 8px}
+.participant-list-names{display:flex;flex-wrap:wrap;gap:6px}
+.participant-chip{font-family:"Jersey 15",monospace;font-size:14px;color:var(--parchment);background:rgba(0,0,0,.35);border:1px solid rgba(107,83,54,.2);border-radius:4px;padding:5px 12px}
+.part-modal.ev-wild{background:linear-gradient(180deg,#1e0c0c,#140808);border-color:#5a1a1a;box-shadow:var(--frame),0 0 40px rgba(139,32,32,.3)}
+.part-modal.ev-wild .part-modal-header h3{color:#ff5544}
+.part-modal.ev-wild .part-modal-count{background:rgba(224,64,64,.1);border-color:rgba(224,64,64,.2)}
+.part-modal.ev-wild .participant-chip{border-color:rgba(139,32,32,.25)}
+.part-modal.ev-social{background:linear-gradient(180deg,#0e1e16,#080e0c);border-color:#1a4a32;box-shadow:var(--frame),0 0 40px rgba(45,107,79,.25)}
+.part-modal.ev-social .part-modal-header h3{color:#4ae88a}
+.part-modal.ev-social .part-modal-count{background:rgba(74,232,138,.1);border-color:rgba(74,232,138,.2)}
+.part-modal.ev-social .participant-chip{border-color:rgba(45,107,79,.25)}
+.part-modal.ev-pvm{background:linear-gradient(180deg,#16101e,#0e0814);border-color:#3a2060;box-shadow:var(--frame),0 0 40px rgba(107,63,160,.25)}
+.part-modal.ev-pvm .part-modal-header h3{color:#ffcb2f}
+.part-modal.ev-pvm .part-modal-count{background:rgba(192,144,255,.1);border-color:rgba(192,144,255,.2)}
+.part-modal.ev-pvm .participant-chip{border-color:rgba(107,63,160,.25)}
 
 /* ---------- event themes ---------- */
 /* Wilderness / PVP */

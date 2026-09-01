@@ -167,18 +167,24 @@ Nothing pending.
 
 ### Event Participants
 - Participation is OPTIONAL. Events without participant data look exactly the same as before.
-- Members react with green checkmark (U+2705) on messages in event threads to signal participation.
+- Members react with green checkmark (U+2705) on the opening message of event threads.
+- Backend fetches actual reactors via Discord reactions endpoint
+  (`/channels/{id}/messages/{id}/reactions/✅?limit=100`), not message-level reaction metadata.
+  Bot users (u.bot) are filtered out.
 - Leaders can manually add/remove participants via slash commands.
 - Bot embeds ("Participant Added"/"Participant Removed" with Player field) override reactions.
-- Processed chronologically by snowflake ID; later actions override earlier ones.
-- A player appears once; Participant Removed clears their entry.
+  Processed chronologically by snowflake ID; later actions override earlier ones.
+- Reactors and bot embeds merge: reactors added first, then embeds applied in order.
+  A player appears once; Participant Removed clears their entry.
 - API response `participants` field: null when no participants, or sorted array of player names.
+- `transformThreads` accepts 5th param `threadReactors` (Map of threadId -> reactor user array).
 - Slash commands: /participant-add (player string), /participant-remove (player string),
   /participant-list (shows all participants). Add/remove restricted to leaders via
   Discord Integrations; /participant-list open to all.
 - Bot embed colors: Participant Added = 0x2ecc71 (green), Participant Removed = 0xe74c3c (red).
-- Website display: participant count on event cards ("X joined"), "PARTICIPANTS" badge +
-  expandable name list (click to SHOW/HIDE) in featured events and modals.
+- Website display: participant count on event cards ("X joined"), themed participant button
+  in CTA row next to RSVP. Clicking opens a popup modal (z-index 90) with participant chips.
+  Modal themed per event type (default green, ev-wild red, ev-social green, ev-pvm purple).
 
 ### Authentication gate
 - Every page except gate.html and static assets is protected by _middleware.js.
