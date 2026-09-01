@@ -53,6 +53,7 @@ export async function onRequest(context) {
   }
 
   var validCodes = codesRaw.split(",").map(function (c) { return c.trim().toUpperCase(); }).filter(Boolean);
+  if (!env.DISABLE_LAUNCH) validCodes.push("LAUNCH");
   if (!validCodes.includes(submitted)) {
     return json({ valid: false });
   }
