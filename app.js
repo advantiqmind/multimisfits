@@ -565,13 +565,11 @@ async function loadSpotlight() {
     if (!data || !data.configured || !data.spotlight) return;
     var s = data.spotlight;
     var time = s.timestamp ? relTime(s.timestamp) : "";
-    var caption = s.caption || "Clan Spotlight";
     container.innerHTML =
       `<a class="spotlight lightbox-trigger" href="${esc(s.image)}">` +
-        `<div class="spotlight-img"><img src="${esc(s.image)}" alt="${esc(caption)}" loading="lazy"></div>` +
+        `<div class="spotlight-img"><img src="${esc(s.image)}" alt="Clan spotlight" loading="lazy"></div>` +
         `<div class="spotlight-info">` +
           `<div class="spotlight-label">Spotlight</div>` +
-          `<div class="spotlight-caption">${esc(caption)}</div>` +
           `<div class="spotlight-meta">Posted by ${esc(s.author)}${time ? " · " + esc(time) : ""}</div>` +
         `</div>` +
       `</a>`;

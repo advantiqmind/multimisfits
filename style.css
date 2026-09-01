@@ -379,14 +379,14 @@ a.shot:hover img{transform:scale(1.05)}
 .shots-gallery{grid-template-columns:repeat(3,1fr)}
 
 /* ---------- spotlight ---------- */
-.spotlight{display:flex;gap:16px;align-items:center;padding:14px;background:var(--panel);border:2px solid #000;border-radius:8px;box-shadow:inset 0 0 0 2px var(--bronze), inset 0 0 24px rgba(0,0,0,.4), var(--shadow);margin-bottom:16px;cursor:pointer;transition:border-color .15s}
-.spotlight:hover{border-color:var(--bronze-lite)}
-.spotlight-img{flex:0 0 auto;width:260px;aspect-ratio:16/10;border:2px solid #000;border-radius:6px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--bronze)}
-.spotlight-img img{width:100%;height:100%;object-fit:cover;display:block}
-.spotlight-info{flex:1 1 auto;min-width:0}
-.spotlight-label{font-family:"Jersey 15",monospace;font-size:14px;color:var(--gold-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
-.spotlight-caption{font-family:"Cinzel",serif;font-size:18px;color:var(--gold);line-height:1.3;margin-bottom:6px;text-shadow:1px 1px 0 #000}
-.spotlight-meta{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted)}
+.spotlight{display:block;position:relative;border:2px solid #000;border-radius:10px;overflow:hidden;box-shadow:0 0 30px rgba(255,203,47,.15), inset 0 0 0 2px var(--bronze), var(--shadow);margin-bottom:16px;cursor:pointer;transition:box-shadow .2s}
+.spotlight:hover{box-shadow:0 0 40px rgba(255,203,47,.25), inset 0 0 0 2px var(--gold-dim), var(--shadow)}
+.spotlight-img{width:100%;aspect-ratio:21/9;overflow:hidden}
+.spotlight-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.spotlight:hover .spotlight-img img{transform:scale(1.03)}
+.spotlight-info{position:absolute;bottom:0;left:0;right:0;padding:20px 24px;background:linear-gradient(transparent,rgba(13,11,8,.85) 40%,rgba(13,11,8,.95))}
+.spotlight-label{font-family:"Cinzel",serif;font-weight:700;font-size:18px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.spotlight-meta{font-family:"Jersey 15",monospace;font-size:14px;color:var(--parchment);text-shadow:0 1px 4px rgba(0,0,0,.6)}
 
 /* ---------- lightbox ---------- */
 .lightbox-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -434,9 +434,9 @@ nav.main a[href="/ge.html"]{display:none}
   .col-2{grid-column:span 1}
   .shots{grid-template-columns:repeat(2,1fr)}
   .shots-gallery{grid-template-columns:repeat(2,1fr)}
-  .spotlight{flex-direction:column;gap:10px;padding:10px}
-  .spotlight-img{width:100%;max-width:100%}
-  .spotlight-caption{font-size:15px}
+  .spotlight-img{aspect-ratio:16/9}
+  .spotlight-info{padding:14px 16px}
+  .spotlight-label{font-size:15px;letter-spacing:2px}
   .ach-thumb{width:44px;height:44px}
   .ev-grid{grid-template-columns:1fr}
   .panel > .head a.more{padding:10px 0}

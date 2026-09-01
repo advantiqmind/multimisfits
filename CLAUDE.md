@@ -45,7 +45,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/news.js        GET /api/news -> reads #announcements via Discord bot
 - functions/api/events.js      GET /api/events -> reads forum threads (filters out giveaway threads), cached 5min
 - functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
-- functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image
+- functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image only (message text never shown; just image + posted-by)
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
 - functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
@@ -97,6 +97,10 @@ Nothing pending.
   giveaway. Open to all members (no Discord Integrations override needed).
 - Bot embeds parsed by extractBotEntry(): Player + Entries fields, accumulation
   with sum-then-clamp. "Entry Removed" returns negative count for subtraction.
+- Reaction entries and manual bot entries merge per person by lowercase player
+  name (Discord display name vs Player field), one row each, combined total
+  clamped to [0, MAX_ENTRIES_PER_PERSON]. Leaders must type the name as shown
+  on Discord (case does not matter) for the merge to apply.
 - Stats auto-calculated: total entries, participants, GP raised.
 - Winner detected via trophy emoji in message: @mention > text after trophy
   (greeting words stripped, max 3 words) > message author. Pinned messages as fallback.
@@ -131,7 +135,7 @@ Nothing pending.
 - "Live via Dink" badge at bottom of leaderboard.
 - Forwarding proxy: site receives ALL drops (Dink min value = 1), stores for events,
   and forwards drops >= LOOT_DISCORD_MIN_VALUE (default 150k) to Discord chest channel.
-  Members only need one URL in Dink: https://multimisfits.pages.dev/api/loot?key=SECRET
+  Members only need one URL in Dink: https://multimisfits.us/api/loot?key=SECRET
   Set LOOT_DISCORD_WEBHOOK to the chest channel's Discord webhook URL.
   Forwarding is fire-and-forget via context.waitUntil (does not block the response).
 - Auth key stored in LOOT_WEBHOOK_KEY env var. /api/loot bypasses auth middleware.
@@ -139,7 +143,7 @@ Nothing pending.
 
 ### Events
 - Forum threads from events channel, excluding giveaway-named threads.
-- EventForge date parsing: `When:` and `Ends:` lines (plain text or Discord timestamps).
+- EventForge date parsing: `When:` and `Ends:`/`End:` lines (plain text or Discord timestamps).
 - [LIVE] tag in thread name forces live status regardless of dates.
 - Emoji-prefixed date lines supported (e.g. calendar emoji before When:).
 - Discord forum tags (e.g. Entry, PVM, Loot Value) resolved from channel available_tags
