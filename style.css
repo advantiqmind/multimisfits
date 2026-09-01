@@ -741,12 +741,12 @@ nav.main a[href="/ge.html"]{display:none}
   background:rgba(255,203,47,.1);border:1px solid var(--gold-dim);border-radius:999px;
   font-family:"Cinzel",serif;font-weight:800;font-size:13px;color:var(--gold);letter-spacing:3px;
 }
-.wheel-prize-line{font-family:"Jersey 15",monospace;font-size:18px;color:var(--gold);margin-bottom:8px}
-.wheel-prize-line:empty{display:none}
-.wheel-winner-name{
-  font-family:"Cinzel",serif;font-weight:900;font-size:30px;line-height:1.1;color:var(--parchment);
-  margin-bottom:26px;word-break:break-word;text-shadow:1px 1px 0 #000, 0 0 24px rgba(255,203,47,.35);
+.wheel-prize-line{
+  font-family:"Cinzel",serif;font-weight:900;font-size:30px;line-height:1.1;color:var(--gold);
+  margin-bottom:18px;word-break:break-word;text-shadow:1px 1px 0 #000, 0 0 24px rgba(255,203,47,.35);
 }
+.wheel-prize-line:empty{display:none}
+.wheel-winner-name{font-family:"Jersey 15",monospace;font-size:19px;letter-spacing:1px;color:var(--parchment);margin-bottom:26px;word-break:break-word;text-shadow:1px 1px 0 #000}
 .wheel-modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .wheel-modal-btn{
   font-family:"Jersey 15",monospace;font-size:16px;letter-spacing:1px;
