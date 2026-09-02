@@ -37,6 +37,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - gate.html                    auth gate landing page (referral code + Discord OAuth)
 - wheel.html / wheel.js        Loot Wheel page (spin for a winner; loads event participants)
 - wheel-popout.html            popout wheel window (canvas + spin only, synced via BroadcastChannel)
+- strats.html / strats.js      Strat Finder (OSRS Wiki strategy guide launcher, categorized boss tiles)
 - style.css                    theme
 - app.js                       nav, toasts, Discord links, all panel rendering
 - functions/_middleware.js     auth middleware (redirects unauthenticated to gate.html)
@@ -202,6 +203,24 @@ Nothing pending.
   "mm-loot-wheel" + storage events. Nav link "Wheel" on all pages.
 - All wheel CSS is namespaced .wheel-* in style.css; graceful fallback if /api/events fails
   (dropdown shows "Events unavailable", manual entry still works).
+
+### Strat Finder
+- strats.html: clan-themed rework of the 1BOX Strat Finder (1box.online copy untouched).
+- Protected by the normal auth gate; purely client-side, no backend or env vars.
+- ~56 targets in strats.js TARGETS, grouped by category (Raids, Wilderness, Slayer,
+  God Wars, DT2, Bosses, Minigames, Skilling) with colored section headers, tiles,
+  and filter chips reusing the event theme hues.
+- Tiles link to {page}/Strategies on the OSRS Wiki (new tab). `p` field overrides the
+  wiki page name when it differs from the display name (e.g. Fight Caves -> TzHaar Fight Cave).
+- NPC art hotlinked from the wiki via Special:FilePath?width=80; `img` field overrides
+  the filename. On image error the tile keeps its Cinzel initials medallion, so a wrong
+  filename never breaks the layout. Fix art misses by setting `img` on that entry.
+- Search filters tiles live; GO/Enter resolves clan shorthand from the ALIASES map
+  (cox, tob, gg, thermy...), falls back to wiki search for unknown text.
+- Recent row (localStorage mm-strats-recent, last 4 clicked) pinned above the sections.
+- All CSS namespaced .st-* in style.css. Nav link "Strats" on all pages.
+- Event tie-in idea (highlight tonight's boss from live Loot Value events) discussed but
+  intentionally NOT built yet.
 
 ### Authentication gate
 - Every page except gate.html and static assets is protected by _middleware.js.
