@@ -155,7 +155,7 @@
 
   function imgUrl(t) {
     var file = t.img || (pageOf(t) + ".png");
-    return WIKI + "/w/Special:FilePath/" + encodeURIComponent(file.replace(/ /g, "_")) + "?width=80";
+    return WIKI + "/w/Special:FilePath/" + encodeURIComponent(file.replace(/ /g, "_")) + "?width=120";
   }
 
   function initials(name) {
@@ -217,6 +217,9 @@
     // Broken image -> initials medallion stays
     sectionsEl.querySelectorAll(".st-npc img").forEach(function (img) {
       img.addEventListener("error", function () { img.remove(); });
+      function mark() { img.parentElement.classList.add("has-img"); }
+      if (img.complete && img.naturalWidth) mark();
+      else img.addEventListener("load", mark);
     });
 
     applyFilters();
