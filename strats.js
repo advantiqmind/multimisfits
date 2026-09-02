@@ -16,6 +16,25 @@
     { n: "Theatre of Blood", cat: "raid", img: "Verzik Vitur.png" },
     { n: "Tombs of Amascut", cat: "raid", img: "Tumeken's Warden.png" },
 
+    { n: "Scurrius", cat: "boss" },
+    { n: "Giant Mole", cat: "boss" },
+    { n: "Barrows", cat: "boss", img: "Dharok the Wretched.png" },
+    { n: "Hespori", cat: "boss" },
+    { n: "Amoxliatl", cat: "boss" },
+    { n: "Moons of Peril", cat: "boss", img: "Eclipse Moon.png" },
+    { n: "Sarachnis", cat: "boss" },
+    { n: "Royal Titans", cat: "boss", p: "The Royal Titans", img: "Branda the Fire Queen.png" },
+    { n: "Skotizo", cat: "boss" },
+    { n: "Kalphite Queen", cat: "boss" },
+    { n: "Dagannoth Kings", cat: "boss", img: "Dagannoth Rex.png" },
+    { n: "The Hueycoatl", cat: "boss" },
+    { n: "Zulrah", cat: "boss", img: "Zulrah (serpentine).png" },
+    { n: "Vorkath", cat: "boss" },
+    { n: "Phantom Muspah", cat: "boss", img: "Phantom Muspah (ranged).png" },
+    { n: "Corporeal Beast", cat: "boss" },
+    { n: "Nightmare", cat: "boss", p: "The Nightmare" },
+    { n: "Yama", cat: "boss" },
+
     { n: "Callisto", cat: "wild" },
     { n: "Vet'ion", cat: "wild" },
     { n: "Venenatis", cat: "wild" },
@@ -33,7 +52,7 @@
     { n: "Cerberus", cat: "slay" },
     { n: "Abyssal Sire", cat: "slay" },
     { n: "Grotesque Guardians", cat: "slay", img: "Dusk.png" },
-    { n: "Alchemical Hydra", cat: "slay" },
+    { n: "Alchemical Hydra", cat: "slay", img: "Alchemical Hydra (poison).png" },
     { n: "Araxxor", cat: "slay" },
 
     { n: "General Graardor", cat: "gwd" },
@@ -47,25 +66,6 @@
     { n: "The Leviathan", cat: "dt2" },
     { n: "The Whisperer", cat: "dt2" },
 
-    { n: "Zulrah", cat: "boss", img: "Zulrah (serpentine).png" },
-    { n: "Vorkath", cat: "boss" },
-    { n: "Corporeal Beast", cat: "boss" },
-    { n: "Nightmare", cat: "boss", p: "The Nightmare" },
-    { n: "Phantom Muspah", cat: "boss", img: "Phantom Muspah (ranged).png" },
-    { n: "Kalphite Queen", cat: "boss" },
-    { n: "Dagannoth Kings", cat: "boss", img: "Dagannoth Rex.png" },
-    { n: "Giant Mole", cat: "boss" },
-    { n: "Sarachnis", cat: "boss" },
-    { n: "Skotizo", cat: "boss" },
-    { n: "Scurrius", cat: "boss" },
-    { n: "The Hueycoatl", cat: "boss" },
-    { n: "Amoxliatl", cat: "boss" },
-    { n: "Royal Titans", cat: "boss", p: "The Royal Titans", img: "Branda the Fire Queen.png" },
-    { n: "Yama", cat: "boss" },
-    { n: "Barrows", cat: "boss", img: "Dharok the Wretched.png" },
-    { n: "Moons of Peril", cat: "boss", img: "Eclipse Moon.png" },
-    { n: "Hespori", cat: "boss" },
-
     { n: "The Gauntlet", cat: "mini", img: "Crystalline Hunllef.png" },
     { n: "Corrupted Gauntlet", cat: "mini", p: "The Corrupted Gauntlet", img: "Corrupted Hunllef.png" },
     { n: "Fight Caves", cat: "mini", p: "TzHaar Fight Cave", img: "TzTok-Jad.png" },
@@ -73,18 +73,18 @@
     { n: "Colosseum", cat: "mini", p: "Fortis Colosseum", img: "Sol Heredit.png" },
 
     { n: "Tempoross", cat: "skill" },
-    { n: "Wintertodt", cat: "skill" },
+    { n: "Wintertodt", cat: "skill", img: "Pyromancer.png" },
     { n: "Zalcano", cat: "skill" }
   ];
 
   var CATS = [
     { key: "recent", label: "Recent" },
     { key: "raid", label: "Raids" },
+    { key: "boss", label: "Bosses" },
     { key: "wild", label: "Wilderness" },
     { key: "slay", label: "Slayer" },
     { key: "gwd", label: "God Wars" },
     { key: "dt2", label: "Desert Treasure II" },
-    { key: "boss", label: "Bosses" },
     { key: "mini", label: "Minigames" },
     { key: "skill", label: "Skilling" }
   ];
@@ -92,11 +92,11 @@
   var CHIPS = [
     { key: "all", label: "All" },
     { key: "raid", label: "Raids" },
+    { key: "boss", label: "Bosses" },
     { key: "wild", label: "Wildy" },
     { key: "slay", label: "Slayer" },
     { key: "gwd", label: "God Wars" },
     { key: "dt2", label: "DT2" },
-    { key: "boss", label: "Bosses" },
     { key: "mini", label: "Minigames" },
     { key: "skill", label: "Skilling" }
   ];
