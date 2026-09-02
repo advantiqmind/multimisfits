@@ -816,8 +816,10 @@
             ' <span style="color:var(--gold);font-size:16px;margin:0 10px;">VS</span> ' +
             esc(nextMatch.p2.name) +
           '</div>' +
-          '<div style="font-size:14px;color:var(--text-mid);margin-top:12px;">Tap <span style="color:var(--gold);">Start Fight</span> to begin</div>' +
+          '<button id="bkFightGo" class="btn join bk-btn-start" style="margin-top:18px;font-size:13px;padding:10px 32px;">Start Fight</button>' +
         '</div>';
+      var goBtn = document.getElementById("bkFightGo");
+      if (goBtn) goBtn.addEventListener("click", function () { runFight(); });
     }
 
     popoutSend("round-start", { roundName: roundName(state.totalRounds, state.round), standings: getStandings() });
@@ -885,7 +887,18 @@
 
     popoutSend("standings", getStandings());
     if (state.matchIdx >= round.length) finishRound();
-    else updateButton();
+    else {
+      updateButton();
+      var logEl = document.getElementById("bkFightLog");
+      if (logEl) {
+        var nb = document.createElement("button");
+        nb.className = "btn join bk-btn-start";
+        nb.style.cssText = "margin-top:12px;font-size:13px;padding:8px 28px;display:block;margin-left:auto;margin-right:auto;";
+        nb.textContent = "Next Fight";
+        nb.addEventListener("click", function () { runFight(); });
+        logEl.appendChild(nb);
+      }
+    }
   }
 
   async function finishRound() {
