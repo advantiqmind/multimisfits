@@ -97,6 +97,7 @@
   var popoutWin = null;
   var eventsById = {};
   var giveawayRounds = [];
+  var manualEntries = []; // {name, entries, rank}
 
   // -- Code lock --
   function checkLock() {
@@ -253,31 +254,102 @@
     var parts = val.split(":");
     var type = parts[0];
     var id = parts.slice(1).join(":");
+    var newEntries = [];
 
     if (type === "event" && eventsById[id]) {
       var ev = eventsById[id];
-      var players = [];
       for (var i = 0; i < ev.participants.length; i++) {
         var name = ev.participants[i];
         var role = state.womMap[name.toLowerCase()] || "";
-        players.push({ name: name, entries: 1, rank: role });
+        newEntries.push({ name: name, entries: 1, rank: role });
       }
-      state.players = players;
-      initBracket();
     } else if (type === "giveaway") {
       var idx = parseInt(id, 10);
       if (isNaN(idx) || idx < 0 || idx >= giveawayRounds.length) return;
       var round = giveawayRounds[idx];
       if (!round.entries || !round.entries.length) return;
-      var players2 = [];
       for (var j = 0; j < round.entries.length; j++) {
         var e = round.entries[j];
         var role2 = state.womMap[e.player.toLowerCase()] || "";
-        players2.push({ name: e.player, entries: e.count, rank: role2 });
+        newEntries.push({ name: e.player, entries: e.count, rank: role2 });
       }
-      state.players = players2;
-      initBracket();
     }
+
+    if (!newEntries.length) return;
+    if (manualEntries.length && !window.confirm("Replace current fighters with loaded data?")) return;
+    manualEntries = newEntries;
+    renderEntries();
+    applyEntriesToBracket();
+  }
+
+  // -- Manual entry management --
+  function renderEntries() {
+    var list = document.getElementById("bkEntryList");
+    var countEl = document.getElementById("bkFighterCount");
+    if (!list) return;
+    var html = "";
+    for (var i = 0; i < manualEntries.length; i++) {
+      var e = manualEntries[i];
+      var hp = hpForEntries(e.entries);
+      html += '<div class="bk-entry">' +
+        (e.rank ? '<span class="bk-rank-icon">' + rankMark(e.rank) + '</span>' : '') +
+        '<span class="bk-entry-name">' + esc(e.name) + '</span>' +
+        '<span class="bk-entry-controls">' +
+          '<button class="bk-entry-adj minus" data-idx="' + i + '" data-delta="-1">−</button>' +
+          '<span class="bk-entry-qty">' + e.entries + '</span>' +
+          '<button class="bk-entry-adj plus" data-idx="' + i + '" data-delta="1">+</button>' +
+        '</span>' +
+        '<span class="bk-entry-hp">' + hp.total + ' HP</span>' +
+        '<button class="bk-entry-remove" data-idx="' + i + '">×</button>' +
+        '</div>';
+    }
+    list.innerHTML = html;
+    if (countEl) countEl.textContent = manualEntries.length;
+  }
+
+  function addEntry(rawName, rawEntries) {
+    var name = rawName.trim();
+    if (!name) return;
+    var count = Math.max(1, Math.min(5, parseInt(rawEntries, 10) || 1));
+    var lower = name.toLowerCase();
+    for (var i = 0; i < manualEntries.length; i++) {
+      if (manualEntries[i].name.toLowerCase() === lower) {
+        manualEntries[i].entries = Math.min(5, manualEntries[i].entries + count);
+        renderEntries();
+        applyEntriesToBracket();
+        return;
+      }
+    }
+    var role = state.womMap[lower] || "";
+    manualEntries.push({ name: name, entries: count, rank: role });
+    renderEntries();
+    applyEntriesToBracket();
+  }
+
+  function adjustEntry(idx, delta) {
+    if (idx < 0 || idx >= manualEntries.length) return;
+    manualEntries[idx].entries = Math.max(1, Math.min(5, manualEntries[idx].entries + delta));
+    renderEntries();
+    applyEntriesToBracket();
+  }
+
+  function removeEntry(idx) {
+    if (idx < 0 || idx >= manualEntries.length) return;
+    manualEntries.splice(idx, 1);
+    renderEntries();
+    applyEntriesToBracket();
+  }
+
+  function clearEntries() {
+    if (!manualEntries.length) return;
+    manualEntries = [];
+    renderEntries();
+    applyEntriesToBracket();
+  }
+
+  function applyEntriesToBracket() {
+    state.players = manualEntries.slice();
+    initBracket();
   }
 
   // -- Bracket init --
@@ -1048,9 +1120,66 @@ splatCSS +
       popoutBtn.addEventListener("click", openPopout);
     }
 
-    if (picker) {
-      picker.addEventListener("change", function () {
+    var loadBtn = document.getElementById("bkLoadBtn");
+    var addBtn = document.getElementById("bkAddBtn");
+    var nameInput = document.getElementById("bkNameInput");
+    var entryInput = document.getElementById("bkEntryInput");
+    var clearBtn = document.getElementById("bkClearBtn");
+    var entryList = document.getElementById("bkEntryList");
+
+    if (loadBtn && picker) {
+      loadBtn.addEventListener("click", function () {
         loadFromPicker(picker.value);
+      });
+    }
+
+    if (addBtn && nameInput && entryInput) {
+      addBtn.addEventListener("click", function () {
+        addEntry(nameInput.value, entryInput.value);
+        nameInput.value = "";
+        entryInput.value = "1";
+        nameInput.focus();
+      });
+    }
+
+    if (nameInput) {
+      nameInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (addBtn) addBtn.click();
+        }
+      });
+    }
+
+    if (entryInput) {
+      entryInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (addBtn) addBtn.click();
+        }
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        if (manualEntries.length && confirm("Clear all fighters?")) {
+          clearEntries();
+        }
+      });
+    }
+
+    if (entryList) {
+      entryList.addEventListener("click", function (e) {
+        var adjBtn = e.target.closest(".bk-entry-adj");
+        var rmBtn = e.target.closest(".bk-entry-remove");
+        if (adjBtn) {
+          var idx = parseInt(adjBtn.getAttribute("data-idx"), 10);
+          var delta = parseInt(adjBtn.getAttribute("data-delta"), 10);
+          adjustEntry(idx, delta);
+        } else if (rmBtn) {
+          var idx = parseInt(rmBtn.getAttribute("data-idx"), 10);
+          removeEntry(idx);
+        }
       });
     }
   }

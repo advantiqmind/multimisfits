@@ -65,11 +65,32 @@
       <div class="head"><h2><span class="rune"></span>The Bracket</h2></div>
       <div class="body">
 
+        <!-- Entry panel -->
+        <div class="bk-entry-panel">
+          <div class="bk-source-row">
+            <label for="bkEventPicker" class="bk-label">Event</label>
+            <select id="bkEventPicker" class="bk-select">
+              <option value="">Loading events...</option>
+            </select>
+            <button id="bkLoadBtn" class="bk-add-btn">Load</button>
+          </div>
+          <div class="bk-panel-header">
+            <h3>Fighters</h3>
+            <span id="bkFighterCount" class="bk-fighter-count">0</span>
+          </div>
+          <div class="bk-add-row">
+            <input type="text" id="bkNameInput" placeholder="Add a name..." maxlength="32" autocomplete="off">
+            <input type="number" id="bkEntryInput" min="1" max="5" value="1" class="bk-entry-input" title="Entries (1-5)">
+            <button id="bkAddBtn" class="bk-add-btn">Add</button>
+          </div>
+          <div id="bkEntryList" class="bk-entry-list"></div>
+          <div class="bk-entry-footer">
+            <button id="bkClearBtn" class="bk-clear-btn">Clear All</button>
+          </div>
+        </div>
+
         <!-- Controls bar -->
         <div class="bk-controls">
-          <select id="bkEventPicker" class="bk-select">
-            <option value="">Loading events...</option>
-          </select>
           <label class="bk-speed-label">Speed
             <input type="range" id="bkSpeedSlider" min="1" max="5" value="3" class="bk-speed">
           </label>
