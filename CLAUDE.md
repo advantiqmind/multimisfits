@@ -200,7 +200,8 @@ Nothing pending.
 - Deep link: /wheel.html?event=THREAD_ID auto-loads that event's participants on arrival.
   The participant modal on events pages has a "Spin the Wheel" button linking there.
 - Popout (wheel-popout.html) mirrors the wheel for streaming; synced via BroadcastChannel
-  "mm-loot-wheel" + storage events. Nav link "Wheel" on all pages.
+  "mm-loot-wheel" + storage events. No nav link by owner request: reached via the
+  "Spin the Wheel" button in event participant modals, or the direct URL.
 - All wheel CSS is namespaced .wheel-* in style.css; graceful fallback if /api/events fails
   (dropdown shows "Events unavailable", manual entry still works).
 
