@@ -86,6 +86,16 @@ LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster
 ## What's left
 Nothing pending.
 
+## Future ideas (not built yet)
+
+### Battle Royale Drawing
+A top-down arena (Wilderness/PvP themed) where player names spawn as dots or shields.
+Random events eliminate names: shrinking danger zone, lightning strikes, sword clashes.
+Final 5 get health bars, final 2 get a 1v1 duel animation, winner gets a crown.
+Runtime 1-2 minutes. Most complex drawing option -- canvas animation, collision logic,
+zone shrinking. Would live alongside the bracket/slot machine drawing tools.
+Planned for later, after the bracket knockout and slot machine are done.
+
 ## How things work
 
 ### Giveaways
