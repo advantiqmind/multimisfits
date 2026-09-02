@@ -242,6 +242,10 @@ Planned for later, after the slot machine is done.
   no nav link, reached only by direct URL /bracket.html.
 - Data sources: /api/events (participants), /api/giveaway (entries), /api/wom (clan ranks).
   Events dropdown shows events with participants; giveaways show rounds with entries.
+  Load button replaces auto-load on picker change.
+- Manual entry: name input + entry count (1-5), +/- adjust, remove, clear all. HP preview
+  next to each entry. Case-insensitive dedup (adding existing name adds to their entries).
+  Matches the Loot Wheel entry panel UX. Manual and loaded entries can coexist.
 - Deep link: /bracket.html?event=THREAD_ID or ?giveaway=ROUND_INDEX auto-loads on arrival.
 - HP system: 1 entry = 15 HP (base only), 2 entries = 20 HP (15 base + 5 shield),
   3+ entries = 21-23 HP (15 base + 5 shield + 1-3 bonus). HP displayed as colored
