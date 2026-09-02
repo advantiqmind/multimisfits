@@ -858,9 +858,16 @@ nav.main a[href="/ge.html"]{display:none}
 /* Code lock overlay */
 .bk-lock{
   position:fixed;inset:0;z-index:60;
-  background:rgba(13,11,8,0.92);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  background:rgba(13,11,8,0.95);
+  display:flex;align-items:center;justify-content:center;
   color:var(--parchment);font-family:"Cinzel",serif;
+}
+.bk-lock[hidden]{display:none!important}
+.bk-lock-panel{
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  background:var(--panel-2);border:2px solid var(--bronze);border-radius:12px;
+  padding:40px 48px;max-width:380px;width:90%;
+  box-shadow:0 8px 40px rgba(0,0,0,0.6);
 }
 .bk-lock-icon{font-size:48px;filter:drop-shadow(0 0 12px rgba(0,0,0,0.6))}
 .bk-lock-title{font-weight:900;font-size:20px;color:var(--gold);letter-spacing:3px;text-transform:uppercase}
@@ -870,7 +877,9 @@ nav.main a[href="/ge.html"]{display:none}
   text-align:center;width:240px;letter-spacing:2px;
 }
 .bk-lock-input:focus{outline:2px solid var(--gold-dim);border-color:var(--gold-dim)}
-.bk-lock-error{color:var(--blood);font-size:13px;letter-spacing:1px}
+.bk-lock-text{font-size:14px;color:var(--parchment);opacity:0.7;letter-spacing:1px;margin:0}
+.bk-lock-error{color:var(--blood);font-size:13px;letter-spacing:1px;min-height:18px}
+.bk-lock-error[hidden]{display:none}
 .bk-lock-btn{
   font-family:"Cinzel",serif;font-weight:700;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
   padding:10px 28px;border:2px solid var(--gold-dim);border-radius:4px;cursor:pointer;
@@ -1265,6 +1274,7 @@ nav.main a[href="/ge.html"]{display:none}
   .bk-champion-label{font-size:10px}
   .bk-trophy{font-size:36px}
   .bk-rank-badge{font-size:8px;padding:1px 3px}
+  .bk-lock-panel{padding:28px 24px}
   .bk-lock-title{font-size:16px;letter-spacing:2px}
   .bk-lock-input{width:200px;font-size:16px}
 }

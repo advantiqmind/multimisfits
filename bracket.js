@@ -131,10 +131,10 @@
     if (!input) return;
     if (input.value === "Misfits") {
       try { localStorage.setItem("mm-bracket-unlocked", "1"); } catch (e) { /* */ }
-      if (err) err.textContent = "";
+      if (err) err.hidden = true;
       showMain();
     } else {
-      if (err) err.textContent = "Invalid code";
+      if (err) err.hidden = false;
     }
   }
 
