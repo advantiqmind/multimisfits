@@ -627,6 +627,11 @@
       f.className = "bk-fighter";
       var h = hpForEntries(p.entries);
 
+      var ind = document.createElement("div");
+      ind.className = "bk-fight-indicator";
+      ind.id = "bkInd-" + side;
+      f.appendChild(ind);
+
       var nameDiv = document.createElement("div");
       nameDiv.className = "bk-fighter-name";
       nameDiv.textContent = p.name;
@@ -690,6 +695,34 @@
     popoutSend("countdown-end", null);
   }
 
+  var SVG_SWORD = '<svg viewBox="0 0 24 24" width="28" height="28" fill="var(--gold)"><path d="M6.92 5H5L3 7l2 2 1.5-1.5L14 15l-1 1 1.5 1.5L16 16l1.5 1.5L19 16l-9-9L11.5 5.5 10 4 8.5 5.5z"/><path d="M19 4l1 1-9.5 9.5-1-1z"/></svg>';
+  var SVG_SHIELD = '<svg viewBox="0 0 24 24" width="28" height="28" fill="var(--text-mid)"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm0 2.18l6 2.25v4.66c0 4.15-2.76 7.94-6 8.83-3.24-.89-6-4.68-6-8.83V6.43l6-2.25z"/></svg>';
+  var SVG_TROPHY = '<svg viewBox="0 0 24 24" width="34" height="34" fill="var(--gold)"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>';
+
+  function setIndicators(atkSide) {
+    var left = document.getElementById("bkInd-left");
+    var right = document.getElementById("bkInd-right");
+    if (!left || !right) return;
+    if (atkSide === "left") {
+      left.innerHTML = SVG_SWORD;
+      left.className = "bk-fight-indicator bk-ind-atk";
+      right.innerHTML = SVG_SHIELD;
+      right.className = "bk-fight-indicator bk-ind-def";
+    } else {
+      right.innerHTML = SVG_SWORD;
+      right.className = "bk-fight-indicator bk-ind-atk";
+      left.innerHTML = SVG_SHIELD;
+      left.className = "bk-fight-indicator bk-ind-def";
+    }
+  }
+
+  function setTrophy(side) {
+    var el = document.getElementById("bkInd-" + side);
+    var other = document.getElementById("bkInd-" + (side === "left" ? "right" : "left"));
+    if (el) { el.innerHTML = SVG_TROPHY; el.className = "bk-fight-indicator bk-ind-trophy"; }
+    if (other) { other.innerHTML = ""; other.className = "bk-fight-indicator"; }
+  }
+
   // -- Fight animation --
   async function animateFight(p1, p2) {
     var h1 = hpForEntries(p1.entries), h2 = hpForEntries(p2.entries);
@@ -714,6 +747,7 @@
       var hit = rollHit();
       var atk = turn % 2 === 0 ? p1.name : p2.name;
       var def = turn % 2 === 0 ? p2.name : p1.name;
+      setIndicators(turn % 2 === 0 ? "left" : "right");
 
       if (turn % 2 === 0) {
         hp2 = Math.max(0, hp2 - hit);
@@ -754,6 +788,7 @@
     var ln = w ? p2.name : p1.name;
     log.className = "bk-fight-log ko";
     log.textContent = ln + " has been defeated!";
+    setTrophy(w ? "left" : "right");
     popoutSend("ko", { loser: ln, log: log.textContent });
     await wait(700);
     log.className = "bk-fight-log win";

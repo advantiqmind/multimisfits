@@ -1038,6 +1038,11 @@ nav.main a[href="/ge.html"]{display:none}
 /* Arena / fighters */
 .bk-arena{display:flex;align-items:flex-start;justify-content:center;gap:24px}
 .bk-fighter{flex:1;max-width:310px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.bk-fight-indicator{height:34px;display:flex;align-items:center;justify-content:center;transition:transform 0.15s ease}
+.bk-ind-atk{animation:bk-pulse-atk 0.5s ease}
+.bk-ind-trophy{animation:bk-trophy-pop 0.4s ease}
+@keyframes bk-pulse-atk{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes bk-trophy-pop{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
 .bk-fighter-name{font-size:24px;color:var(--parchment);text-align:center}
 .bk-fighter-entries{font-size:13px;color:var(--muted);text-align:center}
 .bk-vs-divider{
@@ -1282,7 +1287,7 @@ nav.main a[href="/ge.html"]{display:none}
 /* Reduced motion */
 @media(prefers-reduced-motion:reduce){
   .bk-hit-splat,.bk-fight-panel.shake,.bk-countdown-num,.bk-countdown-fight,.bk-sparkle,
-  .bk-trophy,.bk-round-dot,.bk-hp-chunk,.bk-player-card{
+  .bk-trophy,.bk-round-dot,.bk-hp-chunk,.bk-player-card,.bk-ind-atk,.bk-ind-trophy{
     animation-duration:0.01ms!important;animation-iteration-count:1!important;
     transition-duration:0.01ms!important;
   }
