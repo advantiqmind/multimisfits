@@ -38,6 +38,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - wheel.html / wheel.js        Loot Wheel page (spin for a winner; loads event participants)
 - wheel-popout.html            popout wheel window (canvas + spin only, synced via BroadcastChannel)
 - strats.html / strats.js      Strat Finder (OSRS Wiki strategy guide launcher, categorized boss tiles)
+- bracket.html / bracket.js    Bracket Knockout (code-locked giveaway drawing tool, dice-based HP combat)
 - style.css                    theme
 - app.js                       nav, toasts, Discord links, all panel rendering
 - functions/_middleware.js     auth middleware (redirects unauthenticated to gate.html)
@@ -94,7 +95,7 @@ Random events eliminate names: shrinking danger zone, lightning strikes, sword c
 Final 5 get health bars, final 2 get a 1v1 duel animation, winner gets a crown.
 Runtime 1-2 minutes. Most complex drawing option -- canvas animation, collision logic,
 zone shrinking. Would live alongside the bracket/slot machine drawing tools.
-Planned for later, after the bracket knockout and slot machine are done.
+Planned for later, after the slot machine is done.
 
 ## How things work
 
@@ -232,6 +233,31 @@ Planned for later, after the bracket knockout and slot machine are done.
 - All CSS namespaced .st-* in style.css. Nav link "Strats" on all pages.
 - Event tie-in idea (highlight tonight's boss from live Loot Value events) discussed but
   intentionally NOT built yet.
+
+### Bracket Knockout
+- bracket.html / bracket.js: code-locked giveaway drawing tool. OSRS-themed elimination
+  bracket where participants fight via dice-based HP combat.
+- Protected by the normal auth gate + a secondary code lock (passphrase "Misfits",
+  capital M, stored in localStorage key "mm-bracket-unlocked"). Hidden in plain sight:
+  no nav link, reached only by direct URL /bracket.html.
+- Data sources: /api/events (participants), /api/giveaway (entries), /api/wom (clan ranks).
+  Events dropdown shows events with participants; giveaways show rounds with entries.
+- Deep link: /bracket.html?event=THREAD_ID or ?giveaway=ROUND_INDEX auto-loads on arrival.
+- HP system: 1 entry = 15 HP (base only), 2 entries = 20 HP (15 base + 5 shield),
+  3+ entries = 21-23 HP (15 base + 5 shield + 1-3 bonus). HP displayed as colored
+  chunks (red base, blue shield, green bonus).
+- Combat: all players attack with d7 (0-6 damage). Trade hits alternately until one
+  reaches 0 HP. Canvas-drawn OSRS-style hit splats (regular red, max-hit red, zero blue).
+- Two-level control: "Start Round" shows fight overlay with matchup preview,
+  "Start Fight" begins the animation. Speed slider (1-5x) adjusts animation speed.
+- Bracket auto-pads to next power of 2 with byes (auto-resolved). Players shuffled
+  randomly on load. Seeds displayed. Round names: Round of N, Quarter Finals, Semi Finals, Final.
+- Rank icons from WOM data shown next to player names (uses rankMark() from app.js).
+- Stream Popout window for Discord screen-sharing via window.open() + window.opener.receive().
+  Self-contained HTML/CSS/JS written via document.write(). No BroadcastChannel.
+- Champion celebration: sparkle effects, trophy emoji, gold styling.
+- All CSS namespaced .bk-* in style.css. Mobile responsive (stacked layout on small screens,
+  bracket scrolls horizontally). Reduced motion support.
 
 ### Authentication gate
 - Every page except gate.html and static assets is protected by _middleware.js.
