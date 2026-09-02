@@ -1,7 +1,8 @@
 /* Strat Finder -- OSRS Wiki strategy guide launcher, clan-themed.
    Tiles open {page}/Strategies on the wiki in a new tab. NPC art is hotlinked
-   from the wiki via Special:FilePath; if an image 404s the tile falls back to
-   the initials medallion, so a wrong filename never breaks the layout. */
+   from the wiki: explicit img overrides use Special:FilePath, everything else
+   gets its page's official thumbnail from the pageimages API (no guessed
+   filenames). Initials medallions remain wherever no image arrives. */
 (function () {
   "use strict";
 
@@ -52,7 +53,7 @@
     { n: "Cerberus", cat: "slay" },
     { n: "Abyssal Sire", cat: "slay" },
     { n: "Grotesque Guardians", cat: "slay", img: "Dusk.png" },
-    { n: "Alchemical Hydra", cat: "slay", img: "Alchemical Hydra (poison).png" },
+    { n: "Alchemical Hydra", cat: "slay" },
     { n: "Araxxor", cat: "slay" },
 
     { n: "General Graardor", cat: "gwd" },
@@ -73,7 +74,7 @@
     { n: "Colosseum", cat: "mini", p: "Fortis Colosseum", img: "Sol Heredit.png" },
 
     { n: "Tempoross", cat: "skill" },
-    { n: "Wintertodt", cat: "skill", img: "Pyromancer.png" },
+    { n: "Wintertodt", cat: "skill" },
     { n: "Zalcano", cat: "skill" }
   ];
 
@@ -154,8 +155,56 @@
   }
 
   function imgUrl(t) {
-    var file = t.img || (pageOf(t) + ".png");
-    return WIKI + "/w/Special:FilePath/" + encodeURIComponent(file.replace(/ /g, "_")) + "?width=120";
+    if (t.img) return WIKI + "/w/Special:FilePath/" + encodeURIComponent(t.img.replace(/ /g, "_")) + "?width=120";
+    var cached = artCache[pageOf(t)];
+    return cached || "";
+  }
+
+  // Art for entries without an explicit img: the wiki pageimages API supplies each
+  // page's official thumbnail, so no filenames are guessed. Cached 7 days.
+  var ART_KEY = "mm-strats-art-v1";
+  var artCache = {};
+  try {
+    var stored = JSON.parse(localStorage.getItem(ART_KEY));
+    if (stored && stored.art && Date.now() - stored.ts < 7 * 864e5) artCache = stored.art;
+  } catch (e) { /* */ }
+
+  function loadArt() {
+    var need = TARGETS.filter(function (t) { return !t.img && !artCache[pageOf(t)]; })
+      .map(function (t) { return pageOf(t); });
+    if (!need.length) return;
+    var chunks = [];
+    for (var i = 0; i < need.length; i += 50) chunks.push(need.slice(i, i + 50));
+    chunks.forEach(function (titles) {
+      var url = WIKI + "/api.php?action=query&format=json&origin=*&prop=pageimages" +
+        "&piprop=thumbnail&pithumbsize=120&redirects=1&titles=" +
+        encodeURIComponent(titles.join("|"));
+      fetch(url)
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data || !data.query || !data.query.pages) return;
+          var backmap = {};
+          (data.query.normalized || []).concat(data.query.redirects || []).forEach(function (m) {
+            backmap[m.to] = backmap[m.from] || m.from;
+          });
+          Object.keys(data.query.pages).forEach(function (id) {
+            var pg = data.query.pages[id];
+            if (!pg.thumbnail || !pg.thumbnail.source) return;
+            var title = backmap[pg.title] || pg.title;
+            artCache[title] = pg.thumbnail.source;
+          });
+          try { localStorage.setItem(ART_KEY, JSON.stringify({ ts: Date.now(), art: artCache })); } catch (e) { /* */ }
+          applyArt();
+        })
+        .catch(function () { /* initials medallions stay */ });
+    });
+  }
+
+  function applyArt() {
+    sectionsEl.querySelectorAll(".st-npc img[data-page]").forEach(function (img) {
+      var url = artCache[img.getAttribute("data-page")];
+      if (url && img.getAttribute("src") !== url) img.setAttribute("src", url);
+    });
   }
 
   function initials(name) {
@@ -186,7 +235,9 @@
   function tileHtml(t) {
     return '<a class="st-tile" href="' + stratUrl(t) + '" target="_blank" rel="noopener" data-name="' + esc(t.n) + '">' +
       '<span class="st-npc"><span class="st-npc-init">' + esc(initials(t.n)) + '</span>' +
-      '<img src="' + imgUrl(t) + '" alt="" loading="lazy"></span>' +
+      (imgUrl(t) || !t.img
+        ? '<img' + (imgUrl(t) ? ' src="' + imgUrl(t) + '"' : '') + ' data-page="' + esc(pageOf(t)) + '" alt="" loading="lazy">'
+        : '') + '</span>' +
       '<span class="st-tinfo"><span class="st-tname">' + esc(t.n) + '</span>' +
       '<span class="st-tsub">wiki strats</span></span></a>';
   }
@@ -216,7 +267,10 @@
 
     // Broken image -> initials medallion stays
     sectionsEl.querySelectorAll(".st-npc img").forEach(function (img) {
-      img.addEventListener("error", function () { img.remove(); });
+      img.addEventListener("error", function () {
+        img.parentElement.classList.remove("has-img");
+        img.remove();
+      });
       function mark() { img.parentElement.classList.add("has-img"); }
       if (img.complete && img.naturalWidth) mark();
       else img.addEventListener("load", mark);
@@ -304,4 +358,5 @@
   // -- Init --
   renderChips();
   render();
+  loadArt();
 })();
