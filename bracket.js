@@ -744,10 +744,14 @@
 
     var turn = 0;
     while (hp1 > 0 && hp2 > 0) {
-      var hit = rollHit();
+      var atkSide = turn % 2 === 0 ? "left" : "right";
       var atk = turn % 2 === 0 ? p1.name : p2.name;
       var def = turn % 2 === 0 ? p2.name : p1.name;
-      setIndicators(turn % 2 === 0 ? "left" : "right");
+      setIndicators(atkSide);
+      popoutSend("indicator", { atkSide: atkSide });
+      await wait(BASE_HIT_DELAY * 2);
+
+      var hit = rollHit();
 
       if (turn % 2 === 0) {
         hp2 = Math.max(0, hp2 - hit);
@@ -789,6 +793,7 @@
     log.className = "bk-fight-log ko";
     log.textContent = ln + " has been defeated!";
     setTrophy(w ? "left" : "right");
+    popoutSend("trophy", { side: w ? "left" : "right" });
     popoutSend("ko", { loser: ln, log: log.textContent });
     await wait(700);
     log.className = "bk-fight-log win";
@@ -1028,6 +1033,12 @@
 '.fight-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;position:relative;min-height:0}' +
 '.s-arena{display:flex;align-items:flex-start;justify-content:center;gap:20px;width:100%;max-width:760px}' +
 '.s-fighter{flex:1;max-width:300px;display:flex;flex-direction:column;align-items:center;gap:5px}' +
+'.s-indicator{height:40px;display:flex;align-items:center;justify-content:center}' +
+'.s-icon{font-size:30px}' +
+'.s-ind-atk .s-icon{animation:sp-pulse .6s ease-in-out infinite}' +
+'.s-ind-trophy .s-icon{animation:sp-pop .5s ease-out}' +
+'@keyframes sp-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}' +
+'@keyframes sp-pop{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0)}}' +
 '.s-fighter-name{font-size:22px;color:#f2ead8}' +
 '.s-fighter-entries{font-size:12px;color:#c8b898}' +
 '.s-hp-chunks{display:flex;gap:2px;justify-content:center;flex-wrap:wrap}' +
@@ -1069,6 +1080,7 @@ splatCSS +
 '@keyframes mp{0%{transform:scale(0) rotate(-30deg);opacity:0}40%{transform:scale(1.4) rotate(6deg);opacity:1}70%{transform:scale(.95) rotate(-2deg)}100%{transform:scale(1) rotate(0);opacity:1}}' +
 '.shake{animation:sk .2s ease-out}' +
 '@keyframes sk{0%{transform:translate(0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-2px,1px)}100%{transform:translate(0)}}' +
+'@media(prefers-reduced-motion:reduce){.s-ind-atk .s-icon,.s-ind-trophy .s-icon,.s-splat,.s-splat.max-hit,.shake{animation:none!important}}' +
 '</style></head><body>' +
 '<div class="stream-header">' +
 '  <div class="stream-title">Bracket Knockout</div>' +
@@ -1103,7 +1115,7 @@ splatCSS +
 'case "fight-start":' +
 'curF1=data.f1;curF2=data.f2;sArena.innerHTML="";' +
 'function mkF(f,side){var d=document.createElement("div");d.className="s-fighter";' +
-'d.innerHTML=\'<div class="s-fighter-name">\'+f.name+\'</div><div class="s-fighter-entries">\'+f.entries+(f.entries===1?" entry":" entries")+\'</div>\';' +
+'d.innerHTML=\'<div class="s-indicator" id="si-\'+side+\'"></div><div class="s-fighter-name">\'+f.name+\'</div><div class="s-fighter-entries">\'+f.entries+(f.entries===1?" entry":" entries")+\'</div>\';' +
 'var chunks=document.createElement("div");chunks.className="s-hp-chunks";chunks.id="sc-"+side;buildChunks(chunks,f.hpData,f.hp);d.appendChild(chunks);' +
 'var leg=document.createElement("div");leg.className="s-hp-legend";' +
 'leg.innerHTML=\'<span><span class="s-legend-sw base"></span>\'+f.hpData.base+\'</span>\';' +
@@ -1117,6 +1129,14 @@ splatCSS +
 'case "countdown-start":sCD.hidden=false;break;' +
 'case "countdown":if(data==="FIGHT!")sCD.innerHTML=\'<div class="s-cd-fight">\'+data+\'</div>\';else sCD.innerHTML=\'<div class="s-cd-num">\'+data+\'</div>\';break;' +
 'case "countdown-end":sCD.hidden=true;break;' +
+'case "indicator":' +
+'var siL=document.getElementById("si-left"),siR=document.getElementById("si-right");' +
+'if(siL&&siR){if(data.atkSide==="left"){siL.innerHTML=\'<span class="s-icon">\\u2694\\uFE0F</span>\';siL.className="s-indicator s-ind-atk";siR.innerHTML=\'<span class="s-icon">\\uD83D\\uDEE1\\uFE0F</span>\';siR.className="s-indicator s-ind-def";}' +
+'else{siR.innerHTML=\'<span class="s-icon">\\u2694\\uFE0F</span>\';siR.className="s-indicator s-ind-atk";siL.innerHTML=\'<span class="s-icon">\\uD83D\\uDEE1\\uFE0F</span>\';siL.className="s-indicator s-ind-def";}}break;' +
+'case "trophy":' +
+'var stL=document.getElementById("si-left"),stR=document.getElementById("si-right");' +
+'if(data.side==="left"){if(stL){stL.innerHTML=\'<span class="s-icon">\\uD83C\\uDFC6</span>\';stL.className="s-indicator s-ind-trophy";}if(stR){stR.innerHTML="";stR.className="s-indicator";}}' +
+'else{if(stR){stR.innerHTML=\'<span class="s-icon">\\uD83C\\uDFC6</span>\';stR.className="s-indicator s-ind-trophy";}if(stL){stL.innerHTML="";stL.className="s-indicator";}}break;' +
 'case "hit":' +
 'var sp=document.createElement("div");sp.className="s-splat "+(data.value>=6?"max-hit":data.value===0?"zero":"regular")+" splat-"+(data.value>=6?"max":data.value===0?"zero":"hit");' +
 'sp.textContent=data.value;var cont=document.getElementById("ss-"+data.side);if(cont)cont.appendChild(sp);' +
