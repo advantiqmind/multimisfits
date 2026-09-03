@@ -209,7 +209,6 @@ Planned for later, after the slot machine is done.
   non-empty participants array appear in the Event dropdown; Load fills entries (1 slot each,
   confirm before replacing existing entries).
 - Deep link: /wheel.html?event=THREAD_ID auto-loads that event's participants on arrival.
-  The participant modal on events pages has a "Spin the Wheel" button linking there.
 - Popout (wheel-popout.html) mirrors the wheel for streaming; synced via BroadcastChannel
   "mm-loot-wheel" + storage events. No nav link by owner request: reached via the
   "Spin the Wheel" button in event participant modals, or the direct URL.

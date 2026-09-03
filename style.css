@@ -756,15 +756,6 @@ nav.main a[href="/ge.html"]{display:none}
 .wheel-modal-btn:hover{background:rgba(255,203,47,.18)}
 .wheel-modal-btn.remove{background:rgba(178,58,48,.1);border-color:rgba(178,58,48,.5);color:#e07868}
 .wheel-modal-btn.remove:hover{background:rgba(178,58,48,.18)}
-.btn-wheel{
-  font-family:"Jersey 15",monospace;font-size:18px;padding:11px 18px;letter-spacing:1px;
-  display:inline-block;color:var(--gold);
-  background:linear-gradient(180deg,rgba(255,203,47,.15),rgba(255,203,47,.06));
-  border:1px solid rgba(255,203,47,.35);border-radius:6px;cursor:pointer;
-  transition:background .15s,border-color .15s;
-}
-.btn-wheel:hover{background:linear-gradient(180deg,rgba(255,203,47,.25),rgba(255,203,47,.12));border-color:rgba(255,203,47,.55)}
-.part-modal-actions{margin-top:16px;text-align:center}
 
 /* ---------- strat finder ---------- */
 .st-wrap{max-width:640px;margin:0 auto;padding:0 16px 50px}
