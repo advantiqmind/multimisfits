@@ -1093,12 +1093,6 @@ input[type="range"].bk-speed::-moz-range-thumb{
 .bk-arena{display:flex;align-items:flex-start;justify-content:center;gap:24px}
 .bk-fighter{flex:1;max-width:310px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;transition:opacity 0.4s}
 .bk-fighter.defeated{opacity:0.25}
-.bk-fighter.defeated::before,.bk-fighter.defeated::after{
-  content:"";position:absolute;top:0;left:10%;width:80%;height:100%;
-  border-top:3px solid var(--blood);transform-origin:center;z-index:1;pointer-events:none;
-}
-.bk-fighter.defeated::before{transform:rotate(25deg)}
-.bk-fighter.defeated::after{transform:rotate(-25deg)}
 .bk-fight-indicator{height:40px;display:flex;align-items:center;justify-content:center}
 img.bk-icon-shield{width:32px;height:auto;display:block}
 img.bk-icon-sword{width:36px;height:auto;display:block}
