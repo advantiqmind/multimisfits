@@ -640,7 +640,11 @@
 
       var nameDiv = document.createElement("div");
       nameDiv.className = "bk-fighter-name";
-      nameDiv.textContent = p.name;
+      if (p.rank && typeof rankMark === "function") {
+        nameDiv.innerHTML = '<span class="bk-rank-icon">' + rankMark(p.rank) + '</span> ' + esc(p.name);
+      } else {
+        nameDiv.textContent = p.name;
+      }
       f.appendChild(nameDiv);
 
       var entDiv = document.createElement("div");
@@ -699,7 +703,7 @@
   }
 
   var ICON_SWORD = '<img class="bk-icon-sword" src="/assets/bracket-swords.png" alt="Attack">';
-  var ICON_SHIELD = '<span class="bk-icon-shield">\u{1F6E1}\u{FE0F}</span>';
+  var ICON_SHIELD = '<img class="bk-icon-shield" src="/assets/bracket-shield.png" alt="Defend">';
   var ICON_TROPHY = '<img class="bk-icon-trophy" src="/assets/bracket-trophy.png" alt="Winner">';
 
   function setIndicators(atkSide) {
@@ -812,7 +816,7 @@
     setTrophy(w ? "left" : "right");
     await waitOrPause(700);
     log.className = "bk-fight-log win";
-    log.textContent = wn + " advances!";
+    log.innerHTML = '<img class="bk-win-trophy" src="/assets/bracket-trophy.png" alt="Trophy"><br>' + esc(wn) + " advances!";
     await waitOrPause(ADVANCE_DELAY);
     return w ? { winner: p1, loser: p2 } : { winner: p2, loser: p1 };
   }
