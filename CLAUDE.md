@@ -256,8 +256,6 @@ Planned for later, after the slot machine is done.
 - Bracket auto-pads to next power of 2 with byes (auto-resolved). Players shuffled
   randomly on load. Seeds displayed. Round names: Round of N, Quarter Finals, Semi Finals, Final.
 - Rank icons from WOM data shown next to player names (uses rankMark() from app.js).
-- Stream Popout window for Discord screen-sharing via window.open() + window.opener.receive().
-  Self-contained HTML/CSS/JS written via document.write(). No BroadcastChannel.
 - Champion celebration: sparkle effects, trophy emoji, gold styling.
 - All CSS namespaced .bk-* in style.css. Mobile responsive (stacked layout on small screens,
   bracket scrolls horizontally). Reduced motion support.
