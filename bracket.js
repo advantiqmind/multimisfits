@@ -1169,10 +1169,16 @@ splatCSS +
       popoutBtn.addEventListener("click", openPopout);
     }
 
+    var overlay = document.getElementById("bkOverlay");
     if (overlayClose) {
       overlayClose.addEventListener("click", function () {
         if (state.running) return;
-        document.getElementById("bkOverlay").hidden = true;
+        overlay.hidden = true;
+      });
+    }
+    if (overlay) {
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay && !state.running) overlay.hidden = true;
       });
     }
 
