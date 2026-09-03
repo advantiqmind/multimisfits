@@ -247,12 +247,16 @@ Planned for later, after the slot machine is done.
   Matches the Loot Wheel entry panel UX. Manual and loaded entries can coexist.
 - Deep link: /bracket.html?event=THREAD_ID or ?giveaway=ROUND_INDEX auto-loads on arrival.
 - HP system: 1 entry = 15 HP (base only), 2 entries = 20 HP (15 base + 5 shield),
-  3+ entries = 21-23 HP (15 base + 5 shield + 1-3 bonus). HP displayed as colored
-  chunks (red base, blue shield, green bonus).
+  3-5 entries = 21-23 HP (15 base + 5 shield + 1-3 bonus),
+  6 entries = 24 HP (+1 special purple). HP displayed as a smooth rounded bar
+  with colored sections (red base, blue shield, green bonus, purple special),
+  tick marks at section boundaries, and centered HP number.
 - Combat: all players attack with d7 (0-6 damage). Trade hits alternately until one
-  reaches 0 HP. Canvas-drawn OSRS-style hit splats (regular red, max-hit red, zero blue).
+  reaches 0 HP. PNG hitsplat assets (regular red, max-hit red, zero blue).
+  Previous splats dim before the next hit lands to signify whose turn it is.
 - Two-level control: "Start Round" shows fight overlay with matchup preview,
   "Start Fight" begins the animation. Speed slider (1-5x) adjusts animation speed.
+  Closing the overlay mid-fight pauses; the main Start button shows "Resume" to reopen.
 - Bracket auto-pads to next power of 2 with byes (auto-resolved). Players shuffled
   randomly on load. Seeds displayed. Round names: Round of N, Quarter Finals, Semi Finals, Final.
 - Rank icons from WOM data shown next to player names (uses rankMark() from app.js).

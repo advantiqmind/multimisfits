@@ -839,11 +839,12 @@ nav.main a[href="/ge.html"]{display:none}
 
 /* ---- Bracket Knockout (.bk-*) ---- */
 
-/* Bracket-specific custom properties (HP chunk colors) */
+/* Bracket-specific custom properties (HP bar colors) */
 :root{
   --bk-hp-base:#d42020;--bk-hp-base-border:#881414;
   --bk-hp-shield:#3090d4;--bk-hp-shield-border:#185888;
   --bk-hp-bonus:#30c868;--bk-hp-bonus-border:#147838;
+  --bk-hp-special:#9040d0;--bk-hp-special-border:#5c2088;
 }
 
 /* Code lock overlay */
@@ -1044,21 +1045,38 @@ nav.main a[href="/ge.html"]{display:none}
   font-family:"Cinzel",serif;font-weight:900;font-size:20px;color:var(--gold);flex-shrink:0;padding-top:28px;
 }
 
-/* HP chunks */
-.bk-hp-chunks-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
-.bk-hp-chunks{display:flex;gap:2px;align-items:center;justify-content:center;flex-wrap:wrap}
-.bk-hp-chunk{width:12px;height:22px;border-radius:2px;border:1.5px solid;transition:all 0.15s}
-.bk-hp-chunk.base{background:var(--bk-hp-base);border-color:var(--bk-hp-base-border)}
-.bk-hp-chunk.shield{background:var(--bk-hp-shield);border-color:var(--bk-hp-shield-border)}
-.bk-hp-chunk.bonus{background:var(--bk-hp-bonus);border-color:var(--bk-hp-bonus-border)}
-.bk-hp-chunk.dead{background:var(--void-2);border-color:var(--panel-3);opacity:0.45}
-.bk-hp-chunk-gap{width:6px;flex-shrink:0}
+/* HP bar (smooth) */
+.bk-hp-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
+.bk-hp-track{
+  position:relative;width:100%;height:22px;border-radius:11px;
+  background:var(--void-2);border:1.5px solid var(--panel-3);overflow:hidden;
+}
+.bk-hp-fill{
+  display:flex;height:100%;border-radius:10px;
+  transition:width 0.25s ease-out;overflow:hidden;
+}
+.bk-hp-section{height:100%}
+.bk-hp-section.base{background:var(--bk-hp-base)}
+.bk-hp-section.shield{background:var(--bk-hp-shield)}
+.bk-hp-section.bonus{background:var(--bk-hp-bonus)}
+.bk-hp-section.special{background:var(--bk-hp-special)}
+.bk-hp-tick{
+  position:absolute;top:2px;bottom:2px;width:1.5px;
+  background:rgba(0,0,0,0.4);transform:translateX(-50%);z-index:1;
+}
+.bk-hp-num{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:"Jersey 15",monospace;font-size:13px;color:#fff;z-index:2;
+  text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;
+  pointer-events:none;
+}
 .bk-hp-legend{display:flex;gap:10px;justify-content:center;font-size:11px;flex-wrap:wrap}
 .bk-hp-legend-item{display:flex;align-items:center;gap:3px;color:var(--muted)}
 .bk-hp-legend-swatch{width:9px;height:9px;border-radius:2px}
 .bk-hp-legend-swatch.base{background:var(--bk-hp-base)}
 .bk-hp-legend-swatch.shield{background:var(--bk-hp-shield)}
 .bk-hp-legend-swatch.bonus{background:var(--bk-hp-bonus)}
+.bk-hp-legend-swatch.special{background:var(--bk-hp-special)}
 
 /* Hit splats */
 .bk-splat-area{
@@ -1077,6 +1095,7 @@ nav.main a[href="/ge.html"]{display:none}
   filter:drop-shadow(0 0 8px rgba(255,30,30,0.5));animation:maxPop 0.4s ease-out;
 }
 .bk-hit-splat.zero{width:44px;height:44px;font-size:22px}
+.bk-hit-splat.dim{opacity:0.25;transition:opacity 0.15s}
 
 /* Fight log */
 .bk-fight-log{font-size:16px;color:var(--muted);text-align:center;min-height:24px;margin-top:8px}
@@ -1230,7 +1249,8 @@ nav.main a[href="/ge.html"]{display:none}
   .bk-player-name{font-size:15px}
   .bk-controls{padding:12px 16px}
   .bk-fighter-name{font-size:20px}
-  .bk-hp-chunk{width:10px;height:18px}
+  .bk-hp-track{height:18px}
+  .bk-hp-num{font-size:11px}
   .bk-fight-panel{padding:16px}
 }
 
@@ -1260,8 +1280,8 @@ nav.main a[href="/ge.html"]{display:none}
   .bk-fighter{max-width:100%;width:100%}
   .bk-fighter-name{font-size:18px}
   .bk-fighter-entries{font-size:11px}
-  .bk-hp-chunk{width:9px;height:16px}
-  .bk-hp-chunk-gap{width:4px}
+  .bk-hp-track{height:16px}
+  .bk-hp-num{font-size:10px}
   .bk-hp-legend{font-size:10px}
   .bk-hit-splat.regular{width:36px;height:36px;font-size:18px}
   .bk-hit-splat.max-hit{width:44px;height:44px;font-size:22px}
@@ -1283,7 +1303,7 @@ nav.main a[href="/ge.html"]{display:none}
 /* Reduced motion */
 @media(prefers-reduced-motion:reduce){
   .bk-hit-splat,.bk-fight-panel.shake,.bk-countdown-num,.bk-countdown-fight,.bk-sparkle,
-  .bk-trophy,.bk-round-dot,.bk-hp-chunk,.bk-player-card,.bk-ind-atk,.bk-ind-trophy{
+  .bk-trophy,.bk-round-dot,.bk-hp-fill,.bk-player-card,.bk-ind-atk,.bk-ind-trophy{
     animation-duration:0.01ms!important;animation-iteration-count:1!important;
     transition-duration:0.01ms!important;
   }

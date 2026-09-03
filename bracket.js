@@ -30,7 +30,8 @@
   function hpForEntries(e) {
     var shield = e >= 2 ? SHIELD_HP : 0;
     var bonus = e >= 3 ? Math.min(e - 2, 3) : 0;
-    return { base: BASE_HP, shield: shield, bonus: bonus, total: BASE_HP + shield + bonus };
+    var special = e >= 6 ? 1 : 0;
+    return { base: BASE_HP, shield: shield, bonus: bonus, special: special, total: BASE_HP + shield + bonus + special };
   }
 
   function rollHit() { return Math.floor(Math.random() * (MAX_HIT + 1)); }
@@ -382,6 +383,7 @@
     var b = document.getElementById("bkStartBtn");
     if (!b) return;
     if (state.done) { b.textContent = "Complete!"; b.disabled = true; }
+    else if (state.running && fightPaused) { b.textContent = "Resume"; b.disabled = false; }
     else if (state.running) { b.textContent = "Fighting..."; b.disabled = true; }
     else if (!state.roundStarted) { b.textContent = "Start Round"; b.disabled = !state.players.length; }
     else { b.textContent = "Start Fight"; b.disabled = false; }
@@ -528,53 +530,92 @@
     return new Promise(function (r) { setTimeout(r, ms); });
   }
 
-  // -- HP chunks --
-  function buildHPChunks(container, hpData, currentHP) {
+  // -- HP bar (smooth bar) --
+  function buildHPBar(container, hpData, currentHP) {
     container.innerHTML = "";
-    var row = document.createElement("div");
-    row.className = "bk-hp-chunks";
-    row.id = container.id + "-chunks";
-    var idx = 0;
+    container.className = "bk-hp-bar-wrap";
+    var total = hpData.total;
+    var fillPct = (currentHP / total) * 100;
 
-    for (var i = 0; i < hpData.base; i++, idx++) {
-      var c = document.createElement("div");
-      c.className = "bk-hp-chunk base" + (idx >= currentHP ? " dead" : "");
-      row.appendChild(c);
-    }
-    if (hpData.shield > 0) {
-      var gap1 = document.createElement("div");
-      gap1.className = "bk-hp-chunk-gap";
-      row.appendChild(gap1);
-      for (var s = 0; s < hpData.shield; s++, idx++) {
-        var cs = document.createElement("div");
-        cs.className = "bk-hp-chunk shield" + (idx >= currentHP ? " dead" : "");
-        row.appendChild(cs);
+    var track = document.createElement("div");
+    track.className = "bk-hp-track";
+    track.id = container.id + "-track";
+
+    var fill = document.createElement("div");
+    fill.className = "bk-hp-fill";
+    fill.id = container.id + "-fill";
+    fill.style.width = fillPct + "%";
+
+    var remaining = currentHP;
+    var sections = [
+      { type: "base", max: hpData.base },
+      { type: "shield", max: hpData.shield },
+      { type: "bonus", max: hpData.bonus },
+      { type: "special", max: hpData.special || 0 }
+    ];
+    var runPct = 0;
+    for (var i = 0; i < sections.length; i++) {
+      var sec = sections[i];
+      if (sec.max <= 0) continue;
+      var show = Math.min(remaining, sec.max);
+      if (show > 0 && fillPct > 0) {
+        var s = document.createElement("div");
+        s.className = "bk-hp-section " + sec.type;
+        s.style.width = ((show / total) / (fillPct / 100) * 100) + "%";
+        fill.appendChild(s);
+      }
+      remaining -= show;
+      runPct += (sec.max / total) * 100;
+      if (i < sections.length - 1 && sections[i + 1].max > 0) {
+        var tick = document.createElement("div");
+        tick.className = "bk-hp-tick";
+        tick.style.left = runPct + "%";
+        track.appendChild(tick);
       }
     }
-    if (hpData.bonus > 0) {
-      var gap2 = document.createElement("div");
-      gap2.className = "bk-hp-chunk-gap";
-      row.appendChild(gap2);
-      for (var b = 0; b < hpData.bonus; b++, idx++) {
-        var cb = document.createElement("div");
-        cb.className = "bk-hp-chunk bonus" + (idx >= currentHP ? " dead" : "");
-        row.appendChild(cb);
-      }
-    }
-    container.appendChild(row);
+
+    track.appendChild(fill);
+
+    var num = document.createElement("div");
+    num.className = "bk-hp-num";
+    num.id = container.id + "-num";
+    num.textContent = currentHP + " / " + total;
+    track.appendChild(num);
+
+    container.appendChild(track);
   }
 
-  function updateHPChunks(id, hpData, hp) {
-    var row = document.getElementById(id + "-chunks");
-    if (!row) return;
-    var idx = 0;
-    for (var i = 0; i < row.children.length; i++) {
-      var ch = row.children[i];
-      if (ch.classList.contains("bk-hp-chunk-gap")) continue;
-      if (idx >= hp) ch.classList.add("dead");
-      else ch.classList.remove("dead");
-      idx++;
+  function updateHPBar(id, hpData, hp) {
+    var track = document.getElementById(id + "-track");
+    if (!track) return;
+    var total = hpData.total;
+    var fillPct = (hp / total) * 100;
+    var fill = document.getElementById(id + "-fill");
+    if (fill) {
+      fill.style.width = fillPct + "%";
+      fill.innerHTML = "";
+      var remaining = hp;
+      var sections = [
+        { type: "base", max: hpData.base },
+        { type: "shield", max: hpData.shield },
+        { type: "bonus", max: hpData.bonus },
+        { type: "special", max: hpData.special || 0 }
+      ];
+      for (var i = 0; i < sections.length; i++) {
+        var sec = sections[i];
+        if (sec.max <= 0) continue;
+        var show = Math.min(remaining, sec.max);
+        if (show > 0 && fillPct > 0) {
+          var s = document.createElement("div");
+          s.className = "bk-hp-section " + sec.type;
+          s.style.width = ((show / total) / (fillPct / 100) * 100) + "%";
+          fill.appendChild(s);
+        }
+        remaining -= show;
+      }
     }
+    var num = document.getElementById(id + "-num");
+    if (num) num.textContent = hp + " / " + total;
   }
 
   // -- Fight UI --
@@ -608,7 +649,7 @@
       f.appendChild(entDiv);
 
       var wrap = document.createElement("div");
-      wrap.className = "bk-hp-chunks-wrap";
+      wrap.className = "bk-hp-bar-wrap";
 
       var hpC = document.createElement("div");
       hpC.id = "bkHp-" + side;
@@ -619,6 +660,7 @@
       leg.innerHTML = '<span class="bk-hp-legend-item"><span class="bk-hp-legend-swatch base"></span>' + h.base + ' HP</span>';
       if (h.shield > 0) leg.innerHTML += '<span class="bk-hp-legend-item"><span class="bk-hp-legend-swatch shield"></span>+' + h.shield + ' Shield</span>';
       if (h.bonus > 0) leg.innerHTML += '<span class="bk-hp-legend-item"><span class="bk-hp-legend-swatch bonus"></span>+' + h.bonus + ' Bonus</span>';
+      if (h.special > 0) leg.innerHTML += '<span class="bk-hp-legend-item"><span class="bk-hp-legend-swatch special"></span>+' + h.special + ' Special</span>';
       wrap.appendChild(leg);
 
       f.appendChild(wrap);
@@ -685,11 +727,30 @@
   }
 
   // -- Fight animation --
+  var fightPaused = false;
+  var fightResolve = null;
+
+  function pauseFight() {
+    fightPaused = true;
+  }
+
+  function resumeFight() {
+    fightPaused = false;
+    if (fightResolve) { var r = fightResolve; fightResolve = null; r(); }
+  }
+
+  function waitOrPause(ms) {
+    return wait(ms).then(function () {
+      if (!fightPaused) return;
+      return new Promise(function (resolve) { fightResolve = resolve; });
+    });
+  }
+
   async function animateFight(p1, p2) {
     var h1 = hpForEntries(p1.entries), h2 = hpForEntries(p2.entries);
     var hp1 = h1.total, hp2 = h2.total;
-    buildHPChunks(document.getElementById("bkHp-left"), h1, hp1);
-    buildHPChunks(document.getElementById("bkHp-right"), h2, hp2);
+    buildHPBar(document.getElementById("bkHp-left"), h1, hp1);
+    buildHPBar(document.getElementById("bkHp-right"), h2, hp2);
 
     var s1 = document.getElementById("bkSplats-left");
     var s2 = document.getElementById("bkSplats-right");
@@ -697,15 +758,19 @@
     var panel = document.getElementById("bkFightPanel");
 
     await showCountdown();
-    await wait(200);
+    await waitOrPause(200);
 
     var turn = 0;
     while (hp1 > 0 && hp2 > 0) {
       var atkSide = turn % 2 === 0 ? "left" : "right";
       var atk = turn % 2 === 0 ? p1.name : p2.name;
       var def = turn % 2 === 0 ? p2.name : p1.name;
+
+      if (s1.firstChild) s1.firstChild.classList.add("dim");
+      if (s2.firstChild) s2.firstChild.classList.add("dim");
+
       setIndicators(atkSide);
-      await wait(BASE_HIT_DELAY * 2);
+      await waitOrPause(BASE_HIT_DELAY * 2);
 
       var hit = rollHit();
 
@@ -713,12 +778,12 @@
         hp2 = Math.max(0, hp2 - hit);
         s2.innerHTML = "";
         s2.appendChild(createSplat(hit));
-        updateHPChunks("bkHp-right", h2, hp2);
+        updateHPBar("bkHp-right", h2, hp2);
       } else {
         hp1 = Math.max(0, hp1 - hit);
         s1.innerHTML = "";
         s1.appendChild(createSplat(hit));
-        updateHPChunks("bkHp-left", h1, hp1);
+        updateHPBar("bkHp-left", h1, hp1);
       }
 
       if (hit >= MAX_HIT) {
@@ -735,9 +800,9 @@
       }
 
       turn++;
-      await wait(BASE_HIT_DELAY);
+      await waitOrPause(BASE_HIT_DELAY);
     }
-    await wait(POST_KO_DELAY);
+    await waitOrPause(POST_KO_DELAY);
 
     var w = hp1 > 0;
     var wn = w ? p1.name : p2.name;
@@ -745,10 +810,10 @@
     log.className = "bk-fight-log ko";
     log.textContent = ln + " has been defeated!";
     setTrophy(w ? "left" : "right");
-    await wait(700);
+    await waitOrPause(700);
     log.className = "bk-fight-log win";
     log.textContent = wn + " advances!";
-    await wait(ADVANCE_DELAY);
+    await waitOrPause(ADVANCE_DELAY);
     return w ? { winner: p1, loser: p2 } : { winner: p2, loser: p1 };
   }
 
@@ -940,6 +1005,11 @@
 
     if (startBtn) {
       startBtn.addEventListener("click", function () {
+        if (state.running && fightPaused) {
+          document.getElementById("bkOverlay").hidden = false;
+          resumeFight();
+          return;
+        }
         if (state.running) return;
         if (!state.roundStarted) startRound();
         else runFight();
@@ -962,13 +1032,16 @@
     var overlay = document.getElementById("bkOverlay");
     if (overlayClose) {
       overlayClose.addEventListener("click", function () {
-        if (state.running) return;
+        if (state.running) { pauseFight(); updateButton(); }
         overlay.hidden = true;
       });
     }
     if (overlay) {
       overlay.addEventListener("click", function (e) {
-        if (e.target === overlay && !state.running) overlay.hidden = true;
+        if (e.target === overlay) {
+          if (state.running) { pauseFight(); updateButton(); }
+          overlay.hidden = true;
+        }
       });
     }
 
