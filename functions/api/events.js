@@ -162,6 +162,38 @@ export function parseParticipants(messages, reactors) {
   return result;
 }
 
+function capitalizeName(name) {
+  if (!name) return name;
+  return name.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+export function parseWinner(messages, threadId) {
+  if (!Array.isArray(messages) || !messages.length) return null;
+  for (const m of messages) {
+    if (m.id === threadId) continue;
+    const c = (m.content || "");
+    const hasTrophy = c.includes("\u{1F3C6}");
+    if (!hasTrophy) continue;
+    const mentioned = Array.isArray(m.mentions) && m.mentions.length
+      ? m.mentions[0] : null;
+    let winnerName;
+    if (mentioned) {
+      winnerName = mentioned.global_name || mentioned.username || "Unknown";
+    } else {
+      let afterTrophy = c.split("\u{1F3C6}").pop().split("\n")[0]
+        .replace(/[!.,;:]+$/g, "").trim();
+      afterTrophy = afterTrophy.replace(/^(?:congratulations|congrats|winner|grats)[!.,;:]*\s*/i, "")
+        .replace(/[!.,;:]+$/g, "").trim();
+      const wordCount = afterTrophy.split(/\s+/).length;
+      winnerName = afterTrophy.length > 0 && afterTrophy.length < 40 && wordCount <= 3
+        ? afterTrophy
+        : (m.author.global_name || m.author.username || "Unknown");
+    }
+    return capitalizeName(winnerName);
+  }
+  return null;
+}
+
 export function transformThreads(threads, openingMessages, tagMap, threadMessages, threadReactors) {
   const msgMap = new Map();
   for (const m of Array.isArray(openingMessages) ? openingMessages : []) {
@@ -196,6 +228,7 @@ export function transformThreads(threads, openingMessages, tagMap, threadMessage
     const teams = allMsgs ? parseTeams(allMsgs) : null;
     const reactors = threadReactors && threadReactors.get(t.id);
     const participants = (allMsgs || reactors) ? parseParticipants(allMsgs, reactors) : null;
+    const winner = allMsgs ? parseWinner(allMsgs, t.id) : null;
 
     events.push({
       id: t.id,
@@ -210,6 +243,7 @@ export function transformThreads(threads, openingMessages, tagMap, threadMessage
       tags,
       teams,
       participants,
+      winner,
     });
   }
 

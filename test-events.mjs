@@ -1,4 +1,4 @@
-import { transformThreads, parseEventForgeDateField, teamFromEmoji, extractTeamEmbed, parseTeams, isCheckmark, extractParticipantEmbed, parseParticipants } from "./functions/api/events.js";
+import { transformThreads, parseEventForgeDateField, teamFromEmoji, extractTeamEmbed, parseTeams, isCheckmark, extractParticipantEmbed, parseParticipants, parseWinner } from "./functions/api/events.js";
 
 const threads = [
   {
@@ -557,6 +557,54 @@ ok.push(["transformThreads: participants from reactors", (() => {
   const tr = new Map([["6002", [{ id: "1", global_name: "Flash", username: "flash" }]]]);
   const result = transformThreads(t, m, null, tm, tr);
   return result[0].participants && result[0].participants.length === 1 && result[0].participants[0] === "Flash";
+})()]);
+
+/* ---- parseWinner ---- */
+
+ok.push(["parseWinner: null for empty messages", parseWinner([], "t1") === null]);
+ok.push(["parseWinner: null for no trophy", parseWinner([
+  { id: "m1", content: "Good luck everyone!" },
+], "t1") === null]);
+ok.push(["parseWinner: skips opening message", parseWinner([
+  { id: "t1", content: "\u{1F3C6} Flash" },
+], "t1") === null]);
+ok.push(["parseWinner: extracts from @mention", parseWinner([
+  { id: "m1", content: "\u{1F3C6} congrats!", mentions: [{ id: "u1", global_name: "mr flsh", username: "mrflsh" }] },
+], "t1") === "Mr Flsh"]);
+ok.push(["parseWinner: extracts from text after trophy", parseWinner([
+  { id: "m1", content: "\u{1F3C6} jackson", mentions: [] },
+], "t1") === "Jackson"]);
+ok.push(["parseWinner: strips greeting words", parseWinner([
+  { id: "m1", content: "\u{1F3C6} Congratulations flash!", mentions: [], author: { global_name: "Admin", username: "admin" } },
+], "t1") === "Flash"]);
+ok.push(["parseWinner: falls back to author", parseWinner([
+  { id: "m1", content: "\u{1F3C6} this is a really long message about the event and who won it all", mentions: [], author: { global_name: "koi", username: "koi" } },
+], "t1") === "Koi"]);
+ok.push(["parseWinner: returns first trophy only", parseWinner([
+  { id: "m1", content: "Hello", mentions: [] },
+  { id: "m2", content: "\u{1F3C6} Alpha", mentions: [] },
+  { id: "m3", content: "\u{1F3C6} Beta", mentions: [] },
+], "t1") === "Alpha"]);
+
+/* ---- transformThreads winner field ---- */
+
+ok.push(["transformThreads: winner field populated", (() => {
+  const t = [{ id: "7001", name: "Test Event", parent_id: "9999", message_count: 2, thread_metadata: { archived: true, create_timestamp: "2026-01-01T00:00:00Z" } }];
+  const m = [{ id: "7001", content: "When: Jan 1 2026", attachments: [] }];
+  const tm = new Map([["7001", [
+    { id: "7001", content: "When: Jan 1 2026" },
+    { id: "m1", content: "\u{1F3C6} mr flsh", mentions: [] },
+  ]]]);
+  const result = transformThreads(t, m, null, tm, null);
+  return result[0].winner === "Mr Flsh";
+})()]);
+
+ok.push(["transformThreads: winner null when no trophy", (() => {
+  const t = [{ id: "7002", name: "No Winner Event", parent_id: "9999", message_count: 1, thread_metadata: { archived: true, create_timestamp: "2026-01-01T00:00:00Z" } }];
+  const m = [{ id: "7002", content: "Just a regular event", attachments: [] }];
+  const tm = new Map([["7002", [{ id: "7002", content: "Just a regular event" }]]]);
+  const result = transformThreads(t, m, null, tm, null);
+  return result[0].winner === null;
 })()]);
 
 console.log("\nchecks:");

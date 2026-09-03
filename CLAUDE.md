@@ -162,6 +162,11 @@ Planned for later, after the slot machine is done.
 - Emoji-prefixed date lines supported (e.g. calendar emoji before When:).
 - Discord forum tags (e.g. Entry, PVM, Loot Value) resolved from channel available_tags
   and included in each event's `tags` array.
+- Winner detected via trophy emoji (U+1F3C6) in thread messages, same logic as giveaways:
+  @mention > text after trophy (greeting words stripped, max 3 words) > message author.
+  Auto-capitalized. API response `winner` field: null when no trophy, or the winner's name.
+  Shown on completed event cards (gold text) and in featured/modal views (spotlight banner).
+  Silent until activated: no trophy emoji = no winner display.
 
 ### Event Teams
 - Teams are OPTIONAL. Events without team data look exactly the same as before.

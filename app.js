@@ -898,6 +898,7 @@ function featuredEventHtml(ev) {
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
     ${lvContainer}
     ${teamRoster}
+    ${ev.winner ? `<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Winner</div><div class="ev-winner-name">${esc(ev.winner)}</div></div></div>` : ""}
     <div class="ev-cta">
       <a class="btn join" data-discord href="#" aria-label="Join Discord for event details">
         <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
@@ -1079,11 +1080,14 @@ function eventCard(ev) {
   var teamDots = teamDotsHtml(ev.teams);
   var partCount = ev.participants && ev.participants.length ? ev.participants.length + " joined" : "";
   var metaParts = [liveText || timeStr, interested, partCount].filter(Boolean).join(" · ");
+  var winnerLine = ev.winner && effStatus === "completed"
+    ? `<div class="ev-card-winner">&#127942; ${esc(ev.winner)}</div>` : "";
   return `<div class="ev-card ev-clickable${liveClass}${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
       <h3>${esc(cleanName(ev.name))}${lvTag ? " " + lvTag : ""}</h3>
       <div class="ev-card-meta">${metaParts}</div>
+      ${winnerLine}
     </div>
     ${teamDots}${badge}
   </div>`;
@@ -1207,6 +1211,9 @@ function wireEventModals() {
     var teamRoster = teamRosterHtml(ev.teams);
     var theme = eventThemeClass(ev);
     var partBtn = participantBtnHtml(ev.participants, ev.id, theme);
+    var winnerHtml = ev.winner
+      ? '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Winner</div><div class="ev-winner-name">' + esc(ev.winner) + '</div></div></div>'
+      : '';
     body.innerHTML =
       '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + teamBadge + badge + '</div>' +
       '<div class="ev-modal-meta">' + dateStr + ' · ' + timeStr +
@@ -1215,6 +1222,7 @@ function wireEventModals() {
       '<div class="ev-modal-desc">' + desc + '</div>' +
       lvHtml +
       teamRoster +
+      winnerHtml +
       '<div class="ev-cta" style="margin-top:16px"><a class="btn join" data-discord href="#" aria-label="Join Discord">' +
       '<svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>' +
       'View on Discord</a>' + partBtn + '</div>';
