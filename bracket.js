@@ -894,6 +894,7 @@
       return;
     }
 
+    document.getElementById("bkOverlay").hidden = false;
     state.running = true;
     updateButton();
     m.p1.fighting = true;
