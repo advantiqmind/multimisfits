@@ -42,8 +42,7 @@
     if (remaining === 1) return "Final";
     if (remaining === 2) return "Semi Finals";
     if (remaining === 3) return "Quarter Finals";
-    var size = Math.pow(2, remaining);
-    return "Round of " + size;
+    return "Round " + (roundIdx + 1);
   }
 
   // -- Shuffle --
@@ -66,10 +65,12 @@
   var giveawayRounds = [];
   var manualEntries = []; // {name, entries, rank}
 
-  // -- Code lock --
+  // -- Code lock (24-hour expiry) --
+  var LOCK_TTL = 24 * 60 * 60 * 1000;
   function checkLock() {
     try {
-      if (localStorage.getItem("mm-bracket-unlocked") === "1") {
+      var ts = parseInt(localStorage.getItem("mm-bracket-unlocked"), 10);
+      if (ts && Date.now() - ts < LOCK_TTL) {
         showMain();
         return;
       }
@@ -97,7 +98,7 @@
     var err = document.getElementById("bkCodeError");
     if (!input) return;
     if (input.value === "Misfits") {
-      try { localStorage.setItem("mm-bracket-unlocked", "1"); } catch (e) { /* */ }
+      try { localStorage.setItem("mm-bracket-unlocked", String(Date.now())); } catch (e) { /* */ }
       if (err) err.hidden = true;
       showMain();
     } else {
@@ -871,12 +872,14 @@
         if (round[i].p1 && round[i].p2) tf++;
       }
       document.getElementById("bkFightMatchLabel").textContent = "Match 1 of " + tf;
+      var r1 = nextMatch.p1.rank && typeof rankMark === "function" ? '<span class="bk-rank-icon">' + rankMark(nextMatch.p1.rank) + '</span> ' : '';
+      var r2 = nextMatch.p2.rank && typeof rankMark === "function" ? '<span class="bk-rank-icon">' + rankMark(nextMatch.p2.rank) + '</span> ' : '';
       arena.innerHTML =
         '<div style="text-align:center;width:100%;padding:20px 0;">' +
           '<div style="font-family:Cinzel,serif;font-size:22px;color:var(--text);margin-bottom:8px;">' +
-            esc(nextMatch.p1.name) +
+            r1 + esc(nextMatch.p1.name) +
             ' <span style="color:var(--gold);font-size:16px;margin:0 10px;">VS</span> ' +
-            esc(nextMatch.p2.name) +
+            r2 + esc(nextMatch.p2.name) +
           '</div>' +
           '<button id="bkFightGo" class="btn join bk-btn-start" style="margin-top:18px;font-size:13px;padding:10px 32px;">Start Fight</button>' +
         '</div>';

@@ -861,8 +861,8 @@ nav.main a[href="/ge.html"]{display:none}
   padding:40px 48px;max-width:380px;width:90%;
   box-shadow:0 8px 40px rgba(0,0,0,0.6);
 }
-.bk-lock-icon{filter:drop-shadow(0 0 12px rgba(0,0,0,0.6))}
-.bk-lock-icon img{width:96px;height:auto}
+.bk-lock-icon{filter:drop-shadow(0 0 12px rgba(0,0,0,0.6));line-height:0}
+.bk-lock-icon img{width:96px;max-width:96px;height:auto;display:block;margin:0 auto}
 .bk-lock-title{font-weight:900;font-size:20px;color:var(--gold);letter-spacing:3px;text-transform:uppercase}
 .bk-lock-input{
   background:var(--panel);border:2px solid var(--bronze);color:var(--parchment);
