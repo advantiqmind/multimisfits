@@ -631,6 +631,7 @@
     function makeFighter(p, side) {
       var f = document.createElement("div");
       f.className = "bk-fighter";
+      f.id = "bkFighter-" + side;
       var h = hpForEntries(p.entries);
 
       var ind = document.createElement("div");
@@ -811,6 +812,9 @@
     var w = hp1 > 0;
     var wn = w ? p1.name : p2.name;
     var ln = w ? p2.name : p1.name;
+    var loserSide = w ? "right" : "left";
+    var loserEl = document.getElementById("bkFighter-" + loserSide);
+    if (loserEl) loserEl.classList.add("defeated");
     log.className = "bk-fight-log ko";
     log.textContent = ln + " has been defeated!";
     setTrophy(w ? "left" : "right");
