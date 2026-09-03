@@ -49,12 +49,18 @@
 <!-- CODE LOCK OVERLAY -->
 <div id="bkLock" class="bk-lock">
   <div class="bk-lock-panel">
-    <h1 class="bk-lock-title">Bracket Knockout</h1>
-    <div class="bk-lock-icon"><img src="/assets/bracket-swords.png" alt="Crossed swords"></div>
-    <p class="bk-lock-text">Enter the code to continue</p>
-    <input type="password" id="bkCodeInput" class="bk-lock-input" placeholder="Enter code" autocomplete="off">
-    <button id="bkCodeSubmit" class="bk-lock-btn">UNLOCK</button>
-    <span id="bkCodeError" class="bk-lock-error" hidden>Invalid code</span>
+    <div class="bk-lock-corner tl"></div>
+    <div class="bk-lock-corner tr"></div>
+    <div class="bk-lock-corner bl"></div>
+    <div class="bk-lock-corner br"></div>
+    <div class="bk-lock-topbar"><span>Restricted Access</span></div>
+    <div class="bk-lock-body">
+      <div class="bk-lock-ring"><img src="/assets/bracket-swords.png" alt="Crossed swords"></div>
+      <h1 class="bk-lock-title">Bracket<br><em>Knockout</em></h1>
+      <input type="password" id="bkCodeInput" class="bk-lock-input" placeholder="Enter code" autocomplete="off">
+      <button id="bkCodeSubmit" class="bk-lock-btn">Unlock</button>
+      <span id="bkCodeError" class="bk-lock-error" hidden>Invalid code</span>
+    </div>
   </div>
 </div>
 
