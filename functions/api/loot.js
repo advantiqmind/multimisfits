@@ -172,7 +172,7 @@ async function ensureTable(db) {
   _tableCreated = true;
 }
 
-function maybeForwardToDiscord(context, body, totalValue) {
+function maybeForwardToDiscord(context, rawBody, contentType, totalValue) {
   const webhookUrl = context.env.LOOT_DISCORD_WEBHOOK;
   if (!webhookUrl) return;
 
@@ -183,10 +183,44 @@ function maybeForwardToDiscord(context, body, totalValue) {
   context.waitUntil(
     fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: { "Content-Type": contentType },
+      body: rawBody,
     }).catch(() => {})
   );
+}
+
+async function parseBody(request) {
+  const ct = request.headers.get("content-type") || "";
+
+  if (ct.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    const payloadJson = formData.get("payload_json");
+    if (!payloadJson) return { body: null, rawBody: null, contentType: ct };
+
+    let body;
+    try {
+      body = JSON.parse(payloadJson);
+    } catch {
+      return { body: null, rawBody: null, contentType: ct };
+    }
+
+    const rebuilt = new FormData();
+    rebuilt.set("payload_json", payloadJson);
+    for (const [key, value] of formData.entries()) {
+      if (key !== "payload_json") rebuilt.set(key, value);
+    }
+
+    return { body, rawBody: rebuilt, contentType: null };
+  }
+
+  const text = await request.text();
+  let body;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    return { body: null, rawBody: null, contentType: ct };
+  }
+  return { body, rawBody: text, contentType: "application/json" };
 }
 
 async function handlePost(context) {
@@ -203,11 +237,9 @@ async function handlePost(context) {
     return json({ error: "database_not_configured" }, 503);
   }
 
-  let body;
-  try {
-    body = await context.request.json();
-  } catch {
-    return json({ error: "invalid_json" }, 400);
+  const { body, rawBody, contentType } = await parseBody(context.request);
+  if (!body) {
+    return json({ error: "invalid_payload" }, 400);
   }
 
   const loot = extractLootData(body);
@@ -215,7 +247,7 @@ async function handlePost(context) {
     return json({ stored: false, reason: "not_loot_or_missing_fields" });
   }
 
-  maybeForwardToDiscord(context, body, loot.totalValue);
+  maybeForwardToDiscord(context, rawBody, contentType, loot.totalValue);
 
   const activeEvents = await getActiveLootEvents(context.env);
   const matched = activeEvents.filter(e => matchesBoss(loot.source, e.bossFilter));
