@@ -59,7 +59,7 @@
   // -- State --
   var state = {
     round: 0, totalRounds: 0, bracket: [], running: false,
-    speed: 3, done: false, roundStarted: false, matchIdx: 0,
+    speed: 2, done: false, roundStarted: false, matchIdx: 0,
     players: [], womMap: {}
   };
   var eventsById = {};
