@@ -191,7 +191,7 @@
         opt2.value = "giveaway:" + j;
         var total = 0;
         for (var k = 0; k < round.entries.length; k++) total += round.entries[k].count;
-        opt2.textContent = round.name + " (" + total + " entries)";
+        opt2.textContent = round.name + " (" + round.entries.length + " participants, " + total + " entries)";
         gaGroup.appendChild(opt2);
       }
       picker.appendChild(gaGroup);
@@ -443,7 +443,7 @@
         var rev = cp && !cp.placeholder;
         cd.innerHTML =
           '<div class="bk-champion-card' + (rev ? " revealed" : "") + '">' +
-            '<div class="bk-trophy' + (rev ? " revealed" : "") + '">\u{1F3C6}</div>' +
+            '<div class="bk-trophy' + (rev ? " revealed" : "") + '"><img src="/assets/bracket-trophy.png" alt="Trophy"></div>' +
             '<div class="bk-champion-label">Champion</div>' +
             '<div class="bk-champion-name">' + (rev ? esc(cp.name) : "") + '</div>' +
           '</div>';
@@ -698,9 +698,9 @@
     wrap.remove();
   }
 
-  var ICON_SWORD = '<span class="bk-icon-sword">⚔️</span>';
-  var ICON_SHIELD = '<span class="bk-icon-shield">🛡️</span>';
-  var ICON_TROPHY = '<span class="bk-icon-trophy">🏆</span>';
+  var ICON_SWORD = '<img class="bk-icon-sword" src="/assets/bracket-swords.png" alt="Attack">';
+  var ICON_SHIELD = '<span class="bk-icon-shield">\u{1F6E1}\u{FE0F}</span>';
+  var ICON_TROPHY = '<img class="bk-icon-trophy" src="/assets/bracket-trophy.png" alt="Winner">';
 
   function setIndicators(atkSide) {
     var left = document.getElementById("bkInd-left");

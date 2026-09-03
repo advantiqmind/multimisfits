@@ -861,7 +861,8 @@ nav.main a[href="/ge.html"]{display:none}
   padding:40px 48px;max-width:380px;width:90%;
   box-shadow:0 8px 40px rgba(0,0,0,0.6);
 }
-.bk-lock-icon{font-size:48px;filter:drop-shadow(0 0 12px rgba(0,0,0,0.6))}
+.bk-lock-icon{filter:drop-shadow(0 0 12px rgba(0,0,0,0.6))}
+.bk-lock-icon img{width:96px;height:auto}
 .bk-lock-title{font-weight:900;font-size:20px;color:var(--gold);letter-spacing:3px;text-transform:uppercase}
 .bk-lock-input{
   background:var(--panel);border:2px solid var(--bronze);color:var(--parchment);
@@ -977,6 +978,24 @@ nav.main a[href="/ge.html"]{display:none}
 .bk-event-picker:focus{outline:2px solid var(--gold-dim)}
 .bk-speed-control{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
 .bk-speed-control input[type="range"]{width:70px;accent-color:var(--gold)}
+input[type="range"].bk-speed{
+  -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
+}
+input[type="range"].bk-speed::-webkit-slider-runnable-track{
+  height:6px;background:var(--panel);border:1px solid var(--bronze);border-radius:3px;
+}
+input[type="range"].bk-speed::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--gold);border:2px solid var(--bronze);margin-top:-6px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.5);
+}
+input[type="range"].bk-speed::-moz-range-track{
+  height:6px;background:var(--panel);border:1px solid var(--bronze);border-radius:3px;
+}
+input[type="range"].bk-speed::-moz-range-thumb{
+  width:12px;height:12px;border-radius:50%;border:2px solid var(--bronze);
+  background:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,0.5);
+}
 .bk-btn{
   font-family:"Cinzel",serif;font-weight:700;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
   padding:9px 18px;border:2px solid var(--gold-dim);border-radius:4px;cursor:pointer;transition:all 0.2s;
@@ -1034,7 +1053,9 @@ nav.main a[href="/ge.html"]{display:none}
 .bk-arena{display:flex;align-items:flex-start;justify-content:center;gap:24px}
 .bk-fighter{flex:1;max-width:310px;display:flex;flex-direction:column;align-items:center;gap:6px}
 .bk-fight-indicator{height:40px;display:flex;align-items:center;justify-content:center}
-.bk-icon-sword,.bk-icon-shield,.bk-icon-trophy{font-size:30px;line-height:1;display:block}
+.bk-icon-shield{font-size:30px;line-height:1;display:block}
+img.bk-icon-sword{width:36px;height:auto;display:block}
+img.bk-icon-trophy{width:32px;height:auto;display:block}
 .bk-ind-atk .bk-icon-sword{animation:bk-pulse-atk 0.4s ease}
 .bk-ind-trophy .bk-icon-trophy{animation:bk-trophy-pop 0.4s ease}
 @keyframes bk-pulse-atk{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
@@ -1121,7 +1142,12 @@ nav.main a[href="/ge.html"]{display:none}
 /* Bracket layout */
 .bk-bracket-container{
   padding:32px 24px;display:flex;justify-content:center;min-width:fit-content;
+  scrollbar-width:thin;scrollbar-color:var(--bronze) transparent;
 }
+.bk-bracket-container::-webkit-scrollbar{height:8px}
+.bk-bracket-container::-webkit-scrollbar-track{background:transparent}
+.bk-bracket-container::-webkit-scrollbar-thumb{background:var(--bronze);border-radius:4px}
+.bk-bracket-container::-webkit-scrollbar-thumb:hover{background:var(--bronze-lite)}
 .bk-bracket{display:flex;align-items:stretch;position:relative}
 .bk-round{
   display:flex;flex-direction:column;justify-content:space-around;
@@ -1177,9 +1203,10 @@ nav.main a[href="/ge.html"]{display:none}
   min-width:200px;padding:0 24px;
 }
 .bk-trophy{
-  font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 16px rgba(255,215,0,0.5));
+  margin-bottom:12px;filter:drop-shadow(0 0 16px rgba(255,215,0,0.5));
   opacity:0.3;transition:all 0.6s;
 }
+.bk-trophy img{width:64px;height:auto}
 .bk-trophy.revealed{opacity:1;transform:scale(1.1)}
 .bk-champion-label{
   font-family:"Cinzel",serif;font-weight:900;font-size:12px;letter-spacing:3px;
@@ -1293,7 +1320,7 @@ nav.main a[href="/ge.html"]{display:none}
   .bk-champion-area{min-width:140px;padding:0 12px}
   .bk-champion-name{font-size:20px}
   .bk-champion-label{font-size:10px}
-  .bk-trophy{font-size:36px}
+  .bk-trophy img{width:48px}
   .bk-rank-badge{font-size:8px;padding:1px 3px}
   .bk-lock-panel{padding:28px 24px}
   .bk-lock-title{font-size:16px;letter-spacing:2px}
