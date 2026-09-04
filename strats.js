@@ -28,6 +28,7 @@
     { n: "Skotizo", cat: "boss" },
     { n: "Kalphite Queen", cat: "boss" },
     { n: "Dagannoth Kings", cat: "boss", img: "Dagannoth Rex.png" },
+    { n: "Mad Angel", cat: "boss" },
     { n: "The Hueycoatl", cat: "boss" },
     { n: "Zulrah", cat: "boss", img: "Zulrah (serpentine).png" },
     { n: "Vorkath", cat: "boss" },
@@ -134,7 +135,8 @@
     duke: "Duke Sucellus",
     vard: "Vardorvis",
     mole: "Giant Mole",
-    moons: "Moons of Peril"
+    moons: "Moons of Peril",
+    angel: "Mad Angel"
   };
 
   // -- DOM --
