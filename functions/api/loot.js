@@ -172,7 +172,7 @@ async function ensureTable(db) {
   _tableCreated = true;
 }
 
-function maybeForwardToDiscord(context, forwardReq, totalValue) {
+function maybeForwardToDiscord(context, contentType, rawBody, totalValue) {
   const webhookUrl = context.env.LOOT_DISCORD_WEBHOOK;
   if (!webhookUrl) return;
 
@@ -183,18 +183,21 @@ function maybeForwardToDiscord(context, forwardReq, totalValue) {
   context.waitUntil(
     fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": forwardReq.headers.get("content-type") },
-      body: forwardReq.body,
+      headers: { "Content-Type": contentType },
+      body: rawBody,
     }).catch(() => {})
   );
 }
 
-async function parseBody(request) {
-  const ct = request.headers.get("content-type") || "";
-
-  if (ct.includes("multipart/form-data")) {
+async function parseBodyFromBuffer(contentType, buffer) {
+  if (contentType.includes("multipart/form-data")) {
     try {
-      const formData = await request.formData();
+      const req = new Request("https://dummy/", {
+        method: "POST",
+        headers: { "Content-Type": contentType },
+        body: buffer,
+      });
+      const formData = await req.formData();
       const payloadJson = formData.get("payload_json");
       if (!payloadJson) return null;
       return JSON.parse(payloadJson);
@@ -204,7 +207,7 @@ async function parseBody(request) {
   }
 
   try {
-    return await request.json();
+    return JSON.parse(new TextDecoder().decode(buffer));
   } catch {
     return null;
   }
@@ -224,9 +227,10 @@ async function handlePost(context) {
     return json({ error: "database_not_configured" }, 503);
   }
 
-  const forwardReq = context.request.clone();
+  const contentType = context.request.headers.get("content-type") || "";
+  const rawBody = await context.request.arrayBuffer();
 
-  const body = await parseBody(context.request);
+  const body = await parseBodyFromBuffer(contentType, rawBody);
   if (!body) {
     return json({ error: "invalid_payload" }, 400);
   }
@@ -236,7 +240,7 @@ async function handlePost(context) {
     return json({ stored: false, reason: "not_loot_or_missing_fields" });
   }
 
-  maybeForwardToDiscord(context, forwardReq, loot.totalValue);
+  maybeForwardToDiscord(context, contentType, rawBody, loot.totalValue);
 
   const activeEvents = await getActiveLootEvents(context.env);
   const matched = activeEvents.filter(e => matchesBoss(loot.source, e.bossFilter));
