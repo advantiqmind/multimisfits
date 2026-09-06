@@ -619,6 +619,7 @@ async function fetchGiveawayRounds(token, guildId, channelId) {
       status,
       prize: prize || "TBA",
       gpPerEntry,
+      entries,
       totalEntries,
       totalParticipants,
       gpRaised,
