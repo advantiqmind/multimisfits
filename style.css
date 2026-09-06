@@ -493,16 +493,24 @@ nav.main a[href="/ge.html"]{display:none}
 
 /* Previous winner banner (between tabs and featured) */
 .ev-prev-winner-wrap{margin:-8px 0 10px;padding:0}
-.ev-prev-winner-wrap .ev-winner-spotlight{margin-top:0}
 
-/* Event winner (trophy emoji) */
+/* Winner bar (inline banner between tabs and featured) */
+.ev-winner-bar{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(255,215,0,.1),rgba(255,215,0,.03) 60%,transparent);border:1px solid rgba(201,168,76,.25);border-radius:6px;padding:12px 18px;position:relative;overflow:hidden}
+.ev-winner-bar::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#ffd700}
+.ev-winner-bar-icon{font-size:2.2rem;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(255,215,0,.35))}
+.ev-winner-bar-main{display:flex;align-items:baseline;gap:6px;flex:1;min-width:0;flex-wrap:wrap}
+.ev-winner-bar-label{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.ev-winner-bar-name{font-family:"Cinzel",serif;font-weight:800;font-size:1.35rem;color:#ffd700;white-space:nowrap}
+.ev-winner-dot{color:rgba(201,168,76,.4);font-size:.9rem}
+.ev-winner-event{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted);letter-spacing:.5px;white-space:nowrap}
+
+/* Event winner (trophy emoji on cards/modals) */
 .ev-card-winner{font-family:"Cinzel",serif;font-size:.8rem;color:#ffd700;margin-top:4px}
 .ev-winner-spotlight{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(255,215,0,.06),transparent);border:1px solid rgba(201,168,76,.25);border-left:3px solid #ffd700;border-radius:6px;padding:12px 14px;margin-top:14px}
 .ev-winner-icon{font-size:1.7rem;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(255,215,0,.3))}
 .ev-winner-content{flex:1;min-width:0}
 .ev-winner-label{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
 .ev-winner-name{font-family:"Cinzel",serif;font-weight:700;font-size:1.05rem;color:#ffd700}
-.ev-winner-event{font-family:"Jersey 15",monospace;font-size:.75rem;font-weight:400;color:var(--muted);letter-spacing:.5px;margin-left:8px}
 
 @media (max-width:480px){
   .ga-stats{grid-template-columns:repeat(2,1fr)}

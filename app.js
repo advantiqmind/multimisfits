@@ -1127,8 +1127,8 @@ function renderEvents(events, { cached } = {}) {
   var evWinnerWrap = document.getElementById("ev-prev-winner-wrap");
   if (evWinnerWrap) {
     var winnerName = prevWinner ? esc(prevWinner) : "TBA";
-    var evSuffix = prevWinnerEvent ? ' <span class="ev-winner-event">' + esc(prevWinnerEvent) + '</span>' : "";
-    evWinnerWrap.innerHTML = '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Event Winner</div><div class="ev-winner-name">' + winnerName + evSuffix + '</div></div></div>';
+    var evEventHtml = prevWinnerEvent ? '<span class="ev-winner-dot">&#8226;</span><span class="ev-winner-event">' + esc(prevWinnerEvent) + '</span>' : "";
+    evWinnerWrap.innerHTML = '<div class="ev-winner-bar"><span class="ev-winner-bar-icon">&#127942;</span><div class="ev-winner-bar-main"><span class="ev-winner-bar-label">Winner</span><span class="ev-winner-bar-name">' + winnerName + '</span>' + evEventHtml + '</div></div>';
     evWinnerWrap.style.display = "";
   }
 
@@ -1581,8 +1581,8 @@ function renderGiveaways(rounds, { cached } = {}) {
   var gaWinnerWrap = document.getElementById("ga-prev-winner-wrap");
   if (gaWinnerWrap) {
     var gaWinnerName = prevRoundWinner ? esc(prevRoundWinner) : "TBA";
-    var gaSuffix = prevRoundName ? ' <span class="ev-winner-event">' + esc(prevRoundName) + '</span>' : "";
-    gaWinnerWrap.innerHTML = '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Round Winner</div><div class="ev-winner-name">' + gaWinnerName + gaSuffix + '</div></div></div>';
+    var gaEventHtml = prevRoundName ? '<span class="ev-winner-dot">&#8226;</span><span class="ev-winner-event">' + esc(prevRoundName) + '</span>' : "";
+    gaWinnerWrap.innerHTML = '<div class="ev-winner-bar"><span class="ev-winner-bar-icon">&#127942;</span><div class="ev-winner-bar-main"><span class="ev-winner-bar-label">Winner</span><span class="ev-winner-bar-name">' + gaWinnerName + '</span>' + gaEventHtml + '</div></div>';
     gaWinnerWrap.style.display = "";
   }
 
