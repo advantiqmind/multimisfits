@@ -492,7 +492,7 @@ nav.main a[href="/ge.html"]{display:none}
 .ga-winner-spotlight-round{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted);white-space:nowrap}
 
 /* Previous winner banner (between tabs and featured) */
-.ev-prev-winner-wrap{padding:12px 0 0}
+.ev-prev-winner-wrap{padding:10px 0}
 .ev-prev-winner-wrap .ev-winner-spotlight{margin-top:0}
 
 /* Event winner (trophy emoji) */
