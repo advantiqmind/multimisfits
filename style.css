@@ -491,6 +491,10 @@ nav.main a[href="/ge.html"]{display:none}
 .ga-winner-spotlight-name{font-family:"Cinzel",serif;font-weight:700;font-size:1.05rem;color:#ffd700}
 .ga-winner-spotlight-round{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted);white-space:nowrap}
 
+/* Previous winner banner (between tabs and featured) */
+.ev-prev-winner-wrap{padding:12px 0 0}
+.ev-prev-winner-wrap .ev-winner-spotlight{margin-top:0}
+
 /* Event winner (trophy emoji) */
 .ev-card-winner{font-family:"Cinzel",serif;font-size:.8rem;color:#ffd700;margin-top:4px}
 .ev-winner-spotlight{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(255,215,0,.06),transparent);border:1px solid rgba(201,168,76,.25);border-left:3px solid #ffd700;border-radius:6px;padding:12px 14px;margin-top:14px}

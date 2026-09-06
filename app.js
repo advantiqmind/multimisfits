@@ -862,7 +862,7 @@ function openParticipantModal(ev) {
   document.body.style.overflow = "hidden";
 }
 
-function featuredEventHtml(ev, prevWinner) {
+function featuredEventHtml(ev) {
   var effStatus = computeEventStatus(ev);
   const badge = eventStatusBadge(effStatus);
   const isLive = effStatus === "live";
@@ -898,7 +898,6 @@ function featuredEventHtml(ev, prevWinner) {
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
     ${lvContainer}
     ${teamRoster}
-    ${prevWinner ? `<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Event Winner</div><div class="ev-winner-name">${esc(prevWinner)}</div></div></div>` : `<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Event Winner</div><div class="ev-winner-name">TBA</div></div></div>`}
     <div class="ev-cta">
       <a class="btn join" data-discord href="#" aria-label="Join Discord for event details">
         <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
@@ -1124,9 +1123,16 @@ function renderEvents(events, { cached } = {}) {
     if (past[i].winner) { prevWinner = past[i].winner; break; }
   }
 
+  var evWinnerWrap = document.getElementById("ev-prev-winner-wrap");
+  if (evWinnerWrap) {
+    var winnerName = prevWinner ? esc(prevWinner) : "TBA";
+    evWinnerWrap.innerHTML = '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Event Winner</div><div class="ev-winner-name">' + winnerName + '</div></div></div>';
+    evWinnerWrap.style.display = "";
+  }
+
   if (featuredBody) {
     featuredBody.innerHTML = featured
-      ? featuredEventHtml(featured, prevWinner)
+      ? featuredEventHtml(featured)
       : '<p class="ev-empty">No featured events right now. Check Discord!</p>';
   }
 
@@ -1498,25 +1504,6 @@ function giveawayEntriesHtml(entries) {
   return `<h4 class="ga-entries-title">Confirmed Entries</h4>${rows}`;
 }
 
-function winnerSpotlightHtml(round) {
-  if (round && round.winners && round.winners.length) {
-    return `<div class="ga-winner-spotlight">
-      <span class="ga-winner-spotlight-icon">&#127942;</span>
-      <div class="ga-winner-spotlight-content">
-        <div class="ga-winner-spotlight-label">Previous Round Winner</div>
-        <div class="ga-winner-spotlight-name">${esc(round.winners[0].name)}</div>
-      </div>
-    </div>`;
-  }
-  return `<div class="ga-winner-spotlight">
-    <span class="ga-winner-spotlight-icon">&#127942;</span>
-    <div class="ga-winner-spotlight-content">
-      <div class="ga-winner-spotlight-label">Previous Round Winner</div>
-      <div class="ga-winner-spotlight-name">TBA</div>
-    </div>
-  </div>`;
-}
-
 function featuredGiveawayHtml(round) {
   var effStatus = computeEventStatus(round);
   var badge = eventStatusBadge(effStatus);
@@ -1531,7 +1518,6 @@ function featuredGiveawayHtml(round) {
     ? `<div class="ev-countdown" data-countdown="${esc(round.endTime)}" data-cd-prefix="Ends ">Ends ${endsCountdown}</div>`
     : startsCountdown ? `<div class="ev-countdown" data-countdown="${esc(round.startTime)}">${startsCountdown}</div>` : "";
   var metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
-  var spotlight = winnerSpotlightHtml(round);
 
   return `<div class="ev-featured">
     <div class="ev-featured-header"><h3>${esc(cleanName(round.name))}</h3>${badge}</div>
@@ -1539,7 +1525,6 @@ function featuredGiveawayHtml(round) {
       <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}
     </div>
-    ${spotlight}
     ${giveawayStatsHtml(round)}
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
     ${giveawayEntriesHtml(round.entries)}
@@ -1584,6 +1569,18 @@ function renderGiveaways(rounds, { cached } = {}) {
   var past = rounds.filter(function(r) { return computeEventStatus(r) === "completed"; });
 
   var featured = active[0];
+
+  var prevRoundWinner = null;
+  for (var i = 0; i < past.length; i++) {
+    if (past[i].winners && past[i].winners.length) { prevRoundWinner = past[i].winners[0].name; break; }
+  }
+
+  var gaWinnerWrap = document.getElementById("ga-prev-winner-wrap");
+  if (gaWinnerWrap) {
+    var gaWinnerName = prevRoundWinner ? esc(prevRoundWinner) : "TBA";
+    gaWinnerWrap.innerHTML = '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Round Winner</div><div class="ev-winner-name">' + gaWinnerName + '</div></div></div>';
+    gaWinnerWrap.style.display = "";
+  }
 
   if (featuredBody) {
     featuredBody.innerHTML = featured
