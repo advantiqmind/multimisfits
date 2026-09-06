@@ -105,6 +105,16 @@ to the Loot Value leaderboard but for GP contributions.
 
 ## How things work
 
+### Discord name resolution
+- Events and giveaway endpoints fetch the guild members list to get server nicknames.
+- Name priority: server nickname (member.nick) > global display name (user.global_name) > username.
+- Guild members fetched once per request via `GET /guilds/{guild_id}/members?limit=1000`.
+- Graceful fallback: if the guild members fetch fails, names fall back to global_name/username.
+- Members typically set their server nickname to match their RSN (RuneScape name). Leaders
+  can also set it via right-click > Change Nickname. This is how bracket/wheel tools match
+  Discord participants to WOM rank data.
+- The `fetchNickMap()` and `resolveName()` helpers live in both events.js and giveaway.js.
+
 ### Giveaways
 - Separate Discord forum channel (GIVEAWAY_CHANNEL_ID) from events.
 - Each round = one forum thread. Leaders react with 1/2 keycap emoji on member
