@@ -1043,7 +1043,7 @@
       var logEl = document.getElementById("bkFightLog");
       if (logEl) {
         var cb = document.createElement("button");
-        cb.className = "btn join bk-btn-start";
+        cb.className = "btn bk-btn-crown";
         cb.style.cssText = "margin-top:12px;font-size:13px;padding:8px 28px;display:block;margin-left:auto;margin-right:auto;";
         cb.textContent = "Close";
         cb.addEventListener("click", function () {
@@ -1065,8 +1065,8 @@
       '<img class="bk-win-trophy" src="/assets/bracket-trophy-mm.png" alt="Trophy"><br>' +
       esc(winner.name) + " is the champion!";
     var btn = document.createElement("button");
-    btn.className = "btn join bk-btn-start";
-    btn.style.cssText = "margin-top:16px;font-size:14px;padding:10px 36px;display:block;margin-left:auto;margin-right:auto;border-color:var(--gold);color:var(--gold);";
+    btn.className = "btn bk-btn-crown";
+    btn.style.cssText = "margin-top:16px;font-size:14px;padding:10px 36px;display:block;margin-left:auto;margin-right:auto;";
     btn.textContent = "Crown the Champion";
     btn.addEventListener("click", function () { showChampionCelebration(winner); });
     logEl.appendChild(btn);
@@ -1101,7 +1101,7 @@
         '<div class="bk-celeb-label">Champion</div>' +
         '<div class="bk-celeb-name">' + esc(winner.name) + '</div>' +
         '<div class="bk-celeb-divider"></div>' +
-        '<button class="btn join bk-btn-start bk-celeb-close">Close</button>' +
+        '<button class="btn bk-btn-crown bk-celeb-close">Close</button>' +
       '</div>';
     overlay.appendChild(celeb);
     spawnSparkles(30);
