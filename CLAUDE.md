@@ -85,7 +85,9 @@ LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster
       events, giveaways, achievements, news, gallery, FAQ -- everything functional.
 
 ## What's left
-Nothing pending.
+- Investigate: giveaway keycap reactions may not register when the thread creator
+  reacts on their own post. Possibly a Discord API quirk (self-reactions not returned
+  in the reactions array). Verify via /api/giveaway?debug=1. Workaround: /giveaway-entry.
 
 ## Future ideas (not built yet)
 
