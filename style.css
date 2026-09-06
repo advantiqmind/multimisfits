@@ -502,6 +502,7 @@ nav.main a[href="/ge.html"]{display:none}
 .ev-winner-content{flex:1;min-width:0}
 .ev-winner-label{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
 .ev-winner-name{font-family:"Cinzel",serif;font-weight:700;font-size:1.05rem;color:#ffd700}
+.ev-winner-event{font-family:"Jersey 15",monospace;font-size:.75rem;font-weight:400;color:var(--muted);letter-spacing:.5px;margin-left:8px}
 
 @media (max-width:480px){
   .ga-stats{grid-template-columns:repeat(2,1fr)}

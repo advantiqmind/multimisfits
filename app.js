@@ -1119,14 +1119,16 @@ function renderEvents(events, { cached } = {}) {
   var remainingUpcoming = featured && computeEventStatus(featured) === "scheduled" ? upcoming.slice(1) : upcoming;
 
   var prevWinner = null;
+  var prevWinnerEvent = "";
   for (var i = 0; i < past.length; i++) {
-    if (past[i].winner) { prevWinner = past[i].winner; break; }
+    if (past[i].winner) { prevWinner = past[i].winner; prevWinnerEvent = past[i].name || ""; break; }
   }
 
   var evWinnerWrap = document.getElementById("ev-prev-winner-wrap");
   if (evWinnerWrap) {
     var winnerName = prevWinner ? esc(prevWinner) : "TBA";
-    evWinnerWrap.innerHTML = '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Event Winner</div><div class="ev-winner-name">' + winnerName + '</div></div></div>';
+    var evSuffix = prevWinnerEvent ? ' <span class="ev-winner-event">' + esc(prevWinnerEvent) + '</span>' : "";
+    evWinnerWrap.innerHTML = '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Event Winner</div><div class="ev-winner-name">' + winnerName + evSuffix + '</div></div></div>';
     evWinnerWrap.style.display = "";
   }
 
@@ -1571,14 +1573,16 @@ function renderGiveaways(rounds, { cached } = {}) {
   var featured = active[0];
 
   var prevRoundWinner = null;
+  var prevRoundName = "";
   for (var i = 0; i < past.length; i++) {
-    if (past[i].winners && past[i].winners.length) { prevRoundWinner = past[i].winners[0].name; break; }
+    if (past[i].winners && past[i].winners.length) { prevRoundWinner = past[i].winners[0].name; prevRoundName = past[i].name || ""; break; }
   }
 
   var gaWinnerWrap = document.getElementById("ga-prev-winner-wrap");
   if (gaWinnerWrap) {
     var gaWinnerName = prevRoundWinner ? esc(prevRoundWinner) : "TBA";
-    gaWinnerWrap.innerHTML = '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Round Winner</div><div class="ev-winner-name">' + gaWinnerName + '</div></div></div>';
+    var gaSuffix = prevRoundName ? ' <span class="ev-winner-event">' + esc(prevRoundName) + '</span>' : "";
+    gaWinnerWrap.innerHTML = '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Round Winner</div><div class="ev-winner-name">' + gaWinnerName + gaSuffix + '</div></div></div>';
     gaWinnerWrap.style.display = "";
   }
 
