@@ -637,7 +637,7 @@ const botRemovedMessages = buildMessages("2001", [
 const botRemovedRounds = transformGiveawayData([THREAD_ACTIVE], botRemovedMessages);
 check("Entry Removed zeroes out player", botRemovedRounds[0].totalEntries === 0);
 check("removed player not in entries list", botRemovedRounds[0].entries.length === 0);
-check("removed player still counted as participant", botRemovedRounds[0].totalParticipants === 1);
+check("removed player not counted as participant", botRemovedRounds[0].totalParticipants === 0);
 
 console.log("\n== bot entries: add then subtract ==");
 const addSubMessages = buildMessages("2001", [

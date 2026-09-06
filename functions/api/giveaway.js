@@ -178,7 +178,7 @@ export function transformGiveawayData(threads, threadMessages) {
     }
 
     const totalEntries = entries.reduce((sum, e) => sum + e.count, 0);
-    const totalParticipants = participants.size;
+    const totalParticipants = entries.length;
     const gpRaised = totalEntries * gpPerEntry;
 
     const winners = [];
