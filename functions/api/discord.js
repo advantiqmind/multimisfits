@@ -1310,8 +1310,8 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
       );
       if (memberRes.ok) {
         const member = await memberRes.json();
-        player = member.nick
-          || (member.user && (member.user.global_name || member.user.username))
+        player = (member.user && (member.user.global_name || member.user.username))
+          || member.nick
           || player;
       }
     } catch (e) { /* keep raw mention as fallback */ }
@@ -1404,8 +1404,8 @@ async function handleGiveawayCheck(interaction, token, guildId, giveawayChannelI
       );
       if (memberRes.ok) {
         const member = await memberRes.json();
-        player = member.nick
-          || (member.user && (member.user.global_name || member.user.username))
+        player = (member.user && (member.user.global_name || member.user.username))
+          || member.nick
           || player;
       }
     } catch (e) { /* keep raw mention as fallback */ }
@@ -1613,7 +1613,7 @@ async function resolvePlayerMention(player, guildId, token) {
     );
     if (res.ok) {
       const member = await res.json();
-      return member.nick || (member.user && (member.user.global_name || member.user.username)) || player;
+      return (member.user && (member.user.global_name || member.user.username)) || member.nick || player;
     }
   } catch (e) {}
   return player;
