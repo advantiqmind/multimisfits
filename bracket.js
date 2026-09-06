@@ -331,23 +331,14 @@
 
     var shuffled = shuffle(state.players);
 
-    // Pad to next power of 2
-    var n = shuffled.length;
-    var size = 1;
-    while (size < n) size *= 2;
-
     var slots = [];
-    for (var i = 0; i < size; i++) {
-      if (i < shuffled.length) {
-        var p = shuffled[i];
-        slots.push({
-          name: p.name, entries: p.entries, rank: p.rank,
-          eliminated: false, advancing: false, winner: false, fighting: false,
-          seed: i + 1
-        });
-      } else {
-        slots.push(null); // bye
-      }
+    for (var i = 0; i < shuffled.length; i++) {
+      var p = shuffled[i];
+      slots.push({
+        name: p.name, entries: p.entries, rank: p.rank,
+        eliminated: false, advancing: false, winner: false, fighting: false,
+        seed: i + 1
+      });
     }
 
     state.bracket = [];
@@ -361,8 +352,12 @@
     var nr = 0;
     while (rp.length > 1) {
       var ms = [];
-      for (var j = 0; j < rp.length; j += 2) {
-        ms.push({ p1: rp[j], p2: rp[j + 1] || null, winner: null, resolved: false });
+      var numFights = Math.floor(rp.length / 2);
+      for (var j = 0; j < numFights; j++) {
+        ms.push({ p1: rp[j * 2], p2: rp[j * 2 + 1], winner: null, resolved: false });
+      }
+      if (rp.length % 2 === 1) {
+        ms.push({ p1: rp[rp.length - 1], p2: null, winner: null, resolved: false, isBye: true });
       }
       state.bracket.push(ms);
       rp = ms.map(function () {
@@ -460,18 +455,12 @@
         var m = round[mi];
         var md = document.createElement("div");
         md.className = "bk-matchup";
+        if (m.isBye) md.className += " bk-matchup-bye";
 
-        var sides = [m.p1, m.p2];
+        var sides = m.p2 ? [m.p1, m.p2] : [m.p1];
         for (var si = 0; si < sides.length; si++) {
           var p = sides[si];
-          if (!p) {
-            // Bye slot
-            var byeCard = document.createElement("div");
-            byeCard.className = "bk-player-card bk-empty";
-            byeCard.innerHTML = '<span class="bk-player-name">BYE</span>';
-            md.appendChild(byeCard);
-            continue;
-          }
+          if (!p) continue;
 
           var card = document.createElement("div");
           var cls = "bk-player-card";
