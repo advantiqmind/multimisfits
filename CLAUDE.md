@@ -273,7 +273,12 @@ to the Loot Value leaderboard but for GP contributions.
   Players shuffled randomly on load. Seeds displayed. Round names: Round of N,
   Quarter Finals, Semi Finals, Final.
 - Rank icons from WOM data shown next to player names (uses rankMark() from app.js).
-- Champion celebration: sparkle effects, trophy emoji, gold styling.
+- Fight overlay never auto-closes after a round's last fight. Non-final rounds show a
+  "Close" button; Final shows "Crown the Champion" (replaces the X).
+- Champion celebration: clicking "Crown the Champion" shows a sealed scroll overlay
+  with the MM shield, event name (from picker), MM trophy, and champion name in gold.
+  Closing triggers sparkle effects on the main bracket and reveals the champion card.
+- Assets: bracket-trophy-mm.png (MM-branded trophy), bracket-shield-mm.png (MM shield).
 - All CSS namespaced .bk-* in style.css. Mobile responsive (stacked layout on small screens,
   bracket scrolls horizontally). Reduced motion support.
 
