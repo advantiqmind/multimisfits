@@ -862,7 +862,7 @@ function openParticipantModal(ev) {
   document.body.style.overflow = "hidden";
 }
 
-function featuredEventHtml(ev) {
+function featuredEventHtml(ev, prevWinner) {
   var effStatus = computeEventStatus(ev);
   const badge = eventStatusBadge(effStatus);
   const isLive = effStatus === "live";
@@ -898,7 +898,7 @@ function featuredEventHtml(ev) {
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
     ${lvContainer}
     ${teamRoster}
-    ${ev.winner ? `<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Winner</div><div class="ev-winner-name">${esc(ev.winner)}</div></div></div>` : ""}
+    ${prevWinner ? `<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Event Winner</div><div class="ev-winner-name">${esc(prevWinner)}</div></div></div>` : `<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Previous Event Winner</div><div class="ev-winner-name">TBA</div></div></div>`}
     <div class="ev-cta">
       <a class="btn join" data-discord href="#" aria-label="Join Discord for event details">
         <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
@@ -1119,9 +1119,14 @@ function renderEvents(events, { cached } = {}) {
   var remainingLive = featured && computeEventStatus(featured) === "live" ? live.slice(1) : live;
   var remainingUpcoming = featured && computeEventStatus(featured) === "scheduled" ? upcoming.slice(1) : upcoming;
 
+  var prevWinner = null;
+  for (var i = 0; i < past.length; i++) {
+    if (past[i].winner) { prevWinner = past[i].winner; break; }
+  }
+
   if (featuredBody) {
     featuredBody.innerHTML = featured
-      ? featuredEventHtml(featured)
+      ? featuredEventHtml(featured, prevWinner)
       : '<p class="ev-empty">No featured events right now. Check Discord!</p>';
   }
 
