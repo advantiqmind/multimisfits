@@ -268,8 +268,10 @@ to the Loot Value leaderboard but for GP contributions.
 - Two-level control: "Start Round" shows fight overlay with matchup preview,
   "Start Fight" begins the animation. Speed slider (1-5x) adjusts animation speed.
   Closing the overlay mid-fight pauses; the main Start button shows "Resume" to reopen.
-- Bracket auto-pads to next power of 2 with byes (auto-resolved). Players shuffled
-  randomly on load. Seeds displayed. Round names: Round of N, Quarter Finals, Semi Finals, Final.
+- Dynamic bracket: rounds pair up all players; if the count is odd, exactly 1 player
+  gets a bye (rendered as a single card, no "BYE" label). No power-of-2 padding.
+  Players shuffled randomly on load. Seeds displayed. Round names: Round of N,
+  Quarter Finals, Semi Finals, Final.
 - Rank icons from WOM data shown next to player names (uses rankMark() from app.js).
 - Champion celebration: sparkle effects, trophy emoji, gold styling.
 - All CSS namespaced .bk-* in style.css. Mobile responsive (stacked layout on small screens,
