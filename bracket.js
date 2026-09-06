@@ -828,6 +828,10 @@
 
   // -- Bye resolution --
   function resolveBye(matchup, mi) {
+    if (!matchup.p1) {
+      matchup.resolved = true;
+      return;
+    }
     var ri = state.round;
     var nr = state.bracket[ri + 1];
     matchup.winner = matchup.p1;
