@@ -439,7 +439,7 @@
         var rev = cp && !cp.placeholder;
         cd.innerHTML =
           '<div class="bk-champion-card' + (rev ? " revealed" : "") + '">' +
-            '<div class="bk-trophy' + (rev ? " revealed" : "") + '"><img src="/assets/bracket-trophy.png" alt="Trophy"></div>' +
+            '<div class="bk-trophy' + (rev ? " revealed" : "") + '"><img src="/assets/bracket-trophy-mm.png" alt="Trophy"></div>' +
             '<div class="bk-champion-label">Champion</div>' +
             '<div class="bk-champion-name">' + (rev ? esc(cp.name) : "") + '</div>' +
           '</div>';
@@ -876,7 +876,7 @@
     setTrophy(w ? "left" : "right");
     await waitOrPause(700);
     log.className = "bk-fight-log win";
-    log.innerHTML = '<img class="bk-win-trophy" src="/assets/bracket-trophy.png" alt="Trophy"><br>' + esc(wn) + " advances!";
+    log.innerHTML = '<img class="bk-win-trophy" src="/assets/bracket-trophy-mm.png" alt="Trophy"><br>' + esc(wn) + " advances!";
     await waitOrPause(ADVANCE_DELAY);
     return w ? { winner: p1, loser: p2 } : { winner: p2, loser: p1 };
   }
@@ -1009,8 +1009,9 @@
       state.matchIdx++;
     }
 
-    if (state.matchIdx >= round.length) finishRound();
-    else {
+    if (state.matchIdx >= round.length) {
+      finishRound();
+    } else {
       updateButton();
       var logEl = document.getElementById("bkFightLog");
       if (logEl) {
@@ -1024,8 +1025,7 @@
     }
   }
 
-  async function finishRound() {
-    document.getElementById("bkOverlay").hidden = true;
+  function finishRound() {
     state.roundStarted = false;
     state.matchIdx = 0;
     state.round++;
@@ -1037,16 +1037,84 @@
         cr.player.winner = true;
         state.done = true;
         renderBracket();
-        spawnSparkles(50);
-        await wait(300);
-        spawnSparkles(40);
-        await wait(300);
-        spawnSparkles(30);
+        showCrownButton(cr.player);
+      }
+    } else {
+      var logEl = document.getElementById("bkFightLog");
+      if (logEl) {
+        var cb = document.createElement("button");
+        cb.className = "btn join bk-btn-start";
+        cb.style.cssText = "margin-top:12px;font-size:13px;padding:8px 28px;display:block;margin-left:auto;margin-right:auto;";
+        cb.textContent = "Close";
+        cb.addEventListener("click", function () {
+          document.getElementById("bkOverlay").hidden = true;
+        });
+        logEl.appendChild(cb);
       }
     }
 
     updateButton();
     updateStatus();
+  }
+
+  function showCrownButton(winner) {
+    var logEl = document.getElementById("bkFightLog");
+    if (!logEl) return;
+    logEl.className = "bk-fight-log win";
+    logEl.innerHTML =
+      '<img class="bk-win-trophy" src="/assets/bracket-trophy-mm.png" alt="Trophy"><br>' +
+      esc(winner.name) + " is the champion!";
+    var btn = document.createElement("button");
+    btn.className = "btn join bk-btn-start";
+    btn.style.cssText = "margin-top:16px;font-size:14px;padding:10px 36px;display:block;margin-left:auto;margin-right:auto;border-color:var(--gold);color:var(--gold);";
+    btn.textContent = "Crown the Champion";
+    btn.addEventListener("click", function () { showChampionCelebration(winner); });
+    logEl.appendChild(btn);
+    var closeBtn = document.getElementById("bkOverlayClose");
+    if (closeBtn) closeBtn.hidden = true;
+  }
+
+  function getSelectedEventName() {
+    var picker = document.getElementById("bkEventPicker");
+    if (!picker || !picker.value) return "";
+    var opt = picker.options[picker.selectedIndex];
+    if (!opt) return "";
+    var txt = opt.textContent || "";
+    return txt.replace(/\s*\(.*\)$/, "");
+  }
+
+  function showChampionCelebration(winner) {
+    var overlay = document.getElementById("bkOverlay");
+    var panel = document.getElementById("bkFightPanel");
+    if (!overlay || !panel) return;
+    panel.hidden = true;
+    var eventName = getSelectedEventName();
+    var celeb = document.createElement("div");
+    celeb.className = "bk-celebration";
+    celeb.innerHTML =
+      '<div class="bk-celeb-scroll">' +
+        '<img class="bk-celeb-shield" src="/assets/bracket-shield-mm.png" alt="Multi-Misfits">' +
+        (eventName ? '<div class="bk-celeb-event">' + esc(eventName) + '</div>' : '') +
+        '<div class="bk-celeb-subtitle">Bracket Knockout</div>' +
+        '<div class="bk-celeb-divider"></div>' +
+        '<img class="bk-celeb-trophy" src="/assets/bracket-trophy-mm.png" alt="Champion Trophy">' +
+        '<div class="bk-celeb-label">Champion</div>' +
+        '<div class="bk-celeb-name">' + esc(winner.name) + '</div>' +
+        '<div class="bk-celeb-divider"></div>' +
+        '<button class="btn join bk-btn-start bk-celeb-close">Close</button>' +
+      '</div>';
+    overlay.appendChild(celeb);
+    spawnSparkles(30);
+    celeb.querySelector(".bk-celeb-close").addEventListener("click", function () {
+      overlay.hidden = true;
+      panel.hidden = false;
+      var closeBtn = document.getElementById("bkOverlayClose");
+      if (closeBtn) closeBtn.hidden = false;
+      celeb.remove();
+      spawnSparkles(50);
+      setTimeout(function () { spawnSparkles(40); }, 300);
+      setTimeout(function () { spawnSparkles(30); }, 600);
+    });
   }
 
   // -- Sparkles --
