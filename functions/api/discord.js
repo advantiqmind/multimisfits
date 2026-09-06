@@ -166,6 +166,11 @@ const COMMANDS = [
     ],
   },
   {
+    name: "giveaway-entries",
+    description: "List all entries in the current giveaway",
+    type: 1,
+  },
+  {
     name: "team-assign",
     description: "Assign a player to an event team",
     type: 1,
@@ -1490,6 +1495,62 @@ async function handleGiveawayCheck(interaction, token, guildId, giveawayChannelI
 }
 
 // ---------------------------------------------------------------------------
+// /giveaway-entries
+// ---------------------------------------------------------------------------
+async function handleGiveawayEntries(interaction, token, guildId, channelId, appId) {
+  if (!channelId) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Giveaway channel is not configured.",
+      flags: 64,
+    });
+  }
+
+  let rounds;
+  try {
+    rounds = await fetchGiveawayRounds(token, guildId, channelId);
+  } catch (e) {
+    return patchFollowup(appId, interaction.token, {
+      content: "Could not fetch giveaway data. Try again in a moment.",
+      flags: 64,
+    });
+  }
+
+  const active = rounds.find((r) => r.status === "scheduled");
+  if (!active) {
+    return patchFollowup(appId, interaction.token, {
+      embeds: [{
+        title: "No Active Giveaway",
+        color: 0x95a5a6,
+        description: "There's no giveaway running right now.",
+      }],
+    });
+  }
+
+  const sorted = (active.entries || []).slice().sort((a, b) => b.count - a.count);
+  if (!sorted.length) {
+    return patchFollowup(appId, interaction.token, {
+      embeds: [{
+        title: `Entries: ${active.name}`,
+        color: 0x3498db,
+        description: "No entries yet.",
+      }],
+    });
+  }
+
+  const lines = sorted.map((e, i) => `${i + 1}. **${e.player}** — ${e.count} ${e.count === 1 ? "entry" : "entries"}`);
+  const description = lines.join("\n").slice(0, 4000);
+
+  await patchFollowup(appId, interaction.token, {
+    embeds: [{
+      title: `Entries: ${active.name}`,
+      color: 0x2ecc71,
+      description,
+      footer: { text: `${active.totalEntries} entries · ${active.totalParticipants} participants · ${active.gpRaised}M GP raised` },
+    }],
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Team helpers (inlined -- can't import across functions)
 // ---------------------------------------------------------------------------
 const TEAM_COLORS = { A: 0xe04040, B: 0x4a90d9, C: 0x4ad04a, D: 0xe8a832 };
@@ -2173,6 +2234,11 @@ export async function onRequest(context) {
 
     if (name === "giveaway-check") {
       safeWait(handleGiveawayCheck(interaction, token, guildId, channelId, appId));
+      return json({ type: 5 });
+    }
+
+    if (name === "giveaway-entries") {
+      safeWait(handleGiveawayEntries(interaction, token, guildId, channelId, appId));
       return json({ type: 5 });
     }
 
