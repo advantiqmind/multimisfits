@@ -97,6 +97,12 @@ Runtime 1-2 minutes. Most complex drawing option -- canvas animation, collision 
 zone shrinking. Would live alongside the bracket/slot machine drawing tools.
 Planned for later, after the slot machine is done.
 
+### Giveaway Donation Leaderboard
+Add optional `gp` parameter to /giveaway-entry slash command (defaults to gpPerEntry rate,
+leaders can override for bonus donations). Bot embed stores GP amount per entry. Backend
+sums GP per player. Frontend shows "Top Donors" ranking on giveaway cards. Similar pattern
+to the Loot Value leaderboard but for GP contributions.
+
 ## How things work
 
 ### Giveaways
