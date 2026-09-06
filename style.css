@@ -16,7 +16,11 @@
   --shadow:0 6px 18px rgba(0,0,0,.55);
   --frame: inset 0 0 0 2px var(--bronze), inset 0 0 24px rgba(0,0,0,.55), 0 3px 0 #000, var(--shadow);
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--bronze) rgba(0,0,0,0.25)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.25);border-radius:4px;border:1px solid rgba(107,88,54,0.3)}
+::-webkit-scrollbar-thumb{background:var(--bronze);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--bronze-lite)}
 html{scroll-behavior:smooth}
 body{
   margin:0;
@@ -711,7 +715,6 @@ nav.main a[href="/ge.html"]{display:none}
 .wheel-add-btn:hover{background:rgba(255,203,47,.18)}
 .wheel-entry-list{
   display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto;margin-bottom:12px;
-  scrollbar-width:thin;scrollbar-color:var(--bronze) transparent;
 }
 .wheel-entry{
   display:flex;align-items:center;gap:10px;padding:7px 10px;
@@ -983,7 +986,6 @@ nav.main a[href="/ge.html"]{display:none}
 .bk-add-btn:hover{background:rgba(255,203,47,.18)}
 .bk-entry-list{
   display:flex;flex-direction:column;gap:5px;max-height:280px;overflow-y:auto;margin-bottom:12px;
-  scrollbar-width:thin;scrollbar-color:var(--bronze) transparent;
 }
 .bk-entry{
   display:flex;align-items:center;gap:10px;padding:7px 10px;
@@ -1206,12 +1208,7 @@ img.bk-icon-trophy{width:32px;height:auto;display:block}
 .bk-bracket-container{
   padding:32px 24px;display:flex;justify-content:center;min-width:fit-content;
   overflow-x:auto;-webkit-overflow-scrolling:touch;
-  scrollbar-width:thin;scrollbar-color:var(--bronze) transparent;
 }
-.bk-bracket-container::-webkit-scrollbar{height:8px}
-.bk-bracket-container::-webkit-scrollbar-track{background:transparent}
-.bk-bracket-container::-webkit-scrollbar-thumb{background:var(--bronze);border-radius:4px}
-.bk-bracket-container::-webkit-scrollbar-thumb:hover{background:var(--bronze-lite)}
 .bk-bracket{display:flex;align-items:stretch;position:relative}
 .bk-round{
   display:flex;flex-direction:column;justify-content:space-around;

@@ -372,6 +372,7 @@
     updateButton();
     renderBracket();
     updateStatus();
+    setTimeout(scrollToActiveRound, 100);
   }
 
   // -- UI updates --
@@ -1055,6 +1056,26 @@
 
     updateButton();
     updateStatus();
+    scrollToActiveRound();
+  }
+
+  function scrollToActiveRound() {
+    var container = document.querySelector(".bk-bracket-container");
+    if (!container) return;
+    var rounds = container.querySelectorAll(".bk-round");
+    var target;
+    if (state.done) {
+      target = container.querySelector(".bk-champion-area");
+    } else if (state.round < rounds.length) {
+      target = rounds[state.round];
+    }
+    if (!target) return;
+    var targetCenter = target.offsetLeft + target.offsetWidth / 2;
+    var containerCenter = container.offsetWidth / 2;
+    container.scrollTo({
+      left: targetCenter - containerCenter,
+      behavior: "smooth"
+    });
   }
 
   function showCrownButton(winner) {
