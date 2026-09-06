@@ -490,6 +490,7 @@
           var nameSpan = document.createElement("span");
           nameSpan.className = "bk-player-name";
           nameSpan.textContent = p.placeholder ? "TBD" : p.name;
+          if (!p.placeholder) nameSpan.title = p.name;
           card.appendChild(nameSpan);
 
           if (!p.placeholder && p.entries) {
@@ -1049,6 +1050,7 @@
         cb.textContent = "Close";
         cb.addEventListener("click", function () {
           document.getElementById("bkOverlay").hidden = true;
+          scrollToActiveRound();
         });
         logEl.appendChild(cb);
       }
@@ -1056,7 +1058,6 @@
 
     updateButton();
     updateStatus();
-    scrollToActiveRound();
   }
 
   function scrollToActiveRound() {
@@ -1135,6 +1136,7 @@
       spawnSparkles(50);
       setTimeout(function () { spawnSparkles(40); }, 300);
       setTimeout(function () { spawnSparkles(30); }, 600);
+      scrollToActiveRound();
     });
   }
 
