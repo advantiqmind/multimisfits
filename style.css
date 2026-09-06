@@ -1039,8 +1039,8 @@ nav.main a[href="/ge.html"]{display:none}
   font-family:"Jersey 15",monospace;font-size:15px;padding:7px 10px;border-radius:4px;min-width:180px;
 }
 .bk-event-picker:focus{outline:2px solid var(--gold-dim)}
-.bk-speed-control{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
-.bk-speed-control input[type="range"]{width:70px;accent-color:var(--gold)}
+.bk-speed-label{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;cursor:pointer}
+.bk-speed-label input[type="range"]{width:70px;accent-color:var(--gold)}
 input[type="range"].bk-speed{
   -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
 }
@@ -1070,11 +1070,12 @@ input[type="range"].bk-speed::-moz-range-thumb{
 .bk-btn-reset:hover:not(:disabled){color:var(--parchment);border-color:var(--muted)}
 
 /* Status bar */
-.bk-status-bar{
+.bk-status{
   background:var(--panel-3);border-bottom:1px solid var(--bronze);
   padding:10px 24px;display:flex;align-items:center;justify-content:center;gap:32px;
   font-size:17px;flex-wrap:wrap;
 }
+.bk-status-item{display:inline-flex;align-items:center;gap:4px}
 .bk-status-label{color:var(--muted);font-size:14px}
 .bk-status-value{color:var(--gold);margin-left:6px}
 .bk-round-indicator{display:flex;align-items:center;gap:6px}
@@ -1339,7 +1340,7 @@ img.bk-icon-trophy{width:32px;height:auto;display:block}
 .bk-celeb-close{color:var(--parchment)}
 
 /* Sparkles */
-.bk-sparkle-container{position:fixed;inset:0;pointer-events:none;z-index:100}
+.bk-sparkles{position:fixed;inset:0;pointer-events:none;z-index:100}
 .bk-sparkle{
   position:absolute;width:4px;height:4px;background:var(--gold);border-radius:50%;
   animation:sparkleFloat 1.5s ease-out forwards;
@@ -1401,10 +1402,11 @@ img.bk-icon-trophy{width:32px;height:auto;display:block}
   .bk-controls{flex-direction:column;align-items:stretch;padding:10px 12px;gap:8px}
   .bk-controls-left{justify-content:center}
   .bk-controls-right{flex-direction:column;align-items:stretch;gap:6px}
-  .bk-controls-right .bk-speed-control{justify-content:center}
+  .bk-controls-right .bk-speed-label{justify-content:center}
   .bk-controls-right .bk-btn{width:100%;text-align:center}
   .bk-event-picker{width:100%;min-width:unset}
-  .bk-status-bar{padding:8px 12px;gap:12px;font-size:15px;flex-wrap:wrap;justify-content:center}
+  .bk-status{padding:8px 12px;gap:12px;font-size:15px;flex-wrap:wrap;justify-content:center}
+  .bk-entry-panel{margin:14px 12px 0}
   .bk-round-name-label{font-size:10px}
   .bk-bracket-container{padding:16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .bk-round{min-width:140px;padding:0 6px}
@@ -1413,8 +1415,8 @@ img.bk-icon-trophy{width:32px;height:auto;display:block}
   .bk-player-name{font-size:13px}
   .bk-player-seed{font-size:10px;min-width:18px}
   .bk-entry-badge{font-size:9px;padding:1px 4px}
-  .bk-fight-overlay{align-items:flex-start;padding-top:8px}
-  .bk-fight-panel{width:98%;padding:12px 10px 14px;max-width:100%}
+  .bk-fight-overlay{align-items:flex-start;padding-top:8px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .bk-fight-panel{width:98%;padding:12px 10px 14px;max-width:100%;margin-bottom:8px}
   .bk-fight-round-label{font-size:12px}
   .bk-fight-match-label{font-size:11px;margin-bottom:8px}
   .bk-arena{flex-direction:column;gap:8px;align-items:center}
