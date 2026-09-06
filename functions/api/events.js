@@ -11,6 +11,33 @@
 const CACHE_TTL = 300;
 const MAX_THREADS = 10;
 
+// Fetch guild members and build a map of discord user id -> server nickname.
+// Falls back gracefully: if the call fails, the map is just empty and we
+// use global_name as before.
+async function fetchNickMap(guildId, headers) {
+  const map = new Map();
+  try {
+    const res = await fetch(
+      `https://discord.com/api/v10/guilds/${guildId}/members?limit=1000`,
+      { headers }
+    );
+    if (!res.ok) return map;
+    const members = await res.json();
+    for (const m of members) {
+      if (m.user && m.user.id && m.nick) {
+        map.set(m.user.id, m.nick);
+      }
+    }
+  } catch (_) { /* nicknames unavailable, not fatal */ }
+  return map;
+}
+
+function resolveName(user, nickMap) {
+  if (nickMap && user && user.id && nickMap.has(user.id)) return nickMap.get(user.id);
+  if (user && user.global_name) return user.global_name;
+  return (user && user.username) || "Unknown";
+}
+
 function snowflakeToDate(id) {
   const DISCORD_EPOCH = 1420070400000;
   return new Date(Number(BigInt(id) >> 22n) + DISCORD_EPOCH);
@@ -34,12 +61,12 @@ export function parseEventForgeDateField(content, field) {
   return isNaN(d.getTime()) ? null : d.toISOString();
 }
 
-function resolveMentions(text, mentions) {
+function resolveMentions(text, mentions, nickMap) {
   if (!text || !Array.isArray(mentions) || !mentions.length) return text;
   let t = text;
   for (const u of mentions) {
     if (!u || !u.id) continue;
-    const name = u.global_name || u.username || "member";
+    const name = resolveName(u, nickMap);
     const display = name.charAt(0).toUpperCase() + name.slice(1);
     t = t.replace(new RegExp("<@!?" + u.id + ">", "g"), "**" + display + "**");
   }
@@ -74,7 +101,7 @@ export function extractTeamEmbed(message) {
   return { player: playerField.value.trim(), team: letter };
 }
 
-export function parseTeams(messages) {
+export function parseTeams(messages, nickMap) {
   if (!Array.isArray(messages) || !messages.length) return null;
   const sorted = messages.slice().sort((a, b) => {
     if (a.id < b.id) return -1;
@@ -95,7 +122,7 @@ export function parseTeams(messages) {
     for (const r of m.reactions) {
       const team = teamFromEmoji(r.emoji && r.emoji.name);
       if (team) {
-        const author = m.author.global_name || m.author.username || "Unknown";
+        const author = resolveName(m.author, nickMap);
         assignments.set(author.toLowerCase(), { name: author, team });
         break;
       }
@@ -133,12 +160,12 @@ export function extractParticipantEmbed(message) {
   };
 }
 
-export function parseParticipants(messages, reactors) {
+export function parseParticipants(messages, reactors, nickMap) {
   const participants = new Map();
   if (Array.isArray(reactors)) {
     for (const u of reactors) {
       if (!u || u.bot) continue;
-      const name = u.global_name || u.username || "Unknown";
+      const name = resolveName(u, nickMap);
       participants.set(name.toLowerCase(), name);
     }
   }
@@ -167,7 +194,7 @@ function capitalizeName(name) {
   return name.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-export function parseWinner(messages, threadId) {
+export function parseWinner(messages, threadId, nickMap) {
   if (!Array.isArray(messages) || !messages.length) return null;
   for (const m of messages) {
     if (m.id === threadId) continue;
@@ -178,7 +205,7 @@ export function parseWinner(messages, threadId) {
       ? m.mentions[0] : null;
     let winnerName;
     if (mentioned) {
-      winnerName = mentioned.global_name || mentioned.username || "Unknown";
+      winnerName = resolveName(mentioned, nickMap);
     } else {
       let afterTrophy = c.split("\u{1F3C6}").pop().split("\n")[0]
         .replace(/[!.,;:]+$/g, "").trim();
@@ -187,14 +214,14 @@ export function parseWinner(messages, threadId) {
       const wordCount = afterTrophy.split(/\s+/).length;
       winnerName = afterTrophy.length > 0 && afterTrophy.length < 40 && wordCount <= 3
         ? afterTrophy
-        : (m.author.global_name || m.author.username || "Unknown");
+        : resolveName(m.author, nickMap);
     }
     return capitalizeName(winnerName);
   }
   return null;
 }
 
-export function transformThreads(threads, openingMessages, tagMap, threadMessages, threadReactors) {
+export function transformThreads(threads, openingMessages, tagMap, threadMessages, threadReactors, nickMap) {
   const msgMap = new Map();
   for (const m of Array.isArray(openingMessages) ? openingMessages : []) {
     if (m && m.id) msgMap.set(m.id, m);
@@ -217,7 +244,7 @@ export function transformThreads(threads, openingMessages, tagMap, threadMessage
 
     const whenDate = parseEventForgeDateField(content, "When");
     const endsDate = parseEventForgeDateField(content, "Ends?");
-    const description = resolveMentions(content, msgMentions);
+    const description = resolveMentions(content, msgMentions, nickMap);
 
     const appliedIds = Array.isArray(t.applied_tags) ? t.applied_tags : [];
     const tags = tagMap
@@ -225,10 +252,10 @@ export function transformThreads(threads, openingMessages, tagMap, threadMessage
       : [];
 
     const allMsgs = threadMessages && threadMessages.get(t.id);
-    const teams = allMsgs ? parseTeams(allMsgs) : null;
+    const teams = allMsgs ? parseTeams(allMsgs, nickMap) : null;
     const reactors = threadReactors && threadReactors.get(t.id);
-    const participants = (allMsgs || reactors) ? parseParticipants(allMsgs, reactors) : null;
-    const winner = allMsgs ? parseWinner(allMsgs, t.id) : null;
+    const participants = (allMsgs || reactors) ? parseParticipants(allMsgs, reactors, nickMap) : null;
+    const winner = allMsgs ? parseWinner(allMsgs, t.id, nickMap) : null;
 
     events.push({
       id: t.id,
@@ -350,6 +377,8 @@ export async function onRequest(context) {
   });
   threads = threads.slice(0, MAX_THREADS);
 
+  const nickMap = await fetchNickMap(guildId, headers);
+
   let tagMap = new Map();
   let openingMessages;
   const threadMessages = new Map();
@@ -397,7 +426,7 @@ export async function onRequest(context) {
     openingMessages = [];
   }
 
-  const events = transformThreads(threads, openingMessages, tagMap, threadMessages, threadReactors);
+  const events = transformThreads(threads, openingMessages, tagMap, threadMessages, threadReactors, nickMap);
   const res = json({ configured: true, events }, 200, {
     "Cache-Control": `public, max-age=${CACHE_TTL}`,
   });

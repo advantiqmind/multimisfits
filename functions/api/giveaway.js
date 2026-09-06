@@ -11,6 +11,30 @@
 const CACHE_TTL = 60;
 const MAX_ROUNDS = 10;
 
+async function fetchNickMap(guildId, headers) {
+  const map = new Map();
+  try {
+    const res = await fetch(
+      `https://discord.com/api/v10/guilds/${guildId}/members?limit=1000`,
+      { headers }
+    );
+    if (!res.ok) return map;
+    const members = await res.json();
+    for (const m of members) {
+      if (m.user && m.user.id && m.nick) {
+        map.set(m.user.id, m.nick);
+      }
+    }
+  } catch (_) { /* nicknames unavailable, not fatal */ }
+  return map;
+}
+
+function resolveName(user, nickMap) {
+  if (nickMap && user && user.id && nickMap.has(user.id)) return nickMap.get(user.id);
+  if (user && user.global_name) return user.global_name;
+  return (user && user.username) || "Unknown";
+}
+
 function snowflakeToDate(id) {
   const DISCORD_EPOCH = 1420070400000;
   return new Date(Number(BigInt(id) >> 22n) + DISCORD_EPOCH);
@@ -97,19 +121,19 @@ export function extractBotEntry(message) {
   };
 }
 
-function resolveMentions(text, mentions) {
+function resolveMentions(text, mentions, nickMap) {
   if (!text || !Array.isArray(mentions) || !mentions.length) return text;
   let t = text;
   for (const u of mentions) {
     if (!u || !u.id) continue;
-    const name = u.global_name || u.username || "member";
+    const name = resolveName(u, nickMap);
     const display = name.charAt(0).toUpperCase() + name.slice(1);
     t = t.replace(new RegExp("<@!?" + u.id + ">", "g"), "**" + display + "**");
   }
   return t;
 }
 
-export function transformGiveawayData(threads, threadMessages) {
+export function transformGiveawayData(threads, threadMessages, nickMap) {
   const rounds = [];
 
   for (const thread of (Array.isArray(threads) ? threads : [])) {
@@ -158,7 +182,7 @@ export function transformGiveawayData(threads, threadMessages) {
       const entryCount = extractEntryCountFromReactions(m.reactions);
       if (entryCount <= 0) continue;
 
-      const name = m.author.global_name || m.author.username || "Unknown";
+      const name = resolveName(m.author, nickMap);
       const p = getParticipant(name.toLowerCase());
       p.reactionCount = Math.min(p.reactionCount + entryCount, MAX_ENTRIES_PER_PERSON);
       p.name = name;
@@ -191,7 +215,7 @@ export function transformGiveawayData(threads, threadMessages) {
         ? m.mentions[0] : null;
       let winnerName;
       if (mentioned) {
-        winnerName = mentioned.global_name || mentioned.username || "Unknown";
+        winnerName = resolveName(mentioned, nickMap);
       } else if (hasTrophy) {
         let afterTrophy = c.split("\u{1F3C6}").pop().split("\n")[0]
           .replace(/[!.,;:]+$/g, "").trim();
@@ -200,9 +224,9 @@ export function transformGiveawayData(threads, threadMessages) {
         const wordCount = afterTrophy.split(/\s+/).length;
         winnerName = afterTrophy.length > 0 && afterTrophy.length < 40 && wordCount <= 3
           ? afterTrophy
-          : (m.author.global_name || m.author.username || "Unknown");
+          : resolveName(m.author, nickMap);
       } else {
-        winnerName = m.author.global_name || m.author.username || "Unknown";
+        winnerName = resolveName(m.author, nickMap);
       }
       winners.push({
         name: capitalizeName(winnerName),
@@ -211,7 +235,7 @@ export function transformGiveawayData(threads, threadMessages) {
       });
     }
 
-    const description = resolveMentions(content, openingMentions);
+    const description = resolveMentions(content, openingMentions, nickMap);
     const status = meta.archived ? "completed" : "scheduled";
 
     rounds.push({
@@ -276,6 +300,8 @@ export async function onRequest(context) {
     Authorization: `Bot ${token}`,
     "User-Agent": "Multi-Misfits clan website",
   };
+
+  const nickMap = await fetchNickMap(guildId, headers);
 
   let threads;
   try {
@@ -356,13 +382,15 @@ export async function onRequest(context) {
               messagesWithReactions: allMsgs.filter(m => m.reactions && m.reactions.length).length,
               reactions: allMsgs.filter(m => m.reactions && m.reactions.length).map(m => ({
                 msgId: m.id,
-                author: m.author && m.author.global_name,
+                author: resolveName(m.author, nickMap),
+                authorGlobal: m.author && m.author.global_name,
+                authorNick: m.author && nickMap.get(m.author.id),
                 reactions: m.reactions.map(r => ({ name: r.emoji && r.emoji.name, count: r.count })),
               })),
               trophyMessages: allMsgs.filter(m => (m.content || "").includes("\u{1F3C6}")).map(m => ({
                 msgId: m.id,
                 content: (m.content || "").slice(0, 100),
-                mentions: (m.mentions || []).map(u => u.global_name || u.username),
+                mentions: (m.mentions || []).map(u => resolveName(u, nickMap)),
               })),
             });
           }
@@ -376,7 +404,7 @@ export async function onRequest(context) {
     // proceed with whatever we have
   }
 
-  const rounds = transformGiveawayData(threads, threadMessages);
+  const rounds = transformGiveawayData(threads, threadMessages, nickMap);
 
   if (debug) {
     return json({ configured: true, rounds, _debug: debugInfo }, 200, {
