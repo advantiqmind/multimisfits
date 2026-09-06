@@ -512,12 +512,78 @@
           md.appendChild(card);
         }
 
-        md.innerHTML += '<div class="bk-connector"></div>';
         rd.appendChild(md);
       }
 
       el.appendChild(rd);
     }
+
+    drawConnectors(el);
+  }
+
+  function drawConnectors(el) {
+    var old = el.querySelector(".bk-connectors");
+    if (old) old.remove();
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "bk-connectors");
+    var br = el.getBoundingClientRect();
+    svg.setAttribute("width", br.width);
+    svg.setAttribute("height", br.height);
+
+    var rounds = el.querySelectorAll(".bk-round");
+    var champArea = el.querySelector(".bk-champion-area");
+
+    function rel(node) {
+      var r = node.getBoundingClientRect();
+      return { l: r.left - br.left, r: r.right - br.left, t: r.top - br.top, b: r.bottom - br.top, cy: r.top - br.top + r.height / 2 };
+    }
+
+    function addLine(x1, y1, x2, y2) {
+      var l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      l.setAttribute("x1", x1); l.setAttribute("y1", y1);
+      l.setAttribute("x2", x2); l.setAttribute("y2", y2);
+      svg.appendChild(l);
+    }
+
+    for (var ri = 0; ri < rounds.length; ri++) {
+      var srcMatchups = rounds[ri].querySelectorAll(".bk-matchup");
+      var nextRound = rounds[ri + 1];
+      var dstMatchups = nextRound ? nextRound.querySelectorAll(".bk-matchup") : [];
+
+      if (!dstMatchups.length && champArea && ri === rounds.length - 1) {
+        if (srcMatchups.length === 1) {
+          var sr = rel(srcMatchups[0]);
+          var cr = rel(champArea);
+          addLine(sr.r, sr.cy, cr.l, cr.cy);
+        }
+        continue;
+      }
+
+      for (var di = 0; di < dstMatchups.length; di++) {
+        var top = srcMatchups[di * 2];
+        var bot = srcMatchups[di * 2 + 1];
+        var dst = dstMatchups[di];
+        if (!dst) continue;
+
+        var dr = rel(dst);
+
+        if (top && bot) {
+          var tr = rel(top);
+          var btr = rel(bot);
+          var mx = tr.r + 12;
+          addLine(tr.r, tr.cy, mx, tr.cy);
+          addLine(btr.r, btr.cy, mx, btr.cy);
+          addLine(mx, tr.cy, mx, btr.cy);
+          var midY = (tr.cy + btr.cy) / 2;
+          addLine(mx, midY, dr.l, dr.cy);
+        } else if (top) {
+          var tr2 = rel(top);
+          addLine(tr2.r, tr2.cy, dr.l, dr.cy);
+        }
+      }
+    }
+
+    el.appendChild(svg);
   }
 
   // -- Timing --
