@@ -15,7 +15,7 @@
 .dink-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:40px 20px;text-align:center}
 .dink-wrap h1{font-family:'Cinzel',serif;color:var(--gold);font-size:clamp(26px,5vw,42px);margin:0 0 12px}
 .dink-wrap p{color:var(--parchment);opacity:.8;max-width:480px;margin:0 0 32px;line-height:1.5}
-.dink-btn{font-family:'Jersey 15',monospace;font-size:22px;padding:16px 48px;background:var(--gold);color:var(--bg);border:none;border-radius:6px;cursor:pointer;transition:background .2s,transform .15s;letter-spacing:1px}
+.dink-btn{font-family:'Jersey 15',monospace;font-size:22px;padding:16px 48px;background:var(--gold);color:#fff;border:none;border-radius:6px;cursor:pointer;transition:background .2s,transform .15s;letter-spacing:1px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 .dink-btn:hover{background:var(--bronze);transform:scale(1.04)}
 .dink-btn:active{transform:scale(.97)}
 .dink-btn.copied{background:#2ecc71;color:#fff}
@@ -61,11 +61,17 @@
 <div class="dink-wrap">
   <h1>Clan Dink Settings</h1>
   <p>Copy the clan's Dink plugin settings and import them into RuneLite. This keeps everyone's notifications synced to our chest channel.</p>
+  <h2 style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;margin:0 0 8px;opacity:.9">First-time Setup</h2>
   <ol class="dink-steps">
+    <li>Download the <strong>Dink</strong> plugin on RuneLite</li>
     <li>Click <strong>Copy Settings</strong> below</li>
-    <li>Open RuneLite, go to the Dink plugin config</li>
-    <li>Click the <strong>Import</strong> button at the bottom</li>
-    <li>Paste and confirm</li>
+    <li>Type <code style="background:rgba(255,255,255,.1);padding:2px 6px;border-radius:3px;color:var(--gold)">::dinkimport all</code> in OSRS game chat</li>
+  </ol>
+  <h2 style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;margin:16px 0 8px;opacity:.9">Updating Settings</h2>
+  <ol class="dink-steps">
+    <li>Click the <strong>Reset</strong> button at the bottom of the Dink plugin settings panel</li>
+    <li>Click <strong>Copy Settings</strong> below</li>
+    <li>Type <code style="background:rgba(255,255,255,.1);padding:2px 6px;border-radius:3px;color:var(--gold)">::dinkimport all</code> in OSRS game chat</li>
   </ol>
   <button class="dink-btn" id="dink-copy">COPY SETTINGS</button>
   <div class="dink-note" id="dink-status">Settings loaded and ready</div>
