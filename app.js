@@ -1698,7 +1698,9 @@ async function showWinnerToast() {
         (roundName ? '<div class="ga-winner-toast-round">' + esc(roundName) + '</div>' : '') +
       '</div>' +
       '<button class="ga-winner-toast-close" aria-label="Close">&times;</button>';
-    document.querySelector("header").appendChild(toast);
+    var hdr = document.querySelector("header");
+    toast.style.top = hdr.offsetHeight + "px";
+    document.body.appendChild(toast);
     requestAnimationFrame(function() {
       toast.classList.add("ga-winner-toast-show");
       var colors = ["#ffd700","#ffcb2f","#c9a227","#fff0a0","#e0a81f","#ffa500"];
