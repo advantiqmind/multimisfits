@@ -1522,7 +1522,11 @@ function giveawayCard(round) {
   var winnerText = round.winners && round.winners.length ? "Winner: " + esc(round.winners[0].name) : "";
   var statsText = round.totalEntries + " entries · " + round.totalParticipants + " players · " + formatGP(round.gpRaised) + " GP";
 
-  return `<div class="ev-card">
+  var bgStyle = round.image
+    ? ` style="background:linear-gradient(to right,rgba(18,13,6,.92),rgba(18,13,6,.7)),url('${esc(round.image)}') center/cover;"`
+    : "";
+
+  return `<div class="ev-card"${bgStyle}>
     <div class="ev-card-date${round.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
       <h3>${esc(cleanName(round.name))}</h3>
