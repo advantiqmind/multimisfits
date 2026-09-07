@@ -99,6 +99,18 @@ Runtime 1-2 minutes. Most complex drawing option -- canvas animation, collision 
 zone shrinking. Would live alongside the bracket/slot machine drawing tools.
 Planned for later, after the slot machine is done.
 
+### Idea Board Tag Colors
+Color-code idea board cards by tag. Proposed palette:
+- **#website** - teal/cyan (digital feel, distinct from medieval theme)
+- **#discord** - Discord blurple (#5865F2)
+- **#events** - warm gold/amber base
+- Event sub-categories (match existing event theme hues):
+  - **#pvm** - purple (ev-pvm theme)
+  - **#wild** - red (ev-wild theme)
+  - **#social** - green (ev-social theme)
+  - **#skilling** - blue/teal variant
+- Open questions: Do sub-categories replace #events or stack? Keep old tags (#boss, #team, #hunt)?
+
 ### Giveaway Donation Leaderboard
 Add optional `gp` parameter to /giveaway-entry slash command (defaults to gpPerEntry rate,
 leaders can override for bonus donations). Bot embed stores GP amount per entry. Backend
