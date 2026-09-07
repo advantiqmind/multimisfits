@@ -85,9 +85,10 @@ LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster
       events, giveaways, achievements, news, gallery, FAQ -- everything functional.
 
 ## What's left
-- Investigate: giveaway keycap reactions may not register when the thread creator
-  reacts on their own post. Possibly a Discord API quirk (self-reactions not returned
-  in the reactions array). Verify via /api/giveaway?debug=1. Workaround: /giveaway-entry.
+- Waiting on Dink plugin fix for ToA chest loot (PR pajlads/DinkPlugin#1014): division
+  by zero in getAmascutPurpleProbability() crashes GSON serialization, preventing raid
+  chest notifications from sending. Room kills (Akkha, Ba-Ba) work fine. No action on
+  our side until the Dink fix is merged and released.
 
 ## Future ideas (not built yet)
 
@@ -149,7 +150,9 @@ to the Loot Value leaderboard but for GP contributions.
 - Events tagged `[Loot Value]` in the thread name track cumulative boss loot per player.
 - Data source: Dink RuneLite plugin sends loot webhooks to POST /api/loot?key=SECRET.
 - Each Dink payload has playerName, source (boss name), killCount, items with prices.
-- `Boss:` line in event description sets the boss filter (case-insensitive exact match).
+- `Boss:` line in event description sets the boss filter (case-insensitive startsWith match).
+  Difficulty variants match the base name (e.g. "Tombs of Amascut: Expert Mode" matches
+  filter "Tombs of Amascut").
   - Single boss: `Boss: Chambers of Xeric`
   - Multiple: `Boss: Chambers of Xeric, Theatre of Blood`
   - All bosses: `Boss: any` or omit the line entirely.
