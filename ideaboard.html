@@ -41,7 +41,7 @@ body {
 }
 
 /* Armoury nav (inline for this page) */
-.arm-nav{display:flex;align-items:center;padding:10px 20px;background:#241e14;border-bottom:1px solid #6b5836;gap:16px;flex-wrap:wrap}
+.arm-nav{display:flex;align-items:center;padding:10px 20px;background:#241e14;border-top:1px solid #6b5836;border-bottom:1px solid #6b5836;gap:16px;flex-wrap:wrap}
 .arm-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
 .arm-brand img{width:28px;height:28px}
 .arm-brand span{font-family:"Cinzel",serif;font-weight:700;font-size:14px;color:#ffcb2f;letter-spacing:3px}
@@ -77,12 +77,43 @@ body {
   font-size: 13px;
   color: var(--text-dim);
 }
-.page-header .ib-actions {
+.ib-actions {
   display: flex;
   gap: 10px;
   justify-content: center;
   margin-top: 14px;
+  flex-wrap: wrap;
+  align-items: center;
 }
+.ib-user {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.ib-user strong { color: var(--gold-bright); }
+.ib-user button {
+  background: none;
+  border: none;
+  color: var(--gold-dim);
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: inherit;
+  padding: 0;
+}
+.ib-user button:hover { color: var(--gold); }
+.ib-user-set {
+  background: none;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-dim);
+  font-size: 11px;
+  font-family: 'Cinzel', serif;
+  cursor: pointer;
+  padding: 3px 10px;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.ib-user-set:hover { color: var(--gold); border-color: var(--gold); }
 
 /* FILTERS */
 .filters {
@@ -103,6 +134,7 @@ body {
   transition: all 0.2s;
   text-transform: uppercase;
   letter-spacing: 1px;
+  font-family: inherit;
 }
 .filter-btn:hover, .filter-btn.active {
   border-color: var(--gold-dim);
@@ -128,6 +160,27 @@ body {
 @media (max-width: 900px) {
   .board { grid-template-columns: 1fr; }
 }
+
+/* LOADING / OFFLINE */
+.board-msg {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-dim);
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+.board-msg .spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--gold-dim);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* COLUMNS */
 .column {
@@ -190,7 +243,7 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .card-title {
   font-size: 13px;
@@ -216,11 +269,33 @@ body {
 }
 .card:hover .card-delete { opacity: 1; }
 .card-delete:hover { color: var(--red-hover); }
-.card-desc {
+.card-meta {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.card-notes-toggle {
+  font-size: 11px;
+  color: var(--gold-dim);
+  cursor: pointer;
+  margin-bottom: 4px;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.card-notes-toggle:hover { color: var(--gold); }
+.card-notes-toggle .chevron { font-size: 8px; transition: transform 0.15s; }
+.card-notes-toggle.open .chevron { transform: rotate(90deg); }
+.card-notes {
   font-size: 11px;
   color: var(--text-dim);
   line-height: 1.5;
   margin-bottom: 8px;
+  padding: 6px 8px;
+  background: rgba(0,0,0,0.2);
+  border-left: 2px solid var(--gold-dim);
+  white-space: pre-line;
 }
 .card-tags {
   display: flex;
@@ -233,6 +308,9 @@ body {
   padding: 2px 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  background: rgba(169,155,120,0.2);
+  color: #a99b78;
+  border: 1px solid rgba(169,155,120,0.3);
 }
 .tag-skill { background: rgba(42,90,138,0.3); color: #6ab0e8; border: 1px solid rgba(42,90,138,0.5); }
 .tag-boss { background: rgba(160,48,48,0.3); color: #e87070; border: 1px solid rgba(160,48,48,0.5); }
@@ -243,108 +321,48 @@ body {
 .tag-wom { background: rgba(42,122,58,0.3); color: #70e888; border: 1px solid rgba(42,122,58,0.5); }
 .tag-discord { background: rgba(88,101,242,0.3); color: #99a8f8; border: 1px solid rgba(88,101,242,0.5); }
 
-/* MODAL */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 100;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+/* DISMISSED SECTION */
+.dismissed-section {
+  padding: 0 24px 40px;
 }
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--bg-card);
-  border: 2px solid var(--gold-dim);
-  max-width: 460px;
-  width: 100%;
-  padding: 0;
-}
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-.modal-header h3 {
-  font-family: 'Cinzel', serif;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 1px;
-}
-.modal-close {
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-.modal-close:hover { color: var(--gold); }
-.modal-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.form-group label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--gold-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-}
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  background: var(--bg-dark);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 8px 12px;
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-}
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--gold-dim);
-}
-.form-group textarea { resize: vertical; min-height: 60px; }
-.form-group select { cursor: pointer; }
-.form-group select option { background: var(--bg-dark); }
-.tag-select {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.tag-option {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 4px 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  opacity: 0.4;
-  transition: all 0.15s;
-  border: 1px solid transparent;
-}
-.tag-option.selected { opacity: 1; }
-.tag-option:hover { opacity: 0.8; }
-.modal-footer {
-  padding: 14px 20px;
+.dismissed-header {
+  padding: 12px 0;
   border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.dismissed-header .column-title { font-size: 12px; }
+.dismissed-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 8px;
+}
+.card-dismissed {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  padding: 10px 12px;
+  opacity: 0.5;
+}
+.card-dismissed:hover { opacity: 0.7; }
+.card-dismissed .card-title { color: var(--text-dim); }
+.card-dismiss-info {
+  font-size: 10px;
+  color: var(--red);
+  margin: 4px 0;
+}
+.card-dismissed .ib-restore {
+  font-size: 10px;
+  background: none;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-dim);
+  padding: 2px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 6px;
+  transition: all 0.2s;
+}
+.card-dismissed .ib-restore:hover {
+  color: var(--gold);
+  border-color: var(--gold);
 }
 
 /* Buttons */
@@ -359,6 +377,8 @@ body {
   cursor: pointer;
   letter-spacing: 1px;
   transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
 }
 .ib-btn:hover {
   background: rgba(212,160,23,0.1);
@@ -372,6 +392,10 @@ body {
 .ib-btn-primary:hover {
   background: var(--gold);
   border-color: var(--gold);
+}
+.ib-btn-sm {
+  font-size: 11px;
+  padding: 5px 12px;
 }
 
 /* Footer */
@@ -397,6 +421,24 @@ body {
   opacity: 0.4;
   line-height: 1.6;
 }
+
+/* TOAST */
+.ib-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-bright);
+  font-size: 12px;
+  padding: 8px 20px;
+  z-index: 200;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.ib-toast.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -417,14 +459,19 @@ body {
 
 <div class="page-header">
   <h2>Event Ideas</h2>
-  <p>Drag cards between columns to track progress. Click + to add new ideas.</p>
+  <p>Post ideas in Discord. Drag cards to organize. Click a card's notes to expand.</p>
   <div class="ib-actions">
-    <button class="ib-btn" onclick="exportData()">Export</button>
-    <button class="ib-btn ib-btn-primary" onclick="openModal()">+ New Idea</button>
+    <a class="ib-btn ib-btn-primary" id="discordLink" href="#" target="_blank" rel="noopener">+ Post in Discord</a>
+    <button class="ib-btn ib-btn-sm" id="dismissToggle" onclick="toggleDismissed()">Show Dismissed (0)</button>
+  </div>
+  <div class="ib-user" id="userBar">
+    <span id="userDisplay">
+      <button class="ib-user-set" onclick="changeUser()">Set your name</button>
+    </span>
   </div>
 </div>
 
-<div class="filters">
+<div class="filters" id="filters">
   <span class="filter-label">Filter:</span>
   <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
   <button class="filter-btn" data-filter="skill" onclick="setFilter('skill')">Skill</button>
@@ -437,7 +484,9 @@ body {
   <button class="filter-btn" data-filter="discord" onclick="setFilter('discord')">Discord</button>
 </div>
 
-<div class="board">
+<div id="boardMsg" class="board-msg"><span class="spinner"></span> Loading ideas...</div>
+
+<div class="board" id="board" hidden>
   <div class="column" data-col="ideas">
     <div class="column-header">
       <span class="column-title">Ideas</span>
@@ -468,41 +517,11 @@ body {
   </div>
 </div>
 
-<!-- CREATE MODAL -->
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>New Event Idea</h3>
-      <button class="modal-close" onclick="closeModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Event Name</label>
-        <input type="text" id="input-name" placeholder="e.g. Vorkath KC Race">
-      </div>
-      <div class="form-group">
-        <label>Description</label>
-        <textarea id="input-desc" placeholder="Brief description of the event format and rules"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Column</label>
-        <select id="input-col">
-          <option value="ideas">Ideas</option>
-          <option value="planned">Planned</option>
-          <option value="active">In Progress</option>
-          <option value="done">Completed</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Tags (click to toggle)</label>
-        <div class="tag-select" id="tag-select"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="ib-btn" onclick="closeModal()">Cancel</button>
-      <button class="ib-btn ib-btn-primary" onclick="addCard()">Add Idea</button>
-    </div>
+<div class="dismissed-section" id="dismissedSection" hidden>
+  <div class="dismissed-header">
+    <span class="column-title">Dismissed Ideas</span>
   </div>
+  <div class="dismissed-list" id="dismissedList"></div>
 </div>
 
 <div class="ib-footer">
@@ -516,88 +535,203 @@ body {
   </div>
 </div>
 
+<div class="ib-toast" id="ibToast"></div>
+
 <script>
-var TAG_TYPES = [
-  { id: 'skill', label: 'Skill', cls: 'tag-skill' },
-  { id: 'boss', label: 'Boss', cls: 'tag-boss' },
-  { id: 'team', label: 'Team', cls: 'tag-team' },
-  { id: 'hunt', label: 'Hunt', cls: 'tag-hunt' },
-  { id: 'clue', label: 'Clue', cls: 'tag-clue' },
-  { id: 'social', label: 'Social', cls: 'tag-social' },
-  { id: 'wom', label: 'WOM', cls: 'tag-wom' },
-  { id: 'discord', label: 'Discord', cls: 'tag-discord' },
-];
+var KNOWN_TAGS = ['skill','boss','team','hunt','clue','social','wom','discord'];
 
-var DEFAULT_CARDS = [
-  { id: 1, col: 'ideas', title: 'Skill of the Week', desc: 'Pick one skill. Highest XP gained over the weekend wins. Tracked automatically by WOM competitions.', tags: ['skill','wom'] },
-  { id: 2, col: 'ideas', title: 'Boss KC Race', desc: 'Pick a boss. Most kills over the weekend wins. WOM tracks kill counts automatically.', tags: ['boss','wom'] },
-  { id: 3, col: 'ideas', title: 'EHP/EHB Competition', desc: 'Efficient Hours Played or Bossed. Rewards efficient play over raw hours. WOM tracked.', tags: ['skill','boss','wom'] },
-  { id: 4, col: 'ideas', title: 'Clue Scroll Marathon', desc: 'Most clues completed over the weekend. Easy, Medium, Hard, Elite, Master all count. Tracked via hiscores.', tags: ['clue','wom'] },
-  { id: 5, col: 'ideas', title: 'Pet Bounty', desc: 'Target one specific pet. First person to get the drop and submit proof with timestamp wins the GP prize pool.', tags: ['hunt','boss'] },
-  { id: 6, col: 'ideas', title: 'Scavenger Hunt', desc: 'List of specific items or screenshots to collect across Gielinor. First team to complete the checklist wins.', tags: ['team','hunt'] },
-  { id: 7, col: 'ideas', title: 'Drop Bingo', desc: 'Specific unique drops on a 5x5 board. Get the drop, screenshot it, cross it off. Points scaled by rarity.', tags: ['boss','team','hunt'] },
-  { id: 8, col: 'ideas', title: 'Fashion Show', desc: 'Worst or best outfit contest. Screenshot submissions to Discord, members vote. Zero grind, pure fun.', tags: ['social','discord'] },
-  { id: 9, col: 'ideas', title: 'Trivia Night + Raffle', desc: 'Discord-based OSRS trivia with GP prizes. Great filler event between bigger competitions.', tags: ['social','discord'] },
-  { id: 10, col: 'ideas', title: 'Territory War', desc: 'Risk-style map conquest across Gielinor. Teams claim regions by completing tasks tied to those areas.', tags: ['team','hunt'] },
-  { id: 11, col: 'ideas', title: 'Tile Race', desc: 'Dice-rolling board game. Complete OSRS tasks to advance on the board. Hit traps or boosts.', tags: ['team','hunt'] },
-  { id: 12, col: 'ideas', title: 'Boss Tycoon', desc: 'Monopoly-style. Bosses are properties. Kill bosses to buy them, collect points when others land there.', tags: ['team','boss'] },
-  { id: 13, col: 'ideas', title: 'Battleship Bingo', desc: 'Hide ships on a bingo board. Hunt drops to reveal tiles and sink the enemy fleet.', tags: ['team','hunt','boss'] },
-  { id: 14, col: 'ideas', title: 'Blind Draft', desc: 'Captains draft players without knowing stats. Teams compete in bingo or KC race. Levels the playing field.', tags: ['team'] },
-  { id: 15, col: 'ideas', title: 'Collection Log Race', desc: 'Most new collection log slots filled over the weekend wins. Broad and accessible.', tags: ['hunt','wom'] },
-  { id: 16, col: 'ideas', title: 'Gielinor Rush', desc: 'Treasure hunt across the OSRS map. Clues lead to locations, screenshots prove you were there.', tags: ['hunt','team'] },
-  { id: 17, col: 'ideas', title: 'Clan vs Clan', desc: 'Challenge another clan. Bingo, KC race, or XP race format. Supported by event platforms.', tags: ['team','boss','skill'] },
-];
-
-var cards = [];
-var nextId = 100;
+var ideas = [];
 var activeFilter = 'all';
-var selectedTags = [];
+var showingDismissed = false;
 var draggedId = null;
+var discordUrl = null;
 
-function loadCards() {
-  var saved = null;
-  try { saved = localStorage.getItem('mm-ideaboard'); } catch(e) {}
-  if (saved) {
-    try { cards = JSON.parse(saved); } catch(e) { cards = DEFAULT_CARDS.slice(); }
+/* ---- USER IDENTITY ---- */
+
+function getUser() {
+  try { return localStorage.getItem('mm-ideaboard-user'); } catch(e) { return null; }
+}
+
+function setUser(name) {
+  try { localStorage.setItem('mm-ideaboard-user', name); } catch(e) {}
+  updateUserDisplay();
+}
+
+function ensureUser() {
+  var u = getUser();
+  if (u) return u;
+  u = prompt('Enter your name (RSN or Discord name):');
+  if (!u || !u.trim()) return null;
+  u = u.trim();
+  setUser(u);
+  return u;
+}
+
+function changeUser() {
+  var current = getUser() || '';
+  var u = prompt('Enter your name (RSN or Discord name):', current);
+  if (u === null) return;
+  if (!u.trim()) return;
+  setUser(u.trim());
+}
+
+function updateUserDisplay() {
+  var u = getUser();
+  var el = document.getElementById('userDisplay');
+  if (u) {
+    el.innerHTML = 'Your name: <strong>' + esc(u) + '</strong> <button onclick="changeUser()">change</button>';
   } else {
-    cards = DEFAULT_CARDS.slice();
+    el.innerHTML = '<button class="ib-user-set" onclick="changeUser()">Set your name</button>';
   }
-  nextId = Math.max.apply(null, cards.map(function(c) { return c.id; }).concat([99])) + 1;
 }
 
-function saveCards() {
-  try { localStorage.setItem('mm-ideaboard', JSON.stringify(cards)); } catch(e) {}
+/* ---- TOAST ---- */
+
+var toastTimer;
+function showToast(msg) {
+  var el = document.getElementById('ibToast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2400);
 }
+
+/* ---- LOAD DATA ---- */
+
+async function loadBoard() {
+  try {
+    var res = await fetch('/api/ideaboard');
+    var data = await res.json();
+    if (!data.configured) {
+      showBoardMsg('Idea Board is not configured yet. Set IDEABOARD_THREAD_ID in Cloudflare.');
+      return;
+    }
+    ideas = data.ideas || [];
+    discordUrl = data.discordUrl;
+    if (discordUrl) {
+      document.getElementById('discordLink').href = discordUrl;
+    }
+    document.getElementById('boardMsg').hidden = true;
+    document.getElementById('board').hidden = false;
+    render();
+  } catch (e) {
+    showBoardMsg('Could not load ideas. Try refreshing.');
+  }
+}
+
+function showBoardMsg(msg) {
+  var el = document.getElementById('boardMsg');
+  el.innerHTML = esc(msg);
+}
+
+/* ---- RENDER ---- */
 
 function render() {
   ['ideas','planned','active','done'].forEach(function(col) {
     var el = document.getElementById('col-' + col);
-    var colCards = cards.filter(function(c) { return c.col === col && matchesFilter(c); });
-    var allColCards = cards.filter(function(c) { return c.col === col; });
-    document.getElementById('count-' + col).textContent = allColCards.length;
+    var visible = ideas.filter(function(c) {
+      return c.column === col && !c.dismissed && matchesFilter(c);
+    });
+    var total = ideas.filter(function(c) {
+      return c.column === col && !c.dismissed;
+    });
+    document.getElementById('count-' + col).textContent = total.length;
     el.innerHTML = '';
-    colCards.forEach(function(card) {
-      var div = document.createElement('div');
-      div.className = 'card';
-      div.draggable = true;
-      div.dataset.id = card.id;
-      div.addEventListener('dragstart', onDragStart);
-      div.addEventListener('dragend', onDragEnd);
-      var tagsHtml = (card.tags || []).map(function(t) {
-        var info = TAG_TYPES.find(function(tt) { return tt.id === t; });
-        return info ? '<span class="tag ' + info.cls + '">' + info.label + '</span>' : '';
-      }).join('');
-      div.innerHTML =
-        '<div class="card-top">' +
-          '<span class="card-title">' + esc(card.title) + '</span>' +
-          '<button class="card-delete" onclick="deleteCard(' + card.id + ')" title="Remove">&times;</button>' +
-        '</div>' +
-        (card.desc ? '<div class="card-desc">' + esc(card.desc) + '</div>' : '') +
-        '<div class="card-tags">' + tagsHtml + '</div>';
-      el.appendChild(div);
+    visible.forEach(function(idea) {
+      el.appendChild(buildCard(idea));
     });
   });
+
+  var dismissed = ideas.filter(function(c) { return c.dismissed; });
+  document.getElementById('dismissToggle').textContent =
+    (showingDismissed ? 'Hide' : 'Show') + ' Dismissed (' + dismissed.length + ')';
+
+  var section = document.getElementById('dismissedSection');
+  var list = document.getElementById('dismissedList');
+  if (showingDismissed && dismissed.length) {
+    section.hidden = false;
+    list.innerHTML = '';
+    dismissed.forEach(function(idea) {
+      list.appendChild(buildDismissedCard(idea));
+    });
+  } else {
+    section.hidden = true;
+  }
 }
+
+function buildCard(idea) {
+  var div = document.createElement('div');
+  div.className = 'card';
+  div.draggable = true;
+  div.dataset.id = idea.id;
+  div.addEventListener('dragstart', onDragStart);
+  div.addEventListener('dragend', onDragEnd);
+
+  var tagsHtml = buildTagsHtml(idea.tags);
+  var dateStr = formatDate(idea.createdAt);
+
+  var notesHtml = '';
+  if (idea.notes) {
+    notesHtml =
+      '<div class="card-notes-toggle" onclick="toggleNotes(event, this)">' +
+        '<span class="chevron">&#9654;</span> Notes' +
+      '</div>' +
+      '<div class="card-notes" hidden>' + esc(idea.notes) + '</div>';
+  }
+
+  div.innerHTML =
+    '<div class="card-top">' +
+      '<span class="card-title">' + esc(idea.title) + '</span>' +
+      '<button class="card-delete" onclick="dismissCard(\'' + idea.id + '\')" title="Dismiss">&times;</button>' +
+    '</div>' +
+    '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + '</div>' +
+    notesHtml +
+    '<div class="card-tags">' + tagsHtml + '</div>';
+
+  return div;
+}
+
+function buildDismissedCard(idea) {
+  var div = document.createElement('div');
+  div.className = 'card-dismissed';
+
+  var tagsHtml = buildTagsHtml(idea.tags);
+  var dismissInfo = idea.dismissedBy
+    ? 'Dismissed by ' + esc(idea.dismissedBy)
+    : 'Dismissed';
+
+  div.innerHTML =
+    '<div class="card-top">' +
+      '<span class="card-title">' + esc(idea.title) + '</span>' +
+    '</div>' +
+    '<div class="card-meta">by ' + esc(idea.author) + '</div>' +
+    '<div class="card-dismiss-info">' + dismissInfo + '</div>' +
+    '<div class="card-tags">' + tagsHtml + '</div>' +
+    '<button class="ib-restore" onclick="restoreCard(\'' + idea.id + '\')">Restore</button>';
+
+  return div;
+}
+
+function buildTagsHtml(tags) {
+  return (tags || []).map(function(t) {
+    var cls = KNOWN_TAGS.indexOf(t) !== -1 ? 'tag-' + t : '';
+    var label = t.charAt(0).toUpperCase() + t.slice(1);
+    return '<span class="tag ' + cls + '">' + esc(label) + '</span>';
+  }).join('');
+}
+
+/* ---- NOTES TOGGLE ---- */
+
+function toggleNotes(e, el) {
+  e.stopPropagation();
+  var notes = el.nextElementSibling;
+  if (!notes) return;
+  var open = !notes.hidden;
+  notes.hidden = open;
+  el.classList.toggle('open', !open);
+}
+
+/* ---- FILTER ---- */
 
 function matchesFilter(card) {
   if (activeFilter === 'all') return true;
@@ -612,68 +746,79 @@ function setFilter(f) {
   render();
 }
 
-function deleteCard(id) {
-  cards = cards.filter(function(c) { return c.id !== id; });
-  saveCards();
+/* ---- DISMISS / RESTORE ---- */
+
+async function dismissCard(id) {
+  var user = ensureUser();
+  if (!user) return;
+
+  var idea = ideas.find(function(c) { return c.id === id; });
+  if (!idea) return;
+  if (!confirm('Dismiss "' + idea.title + '"?')) return;
+
+  idea.dismissed = true;
+  idea.dismissedBy = user;
+  render();
+
+  try {
+    var res = await fetch('/api/ideaboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'dismiss', message_id: id, user: user }),
+    });
+    if (!res.ok) throw new Error();
+    showToast('Idea dismissed');
+  } catch(e) {
+    idea.dismissed = false;
+    idea.dismissedBy = null;
+    render();
+    showToast('Failed to dismiss');
+  }
+}
+
+async function restoreCard(id) {
+  var idea = ideas.find(function(c) { return c.id === id; });
+  if (!idea) return;
+
+  idea.dismissed = false;
+  idea.dismissedBy = null;
+  render();
+
+  try {
+    var res = await fetch('/api/ideaboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'restore', message_id: id }),
+    });
+    if (!res.ok) throw new Error();
+    showToast('Idea restored');
+  } catch(e) {
+    idea.dismissed = true;
+    render();
+    showToast('Failed to restore');
+  }
+}
+
+function toggleDismissed() {
+  showingDismissed = !showingDismissed;
   render();
 }
 
-function openModal() {
-  selectedTags = [];
-  document.getElementById('input-name').value = '';
-  document.getElementById('input-desc').value = '';
-  document.getElementById('input-col').value = 'ideas';
-  renderTagSelect();
-  document.getElementById('modal').classList.add('open');
-  document.getElementById('input-name').focus();
-}
+/* ---- DRAG AND DROP ---- */
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
-
-function renderTagSelect() {
-  var el = document.getElementById('tag-select');
-  el.innerHTML = TAG_TYPES.map(function(t) {
-    return '<span class="tag-option tag ' + t.cls + (selectedTags.indexOf(t.id) !== -1 ? ' selected' : '') +
-      '" data-tag="' + t.id + '" onclick="toggleTag(\'' + t.id + '\')">' + t.label + '</span>';
-  }).join('');
-}
-
-function toggleTag(id) {
-  var idx = selectedTags.indexOf(id);
-  if (idx !== -1) selectedTags.splice(idx, 1);
-  else selectedTags.push(id);
-  renderTagSelect();
-}
-
-function addCard() {
-  var name = document.getElementById('input-name').value.trim();
-  var desc = document.getElementById('input-desc').value.trim();
-  var col = document.getElementById('input-col').value;
-  if (!name) { document.getElementById('input-name').focus(); return; }
-  cards.push({ id: nextId++, col: col, title: name, desc: desc, tags: selectedTags.slice() });
-  saveCards();
-  render();
-  closeModal();
-}
-
-function esc(s) {
-  var d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-/* DRAG AND DROP */
 function onDragStart(e) {
-  draggedId = parseInt(e.target.dataset.id || e.target.closest('.card').dataset.id);
-  e.target.classList.add('dragging');
+  var card = e.target.closest('.card');
+  if (!card) return;
+  draggedId = card.dataset.id;
+  card.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
 }
 
 function onDragEnd(e) {
   e.target.classList.remove('dragging');
-  document.querySelectorAll('.column-body').forEach(function(c) { c.classList.remove('drag-over'); });
+  document.querySelectorAll('.column-body').forEach(function(c) {
+    c.classList.remove('drag-over');
+  });
   draggedId = null;
 }
 
@@ -689,35 +834,59 @@ document.querySelectorAll('.column-body').forEach(function(colBody) {
   colBody.addEventListener('drop', function(e) {
     e.preventDefault();
     colBody.classList.remove('drag-over');
+    if (!draggedId) return;
     var newCol = colBody.parentElement.dataset.col;
-    var card = cards.find(function(c) { return c.id === draggedId; });
-    if (card) {
-      card.col = newCol;
-      saveCards();
-      render();
-    }
+    moveCard(draggedId, newCol);
   });
 });
 
-function exportData() {
-  var text = JSON.stringify(cards, null, 2);
-  var blob = new Blob([text], { type: 'application/json' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'mm-ideaboard-export.json';
-  a.click();
-  URL.revokeObjectURL(url);
+async function moveCard(id, newCol) {
+  var idea = ideas.find(function(c) { return c.id === id; });
+  if (!idea || idea.column === newCol) return;
+
+  var oldCol = idea.column;
+  var user = getUser();
+
+  idea.column = newCol;
+  idea.movedBy = user;
+  render();
+
+  try {
+    var res = await fetch('/api/ideaboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'move', message_id: id, column: newCol, user: user }),
+    });
+    if (!res.ok) throw new Error();
+  } catch(e) {
+    idea.column = oldCol;
+    render();
+    showToast('Failed to move card');
+  }
 }
 
-/* KEYBOARD */
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeModal();
-});
+/* ---- HELPERS ---- */
 
-/* INIT */
-loadCards();
-render();
+function esc(s) {
+  if (!s) return '';
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var now = new Date();
+  var str = months[d.getMonth()] + ' ' + d.getDate();
+  if (d.getFullYear() !== now.getFullYear()) str += ', ' + d.getFullYear();
+  return str;
+}
+
+/* ---- INIT ---- */
+updateUserDisplay();
+loadBoard();
 </script>
 </body>
 </html>
