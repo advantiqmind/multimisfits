@@ -38,7 +38,8 @@ export function parseBossFilter(content) {
 
 export function matchesBoss(source, bossFilter) {
   if (!bossFilter) return true;
-  return bossFilter.includes(source.toLowerCase());
+  const src = source.toLowerCase();
+  return bossFilter.some(b => src.startsWith(b));
 }
 
 export function extractLootData(body) {

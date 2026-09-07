@@ -83,6 +83,27 @@ assert(
   "non-matching boss in multi-boss filter rejected"
 );
 
+assert(
+  matchesBoss("Tombs of Amascut: Expert Mode", ["tombs of amascut"]) === true,
+  "partial match: Expert Mode matches base name"
+);
+assert(
+  matchesBoss("Chambers of Xeric: Challenge Mode", ["chambers of xeric"]) === true,
+  "partial match: Challenge Mode matches base name"
+);
+assert(
+  matchesBoss("Theatre of Blood: Hard Mode", ["theatre of blood"]) === true,
+  "partial match: Hard Mode matches base name"
+);
+assert(
+  matchesBoss("Tombs of Amascut: Expert Mode", ["tombs of amascut", "chambers of xeric"]) === true,
+  "partial match works in multi-boss filter"
+);
+assert(
+  matchesBoss("Zulrah", ["tombs of amascut"]) === false,
+  "partial match does not false-positive on unrelated boss"
+);
+
 /* ---- extractLootData ---- */
 
 console.log("--- extractLootData ---");
