@@ -53,6 +53,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image only (message text never shown; just image + posted-by)
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
 - functions/api/ideaboard.js   GET/POST /api/ideaboard -> reads Discord thread ideas, D1 column positions + dismiss tracking, cached 1min
+- functions/api/dink-auth.js   POST /api/dink-auth -> validates access code against DINK_ACCESS_CODE env var
 - functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
 - functions/api/discord.js    Discord interactions endpoint (slash commands); GET = register commands
@@ -77,6 +78,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     LOOT_WEBHOOK_KEY         (secret) <- auth key for Dink loot webhooks (?key=VALUE)
     LOOT_DISCORD_WEBHOOK     (secret, optional) <- Discord webhook URL for chest channel (forwarding proxy)
     LOOT_DISCORD_MIN_VALUE   (plain, optional)  <- min total value to forward to Discord (default 150000)
+    DINK_ACCESS_CODE         (secret) <- passphrase to unlock /clandink settings page
 
 ## Bindings (Cloudflare Pages > Settings > Functions)
     DB  ->  D1 database "multimisfits-auth"  (loot_entries, idea_positions tables)

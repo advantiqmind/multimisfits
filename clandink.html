@@ -22,6 +22,9 @@
 .dink-note{color:var(--parchment);opacity:.5;font-size:13px;margin-top:20px}
 .dink-steps{color:var(--parchment);opacity:.7;max-width:420px;margin:0 auto 28px;text-align:left;line-height:1.7;font-size:15px}
 .dink-steps li{margin-bottom:4px}
+.dink-code{background:rgba(255,255,255,.1);padding:2px 6px;border-radius:3px;color:var(--gold)}
+.dink-h2{font-family:'Cinzel',serif;color:var(--gold);font-size:18px;margin:0 0 8px;opacity:.9}
+.dink-h2-update{margin-top:16px}
 </style>
 </head>
 <body>
@@ -57,21 +60,40 @@
   </div>
 </header>
 
-<main>
+<!-- CODE LOCK OVERLAY -->
+<div id="dinkLock" class="bk-lock">
+  <div class="bk-lock-panel">
+    <div class="bk-lock-corner tl"></div>
+    <div class="bk-lock-corner tr"></div>
+    <div class="bk-lock-corner bl"></div>
+    <div class="bk-lock-corner br"></div>
+    <div class="bk-lock-topbar"><span>Restricted Access</span></div>
+    <div class="bk-lock-body">
+      <div class="bk-lock-ring"><img src="/assets/bracket-shield-mm.png" alt="Multi-Misfits"></div>
+      <h1 class="bk-lock-title">Clan Dink<br><em>Settings</em></h1>
+      <input type="password" id="dinkCodeInput" class="bk-lock-input" placeholder="Enter code" autocomplete="off">
+      <button id="dinkCodeSubmit" class="bk-lock-btn">Unlock</button>
+      <span id="dinkCodeError" class="bk-lock-error" hidden>Invalid code</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT (hidden until unlocked) -->
+<main id="dinkMain" hidden>
 <div class="dink-wrap">
   <h1>Clan Dink Settings</h1>
   <p>Copy the clan's Dink plugin settings and import them into RuneLite. This keeps everyone's notifications synced to our chest channel.</p>
-  <h2 style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;margin:0 0 8px;opacity:.9">First-time Setup</h2>
+  <h2 class="dink-h2">First-time Setup</h2>
   <ol class="dink-steps">
     <li>Download the <strong>Dink</strong> plugin on RuneLite</li>
     <li>Click <strong>Copy Settings</strong> below</li>
-    <li>Type <code style="background:rgba(255,255,255,.1);padding:2px 6px;border-radius:3px;color:var(--gold)">::dinkimport all</code> in OSRS game chat</li>
+    <li>Type <code class="dink-code">::dinkimport all</code> in OSRS game chat</li>
   </ol>
-  <h2 style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;margin:16px 0 8px;opacity:.9">Updating Settings</h2>
+  <h2 class="dink-h2 dink-h2-update">Updating Settings</h2>
   <ol class="dink-steps">
     <li>Click the <strong>Reset</strong> button at the bottom of the Dink plugin settings panel</li>
     <li>Click <strong>Copy Settings</strong> below</li>
-    <li>Type <code style="background:rgba(255,255,255,.1);padding:2px 6px;border-radius:3px;color:var(--gold)">::dinkimport all</code> in OSRS game chat</li>
+    <li>Type <code class="dink-code">::dinkimport all</code> in OSRS game chat</li>
   </ol>
   <button class="dink-btn" id="dink-copy">COPY SETTINGS</button>
   <div class="dink-note" id="dink-status">Settings loaded and ready</div>
@@ -94,27 +116,84 @@
 
 <script>
 (function(){
+  var LOCK_TTL = 24 * 60 * 60 * 1000;
+  var lock = document.getElementById('dinkLock');
+  var main = document.getElementById('dinkMain');
+  var input = document.getElementById('dinkCodeInput');
+  var btn = document.getElementById('dinkCodeSubmit');
+  var err = document.getElementById('dinkCodeError');
+
+  function showLock(){ lock.hidden = false; main.hidden = true; }
+  function showMain(){ lock.hidden = true; main.hidden = false; loadSettings(); }
+
+  function checkLock(){
+    try {
+      var ts = parseInt(localStorage.getItem('mm-dink-unlocked'), 10);
+      if(ts && Date.now() - ts < LOCK_TTL){ showMain(); return; }
+    } catch(e){}
+    showLock();
+  }
+
+  function handleSubmit(){
+    if(!input.value.trim()) return;
+    btn.disabled = true;
+    btn.textContent = '...';
+    fetch('/api/dink-auth', {
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body: JSON.stringify({code: input.value})
+    })
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
+    .then(function(res){
+      if(res.ok && res.data.ok){
+        try { localStorage.setItem('mm-dink-unlocked', String(Date.now())); } catch(e){}
+        err.hidden = true;
+        showMain();
+      } else {
+        err.hidden = false;
+      }
+    })
+    .catch(function(){
+      err.hidden = false;
+    })
+    .finally(function(){
+      btn.disabled = false;
+      btn.textContent = 'Unlock';
+    });
+  }
+
+  btn.addEventListener('click', handleSubmit);
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter') handleSubmit();
+  });
+
+  checkLock();
+
+  // -- Copy settings logic --
   var settings = '';
   var statusEl = document.getElementById('dink-status');
-  var btn = document.getElementById('dink-copy');
+  var copyBtn = document.getElementById('dink-copy');
 
-  fetch('/dink-config.txt')
-    .then(function(r){ return r.ok ? r.text() : Promise.reject('fetch failed'); })
-    .then(function(t){ settings = t.trim(); })
-    .catch(function(){
-      statusEl.textContent = 'Could not load settings';
-      btn.disabled = true;
-      btn.style.opacity = '.5';
-    });
+  function loadSettings(){
+    if(settings) return;
+    fetch('/dink-config.txt')
+      .then(function(r){ return r.ok ? r.text() : Promise.reject('fetch failed'); })
+      .then(function(t){ settings = t.trim(); })
+      .catch(function(){
+        statusEl.textContent = 'Could not load settings';
+        copyBtn.disabled = true;
+        copyBtn.style.opacity = '.5';
+      });
+  }
 
-  btn.addEventListener('click', function(){
+  copyBtn.addEventListener('click', function(){
     if(!settings) return;
     navigator.clipboard.writeText(settings).then(function(){
-      btn.textContent = 'COPIED!';
-      btn.classList.add('copied');
+      copyBtn.textContent = 'COPIED!';
+      copyBtn.classList.add('copied');
       setTimeout(function(){
-        btn.textContent = 'COPY SETTINGS';
-        btn.classList.remove('copied');
+        copyBtn.textContent = 'COPY SETTINGS';
+        copyBtn.classList.remove('copied');
       }, 2000);
     }).catch(function(){
       var ta = document.createElement('textarea');
@@ -125,11 +204,11 @@
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
-      btn.textContent = 'COPIED!';
-      btn.classList.add('copied');
+      copyBtn.textContent = 'COPIED!';
+      copyBtn.classList.add('copied');
       setTimeout(function(){
-        btn.textContent = 'COPY SETTINGS';
-        btn.classList.remove('copied');
+        copyBtn.textContent = 'COPY SETTINGS';
+        copyBtn.classList.remove('copied');
       }, 2000);
     });
   });
