@@ -155,7 +155,8 @@ to the Loot Value leaderboard but for GP contributions.
 - Leaders post ideas as messages in the thread. First line = title, remaining lines = notes.
 - Hashtags in messages become colored tag chips. Six known tags:
   #website (teal), #discord (blurple), #pvm (purple), #wild (red),
-  #social (green), #skilling (blue). Unknown tags get default grey.
+  #social (green), #skilling (blue), #weekend (amber), #1day (gold).
+  Unknown tags get default grey.
 - Author resolved via nick map (same fetchNickMap/resolveName pattern as events/giveaways).
 - Backend: GET /api/ideaboard fetches all thread messages, parses ideas, joins with D1
   `idea_positions` table for column placement and dismiss state. Cached 1min.
