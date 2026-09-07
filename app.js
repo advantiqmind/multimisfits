@@ -6,7 +6,6 @@
    - events page: featured event, upcoming/past grids from /api/events */
 
 const CONFIG = {
-  discordInvite: "https://discord.gg/kT4vEGnjgU",
   rosterPreviewCount: 8,
 };
 
@@ -61,25 +60,14 @@ const rosterState = {
   page: 1,
 };
 
-function isGuest() {
-  return document.cookie.split(";").some(function (c) { return c.trim().startsWith("mm_guest="); });
-}
-
 function wireDiscordLinks() {
-  var guest = isGuest();
   document.querySelectorAll("[data-discord]").forEach((el) => {
-    if (guest) {
-      el.setAttribute("href", "#");
-      el.removeAttribute("target");
-      el.addEventListener("click", function (e) {
-        e.preventDefault();
-        window.location.href = "/gate.html?r=" + encodeURIComponent(window.location.pathname);
-      });
-    } else {
-      el.setAttribute("href", CONFIG.discordInvite);
-      el.setAttribute("target", "_blank");
-      el.setAttribute("rel", "noopener");
-    }
+    el.setAttribute("href", "#");
+    el.removeAttribute("target");
+    el.addEventListener("click", function (e) {
+      e.preventDefault();
+      openReferralModal();
+    });
   });
 }
 
@@ -127,18 +115,12 @@ function openReferralModal() {
         .then(function (r) { return r.json(); })
         .then(function (data) {
           if (data.valid && data.invite) {
-            localStorage.setItem("mm-referral", data.invite);
             msg.textContent = "Code accepted! Redirecting...";
             msg.style.color = "#3a8a3a";
             setTimeout(function () {
               closeReferralModal();
               window.open(data.invite, "_blank", "noopener");
             }, 800);
-          } else if (data.error === "not_configured") {
-            localStorage.setItem("mm-referral", CONFIG.discordInvite);
-            msg.textContent = "";
-            closeReferralModal();
-            window.open(CONFIG.discordInvite, "_blank", "noopener");
           } else {
             msg.textContent = "Invalid code. Try again or ask a clan member.";
             msg.style.color = "#e04040";
@@ -146,9 +128,8 @@ function openReferralModal() {
           submit.disabled = false;
         })
         .catch(function () {
-          localStorage.setItem("mm-referral", CONFIG.discordInvite);
-          closeReferralModal();
-          window.open(CONFIG.discordInvite, "_blank", "noopener");
+          msg.textContent = "Something went wrong. Try again.";
+          msg.style.color = "#e04040";
           submit.disabled = false;
         });
     }
