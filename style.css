@@ -501,7 +501,7 @@ nav.main a[href="/ge.html"]{display:none}
 /* Winner bar (inline banner between tabs and featured) */
 .ev-winner-bar{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(255,215,0,.1),rgba(255,215,0,.03) 60%,transparent);border:1px solid rgba(201,168,76,.25);border-radius:6px;padding:12px 18px;position:relative;overflow:hidden}
 .ev-winner-bar::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#ffd700}
-.ev-winner-bar-icon{font-size:2.2rem;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(255,215,0,.35))}
+.ev-winner-bar-icon{height:2.2rem;width:auto;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(255,215,0,.35))}
 .ev-winner-bar-main{display:flex;align-items:baseline;gap:6px;flex:1;min-width:0;flex-wrap:wrap}
 .ev-winner-bar-label{font-family:"Jersey 15",monospace;font-size:1.35rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
 .ev-winner-bar-name{font-family:"Cinzel",serif;font-weight:800;font-size:1.35rem;color:#ffd700;white-space:nowrap}

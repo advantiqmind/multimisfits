@@ -169,6 +169,19 @@ async function ensureTable(db) {
   await db.prepare(
     "CREATE INDEX IF NOT EXISTS idx_loot_event ON loot_entries(event_id)"
   ).run();
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS loot_debug_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL,
+      payload_type TEXT,
+      player TEXT,
+      source TEXT,
+      total_value INTEGER,
+      result TEXT,
+      forwarded INTEGER DEFAULT 0,
+      raw_preview TEXT
+    )`
+  ).run();
   _tableCreated = true;
 }
 
@@ -213,6 +226,25 @@ async function parseBodyFromBuffer(contentType, buffer) {
   }
 }
 
+async function logDebug(db, info) {
+  try {
+    await ensureTable(db);
+    await db.prepare(
+      `INSERT INTO loot_debug_log (created_at, payload_type, player, source, total_value, result, forwarded, raw_preview)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      new Date().toISOString(),
+      info.payloadType || null,
+      info.player || null,
+      info.source || null,
+      info.totalValue || 0,
+      info.result || null,
+      info.forwarded || 0,
+      info.rawPreview || null
+    ).run();
+  } catch { /* debug logging should never break the main flow */ }
+}
+
 async function handlePost(context) {
   const url = new URL(context.request.url);
   const key = url.searchParams.get("key");
@@ -232,21 +264,39 @@ async function handlePost(context) {
 
   const body = await parseBodyFromBuffer(contentType, rawBody);
   if (!body) {
+    await logDebug(db, { result: "invalid_payload" });
     return json({ error: "invalid_payload" }, 400);
   }
 
   const loot = extractLootData(body);
   if (!loot) {
+    await logDebug(db, {
+      payloadType: body.type || null,
+      player: body.playerName || null,
+      source: (body.extra && body.extra.source) || null,
+      result: "not_loot_or_missing_fields",
+      rawPreview: JSON.stringify(body).slice(0, 500),
+    });
     return json({ stored: false, reason: "not_loot_or_missing_fields" });
   }
 
+  const minValue = parseInt(context.env.LOOT_DISCORD_MIN_VALUE, 10) || DEFAULT_DISCORD_MIN_VALUE;
+  const willForward = !!context.env.LOOT_DISCORD_WEBHOOK && loot.totalValue >= minValue;
   maybeForwardToDiscord(context, contentType, rawBody, loot.totalValue);
 
   const activeEvents = await getActiveLootEvents(context.env);
   const matched = activeEvents.filter(e => matchesBoss(loot.source, e.bossFilter));
 
   if (!matched.length) {
-    return json({ stored: false, reason: "no_matching_event", forwarded: !!context.env.LOOT_DISCORD_WEBHOOK });
+    await logDebug(db, {
+      payloadType: "LOOT",
+      player: loot.player,
+      source: loot.source,
+      totalValue: loot.totalValue,
+      result: "no_matching_event",
+      forwarded: willForward ? 1 : 0,
+    });
+    return json({ stored: false, reason: "no_matching_event", forwarded: willForward });
   }
 
   await ensureTable(db);
@@ -260,6 +310,15 @@ async function handlePost(context) {
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     ).bind(event.id, loot.player, loot.source, loot.killCount, itemsJson, loot.totalValue, now).run();
   }
+
+  await logDebug(db, {
+    payloadType: "LOOT",
+    player: loot.player,
+    source: loot.source,
+    totalValue: loot.totalValue,
+    result: "stored:" + matched.map(e => e.id).join(","),
+    forwarded: willForward ? 1 : 0,
+  });
 
   return json({
     stored: true,
