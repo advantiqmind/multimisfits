@@ -52,23 +52,26 @@ function resolveName(user, nickMap) {
 }
 
 function parseIdea(msg, nickMap) {
-  const content = (msg.content || "").trim();
+  let content = (msg.content || "").trim();
   if (!content) return null;
+
+  // Strip Discord channel mentions <#ID> before parsing
+  content = content.replace(/<#\d+>/g, "");
 
   const lines = content.split("\n");
 
   const tags = [];
-  const tagRx = /#(\w+)/g;
+  const tagRx = /#([a-zA-Z]\w*)/g;
   let m;
   while ((m = tagRx.exec(content)) !== null) {
     const t = m[1].toLowerCase();
     if (!tags.includes(t)) tags.push(t);
   }
 
-  const title = lines[0].replace(/#\w+/g, "").trim();
+  const title = lines[0].replace(/#[a-zA-Z]\w*/g, "").trim();
   if (!title) return null;
 
-  const noteLines = lines.slice(1).map((l) => l.replace(/#\w+/g, "").trim());
+  const noteLines = lines.slice(1).map((l) => l.replace(/#[a-zA-Z]\w*/g, "").trim());
   while (noteLines.length && !noteLines[0]) noteLines.shift();
   while (noteLines.length && !noteLines[noteLines.length - 1])
     noteLines.pop();
