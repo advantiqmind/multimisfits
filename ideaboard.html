@@ -320,6 +320,7 @@ body {
 .tag-skilling { background: rgba(42,90,168,0.3); color: #6ab0f0; border: 1px solid rgba(42,90,168,0.5); }
 .tag-weekend { background: rgba(180,110,30,0.3); color: #f0b050; border: 1px solid rgba(180,110,30,0.5); }
 .tag-1day { background: rgba(190,170,50,0.3); color: #e8d860; border: 1px solid rgba(190,170,50,0.5); }
+.tag-teams { background: rgba(106,58,138,0.3); color: #c080f0; border: 1px solid rgba(106,58,138,0.5); }
 
 /* DISMISSED SECTION */
 .dismissed-section {
@@ -482,6 +483,7 @@ body {
   <button class="filter-btn" data-filter="skilling" onclick="setFilter('skilling')">Skilling</button>
   <button class="filter-btn" data-filter="weekend" onclick="setFilter('weekend')">Weekend</button>
   <button class="filter-btn" data-filter="1day" onclick="setFilter('1day')">1 Day</button>
+  <button class="filter-btn" data-filter="teams" onclick="setFilter('teams')">Teams</button>
 </div>
 
 <div id="boardMsg" class="board-msg"><span class="spinner"></span> Loading ideas...</div>
@@ -538,7 +540,7 @@ body {
 <div class="ib-toast" id="ibToast"></div>
 
 <script>
-var KNOWN_TAGS = ['website','discord','pvm','wild','social','skilling','weekend','1day'];
+var KNOWN_TAGS = ['website','discord','pvm','wild','social','skilling','weekend','1day','teams'];
 
 var ideas = [];
 var activeFilter = 'all';
