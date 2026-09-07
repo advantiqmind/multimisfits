@@ -228,7 +228,7 @@ to the Loot Value leaderboard but for GP contributions.
 
 ### Loot Wheel
 - wheel.html: client-side prize wheel ported from the 1BOX wheel (1box.online copy untouched).
-- Protected by the normal auth gate like every other page; members only, no extra config.
+- No auth required (site is public). Purely client-side, no backend or env vars.
 - Entries stored in localStorage (key mm-wheel-v1) as {name, count}; manual add, +/- counts,
   remove, clear all. Prize text shown in the winner modal. Winner can be removed and respun.
 - Participant auto-load: fetches /api/events (same origin, session cookie), events with a
@@ -243,7 +243,7 @@ to the Loot Value leaderboard but for GP contributions.
 
 ### Strat Finder
 - strats.html: clan-themed rework of the 1BOX Strat Finder (1box.online copy untouched).
-- Protected by the normal auth gate; purely client-side, no backend or env vars.
+- Purely client-side, no backend or env vars.
 - ~56 targets in strats.js TARGETS, grouped by category (Raids, Wilderness, Slayer,
   God Wars, DT2, Bosses, Minigames, Skilling) with colored section headers, tiles,
   and filter chips reusing the event theme hues.
@@ -262,7 +262,7 @@ to the Loot Value leaderboard but for GP contributions.
 ### Bracket Knockout
 - bracket.html / bracket.js: code-locked giveaway drawing tool. OSRS-themed elimination
   bracket where participants fight via dice-based HP combat.
-- Protected by the normal auth gate + a secondary code lock (passphrase "Misfits",
+- Secondary code lock (passphrase "Misfits",
   capital M, stored in localStorage key "mm-bracket-unlocked"). Hidden in plain sight:
   no nav link, reached only by direct URL /bracket.html.
 - Data sources: /api/events (participants), /api/giveaway (entries), /api/wom (clan ranks).
@@ -297,26 +297,13 @@ to the Loot Value leaderboard but for GP contributions.
 - All CSS namespaced .bk-* in style.css. Mobile responsive (stacked layout on small screens,
   bracket scrolls horizontally). Reduced motion support.
 
-### Authentication gate
-- Every page except gate.html and static assets is protected by _middleware.js.
-- First visit: gate.html shows referral code input + "Sign in with Discord" for returning users.
-- New user flow: enter referral code -> POST /api/auth/login validates code, returns Discord
-  OAuth URL, sets mm_referral_ok cookie -> Discord OAuth -> /api/auth/callback exchanges code
-  for token, gets user info, checks mm_referral_ok cookie or existing D1 record -> creates
-  session in D1, sets mm_session cookie (30-day expiry) -> redirect to site.
-- Returning user flow: click "Sign in with Discord" -> GET /api/auth/login redirects to
-  Discord OAuth -> callback checks discord_id exists in D1 -> new 30-day session.
-- If D1 or DISCORD_CLIENT_ID not configured, middleware passes through (graceful degradation).
-- D1 table: sessions (discord_id, discord_username, discord_avatar, referral_code,
-  session_token, created_at, last_auth_at, expires_at).
-- OAuth redirect URL: {origin}/api/auth/callback (must be registered in Discord Developer Portal).
-- /inactives slash command: shows members who haven't authenticated in X days (default 30),
-  with paginated list (25 per page) via Discord button interactions.
-
-### Referrals
-- POST /api/referral validates code against REFERRAL_CODES env var (still works standalone).
-- Auth login endpoint also validates referral codes and tracks redemptions.
-- Tracking failure never blocks the referral/auth flow.
+### Discord invite lock
+- Site is fully public (no auth gate). Middleware passes all requests through.
+- All Discord join links (data-discord elements) are locked behind a referral code modal.
+- Discord invite URL is NOT in client-side code. Server returns it only after code validation.
+- POST /api/referral validates code against REFERRAL_CODES env var, returns invite URL on success.
+- Tracking: valid redemptions post an embed to a Discord forum thread (REFERRAL_THREAD_ID).
+- Auth endpoints (gate.html, /api/auth/*) and D1 sessions table still exist but are dormant.
 
 ### Offline indicators
 - Amber tint on panel badges when API returns unconfigured/error state.
