@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#0d0b08" />
+<title>EventForge | Multi-Misfits</title>
+<meta name="description" content="Design clean, timezone-smart Discord event posts for the Multi-Misfits clan. Recurring events, templates, styles -- copy straight to Discord." />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Jersey+15&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0b08;--panel:#1a1305;--panel2:#241e14;--line:#3a2e1a;--text:#e6d9b8;--muted:#a99b78;--gold:#ffcb2f;--red:#b23a30;--green:#4ad04a;--blue:#c9a227;--danger:#b23a30;--shadow:0 12px 30px rgba(0,0,0,.28)}
+*{box-sizing:border-box}body{margin:0;font-family:'Jersey 15',cursive;background:radial-gradient(circle at 20% 0,#1a1305 0,#0d0b08 34%),var(--bg);color:var(--text);min-height:100vh}button,input,textarea,select{font:inherit}button{cursor:pointer}.app{max-width:1520px;margin:0 auto;padding:16px 16px 100px}.topbar{position:sticky;top:0;z-index:30;background:rgba(13,11,8,.93);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);margin:-16px -16px 18px;padding:12px 16px}.backBtn{display:grid;place-items:center;width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:20px;text-decoration:none;transition:border-color .15s,color .15s}.backBtn:hover{border-color:#6b5836;color:var(--gold)}.brandrow{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border:1px solid #6b5836;background:linear-gradient(145deg,#201a0c,#0d0b08);border-radius:11px;display:grid;place-items:center;font-weight:900;color:var(--gold)}.brand h1{font-size:18px;margin:0;letter-spacing:.03em;font-family:'Cinzel',serif}.brand small{color:var(--muted)}.nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}.nav button,.seg button,.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:9px;padding:9px 12px;font-weight:700}.nav button.active,.seg button.active{border-color:#6b5836;color:#ffcb2f;background:#1a1305}.btn.primary{background:linear-gradient(#b23a30,#8a2920);border-color:#b23a30}.btn.gold{background:linear-gradient(#ffcb2f,#c9a227);color:#0d0b08;border-color:#f0d860}.btn.ghost{background:transparent}.btn.danger{color:#e06050}.btn:disabled{opacity:.45}.mobileMode{display:none;margin-top:10px}.seg{display:flex;gap:6px}.seg button{flex:1}.layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(360px,.85fr);gap:18px;align-items:start}.card{background:linear-gradient(180deg,rgba(30,24,9,.97),rgba(26,19,5,.97));border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}.cardHead{padding:15px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}.cardHead h2{font-size:15px;margin:0;letter-spacing:.06em;text-transform:uppercase;font-family:'Cinzel',serif}.cardHead .spacer{flex:1}.body{padding:16px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:12px;color:#a99b78;font-weight:800;letter-spacing:.04em;text-transform:uppercase}.field input,.field textarea,.field select{width:100%;background:#0d0b08;color:var(--text);border:1px solid #3a2e1a;border-radius:9px;padding:10px 11px;outline:none}.field textarea{min-height:90px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{border-color:#6b5836;box-shadow:0 0 0 2px rgba(255,203,47,.12)}.hint{font-size:12px;color:var(--muted)}.status{font-size:12px;color:var(--green);font-weight:700}.warning{color:#f7c76d}.dangerText{color:#e06050}.sectionList{display:flex;flex-direction:column;gap:10px}.block{background:#110e07;border:1px solid #3a2e1a;border-radius:12px;overflow:hidden}.block.dragging{opacity:.45}.blockTop{display:flex;align-items:center;gap:8px;padding:10px}.handle{color:#7a6c4a;cursor:grab;padding:5px;font-size:18px}.emojiBtn{width:38px;height:38px;border-radius:9px;border:1px solid #3a2e1a;background:#1e1809;color:white;font-size:20px}.blockTitle{flex:1}.blockTitle strong{display:block}.blockTitle small{color:var(--muted)}.iconBtn{border:0;background:transparent;color:#a99b78;padding:7px;border-radius:8px}.iconBtn:hover{background:#261f0f;color:white}.blockContent{border-top:1px solid #2a2010;padding:12px;display:none}.block.open .blockContent{display:block}.block.hiddenBlock{opacity:.55}.rowBtns{display:flex;gap:7px;flex-wrap:wrap}.mini{padding:7px 9px;border:1px solid #3a2e1a;border-radius:8px;background:#1e1809;color:#e6d9b8;font-size:12px;font-weight:750}.mini.on{border-color:#8a7449;color:#ffcb2f;background:#1e1809}.importance{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.importance button{padding:7px 4px;border:1px solid #3a2e1a;border-radius:8px;background:#1a1305;color:#a99b78;font-size:11px;font-weight:800}.importance button.active{color:#ffcb2f;border-color:#8a7449;background:#1e1809}.switchline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.switch{position:relative;width:44px;height:24px}.switch input{display:none}.slider{position:absolute;inset:0;border-radius:999px;background:#3a2e1a}.slider:after{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:white;transition:.18s}.switch input:checked+.slider{background:#8a7449}.switch input:checked+.slider:after{transform:translateX(20px)}.previewWrap{position:static}.desktopPreview{position:sticky;top:86px;align-self:start;max-height:calc(100vh - 102px);overflow:auto;overscroll-behavior:contain}.desktopPreview::-webkit-scrollbar{width:10px}.desktopPreview::-webkit-scrollbar-thumb{background:#3a2e1a;border-radius:8px;border:2px solid transparent;background-clip:content-box}.discord{background:#313338;padding:18px;min-height:470px;color:#dbdee1;font-family:gg sans,Inter,system-ui,sans-serif}.discordMsg{line-height:1.38;font-size:15px;white-space:normal;overflow-wrap:anywhere}.discordMsg h1,.discordMsg h2,.discordMsg h3{color:#f2f3f5;margin:.5em 0 .3em;line-height:1.22}.discordMsg h1{font-size:24px}.discordMsg h2{font-size:20px}.discordMsg h3{font-size:17px}.discordMsg p{margin:.34em 0}.discordMsg blockquote{border-left:4px solid #4e5058;padding-left:10px;margin:8px 0;color:#cfd2d5}.discordMsg code{background:#1e1f22;border-radius:4px;padding:2px 4px}.discordMsg ul,.discordMsg ol{margin:.4em 0;padding-left:24px}.timestampChip{display:inline-block;background:#3f4147;padding:1px 4px;border-radius:3px;color:#e3e5e8}.raw{background:#0a0805;border:1px solid #3a2e1a;border-radius:10px;padding:12px;white-space:pre-wrap;color:#c9b88a;min-height:170px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}.addBar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.addBar .btn{font-size:12px;padding:8px 10px}.templateGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.tile{border:1px solid #3a2e1a;background:#130f07;border-radius:12px;padding:14px;position:relative}.tile h3{margin:0 0 5px;font-size:15px;font-family:'Cinzel',serif}.tile p{margin:0 0 12px;color:var(--muted);font-size:12px}.tile .actions{display:flex;gap:6px;flex-wrap:wrap}.fav{position:absolute;right:10px;top:10px;border:0;background:transparent;font-size:20px;color:#777}.fav.on{color:#ffcb2f}.emojiPicker{position:fixed;z-index:80;width:min(380px,calc(100vw - 24px));max-height:390px;overflow:auto;background:#1e1809;border:1px solid #3a2e1a;border-radius:13px;box-shadow:0 20px 50px rgba(0,0,0,.55);padding:10px;display:none}.emojiPicker.open{display:block}.emojiGrid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}.emojiGrid button{aspect-ratio:1;border:1px solid transparent;background:#110e07;border-radius:8px;font-size:21px}.emojiGrid button:hover{border-color:#6b5836;background:#252015}.modalBack{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:70;display:none;place-items:center;padding:16px}.modalBack.open{display:grid}.modal{width:min(620px,100%);max-height:90vh;overflow:auto;background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;box-shadow:0 20px 60px #000;padding:16px}.modal h3{margin:0 0 12px;font-family:'Cinzel',serif}.modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(15px);background:#1a1305;border:1px solid #3a2e1a;border-radius:10px;padding:10px 14px;opacity:0;pointer-events:none;transition:.2s;z-index:100}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.bottomBar{display:none}.formatBar{display:flex;gap:5px;flex-wrap:wrap;padding:7px;border:1px solid #3a2e1a;background:#0d0b08;border-radius:9px;margin-bottom:7px}.formatBar button{min-width:33px;padding:6px 8px;border:1px solid #3a2e1a;border-radius:7px;background:#1e1809;color:#e6d9b8;font-weight:800}.formatBar button:hover{border-color:#8a7449;color:#ffcb2f}.formatBar .sep{width:1px;background:#3a2e1a;margin:2px 2px}.meter{height:8px;background:#241e14;border-radius:99px;overflow:hidden}.meter>span{display:block;height:100%;background:linear-gradient(90deg,#b08b3f,#e1c56b);width:0}.readyRow{display:flex;align-items:center;gap:10px}.readyRow strong{min-width:92px}.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid #3a2e1a;background:#130f07;border-radius:999px;padding:4px 8px;color:#a99b78;font-size:11px}.searchbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.searchbar input{flex:1;min-width:200px;background:#0d0b08;color:var(--text);border:1px solid #3a2e1a;border-radius:9px;padding:10px}.tagInput{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.tag{border:1px solid #3a2e1a;background:#1a1305;border-radius:999px;padding:5px 8px;font-size:11px}.toolboxList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.toolbarHint{font-size:11px;color:#7a6c4a;margin-bottom:6px}.postType{display:flex;gap:6px;flex-wrap:wrap}.postType button.active{border-color:#8a7449;background:#1e1809;color:#ffcb2f}.divider{height:1px;background:#3a2e1a;margin:14px 0}.smallCard{border:1px solid #3a2e1a;background:#110e07;border-radius:10px;padding:12px}.fullWidth{width:100%}
+@media(max-width:900px){.app{padding:12px 12px 98px}.topbar{margin:-12px -12px 12px;padding:10px 12px}.nav{display:none}.mobileMode{display:block}.layout{display:block}.previewWrap{position:static}.desktopPreview{display:none}.mobilePreviewMode .builderPane{display:none}.mobilePreviewMode .desktopPreview{display:block}.templateGrid,.toolboxList{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.field.full{grid-column:auto}.bottomBar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(13,11,8,.96);border-top:1px solid var(--line);padding:10px 12px max(10px,env(safe-area-inset-bottom));gap:8px}.bottomBar button{flex:1}.discord{min-height:60vh}.importance{grid-template-columns:repeat(2,1fr)}.formatBar{overflow-x:auto;flex-wrap:nowrap}.formatBar button{flex:0 0 auto}}
+/* --- QoL polish (additive) --- */
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
+textarea{transition:height .08s ease}
+textarea.listItem{min-height:0;height:auto;resize:none;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45}
+#charCount.warn{color:#e6b450;font-weight:700}#charCount.over{color:#b23a30;font-weight:800}
+/* --- Feature update: required fields, recurrence, touch targets --- */
+.req{color:#e06050;font-weight:900}
+.missingField{border-color:var(--danger)!important;box-shadow:0 0 0 2px rgba(178,58,48,.28)!important}
+.mentionChip{background:#3d4270;color:#c9cdfb;border-radius:3px;padding:0 3px;font-weight:600}
+/* header show-block / show-label toggles */
+.hdrCtl{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.hdrTogs{display:flex;align-items:center;gap:12px;margin-right:4px}
+.hTog{display:flex;align-items:center;gap:5px;font-size:13px;color:#a99b78;cursor:default}
+.hTog .tIco{font-style:normal;font-size:13px}
+.hdrTogs .switch{width:36px;height:20px}
+.hdrTogs .slider:after{width:14px;height:14px;left:3px;top:3px}
+.hdrTogs .switch input:checked+.slider:after{transform:translateX(16px)}
+.hdrDel{font-size:15px}
+.hdrDel.arm{background:#2a1510;color:#e06050;font-size:12px;font-weight:800}
+@media(max-width:900px){
+.blockTop{flex-wrap:wrap}
+.blockTitle{min-width:0;overflow:hidden}
+.blockTitle small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.hdrCtl{order:5;flex:1 0 100%;padding-top:4px;gap:8px}
+.hdrCtl .moveUp{margin-left:auto}
+.hdrTogs{gap:16px}
+.hdrTogs .switch{width:44px;height:24px}
+.hdrTogs .slider:after{width:18px;height:18px}
+.hdrTogs .switch input:checked+.slider:after{transform:translateX(20px)}
+}
+@media(max-width:900px){.btn,.mini,.seg button,.postType button,.importance button,.field input,.field select{min-height:44px}.emojiBtn,.iconBtn{min-height:44px;min-width:44px}.formatBar button{min-height:44px;min-width:44px}.backBtn{width:44px;height:44px}
+/* mobile nav: the tab row was hidden under 900px, leaving Events/Templates/Settings unreachable on phones */
+.brandrow{flex-wrap:wrap}.nav{display:flex;width:100%;margin-left:0;margin-top:8px}.nav button{flex:1;min-height:44px;padding:9px 0;font-size:11px;white-space:nowrap}}
+.pedit{border-bottom:1px dashed rgba(255,255,255,.15);outline:none;min-width:20px;display:inline;cursor:text}
+.pedit:hover{border-bottom-color:rgba(255,203,47,.5);background:rgba(255,203,47,.06)}
+.pedit:focus{border-bottom-color:#ffcb2f;background:rgba(255,203,47,.12);border-radius:2px}
+.pedit:empty::before{content:attr(data-ph);color:#555;font-style:italic}
+.pedit-ml{display:block;white-space:pre-wrap;min-height:1.4em}
+/* --- armoury nav --- */
+.arm-nav{display:flex;align-items:center;padding:10px 20px;background:#0f0c07;border-top:1px solid #3a2e1a;border-bottom:1px solid #3a2e1a;gap:16px;flex-wrap:wrap}
+.arm-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.arm-brand img{width:28px;height:28px}
+.arm-brand span{font-family:"Cinzel",serif;font-weight:700;font-size:14px;color:#ffcb2f;letter-spacing:3px}
+.arm-links{display:flex;gap:4px;flex:1}
+.arm-links a{font-family:"Cinzel",serif;font-size:12px;font-weight:600;color:#a99b78;text-decoration:none;letter-spacing:1px;padding:6px 12px;border-radius:4px;transition:color .2s,background .2s}
+.arm-links a:hover{color:#ffcb2f;background:rgba(255,203,47,.06)}
+.arm-links a.active{color:#ffcb2f;background:rgba(255,203,47,.1)}
+.arm-site{font-family:"Jersey 15",monospace;font-size:14px;color:#a99b78;text-decoration:none;letter-spacing:1px;transition:color .2s}
+.arm-site:hover{color:#c9a227}
+@media(max-width:600px){.arm-nav{padding:10px 14px;gap:10px}.arm-brand span{font-size:12px;letter-spacing:2px}.arm-links{order:3;width:100%;justify-content:center}.arm-links a{font-size:11px;padding:5px 8px}.arm-site{font-size:13px}}
+/* --- footer --- */
+.ef-footer{padding:32px 20px 24px;text-align:center;border-top:1px solid #3a2e1a;margin-top:40px}
+.ef-footer .foot-links{display:flex;gap:16px;justify-content:center;margin-bottom:12px}
+.ef-footer .foot-links a{font-family:"Cinzel",serif;font-size:12px;color:#a99b78;text-decoration:none;letter-spacing:1px}
+.ef-footer .foot-links a:hover{color:#c9a227}
+.ef-footer .disclaimer{font-size:11px;color:#a99b78;opacity:.35;line-height:1.6;max-width:480px;margin:0 auto}
+/* --- shared saves panel --- */
+.shared-panel{margin-top:18px}
+.shared-list{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;padding-right:4px}
+.shared-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0f0c07;border:1px solid #3a2e1a;border-radius:9px;cursor:pointer;transition:border-color .15s}
+.shared-item:hover{border-color:#7b663a}
+.shared-item .si-icon{font-size:18px;flex:0 0 28px;text-align:center}
+.shared-item .si-info{flex:1;min-width:0}
+.shared-item .si-name{font-weight:700;color:#e6d9b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shared-item .si-meta{font-size:11px;color:#a99b78}
+.shared-item .si-cat{font-size:10px;padding:2px 8px;border-radius:99px;background:rgba(255,203,47,.1);color:#c9a227;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.shared-item .si-actions{display:flex;gap:6px}
+.shared-empty{text-align:center;padding:24px;color:#a99b78;font-size:13px}
+</style>
+</head>
+<body>
+
+<nav class="arm-nav">
+  <a class="arm-brand" href="/armoury.html">
+    <img src="/assets/crest.png" alt="Multi-Misfits" width="28" height="28">
+    <span>THE ARMOURY</span>
+  </a>
+  <div class="arm-links">
+    <a href="/wheel.html">Wheel</a>
+    <a href="/bracket.html">Bracket</a>
+    <a href="/ideaboard.html">Idea Board</a>
+    <a href="/eventforge.html" class="active">EventForge</a>
+  </div>
+  <a class="arm-site" href="/">Main Site</a>
+</nav>
+
+<div class="app" id="app"><header class="topbar"><div class="brandrow"><div class="logo">EF</div><div class="brand"><h1>EventForge</h1><small>Discord Event Designer</small></div><div class="nav" id="nav"></div></div><div class="mobileMode"><div class="seg"><button id="mEdit" class="active">✏️ EDIT</button><button id="mPreview">👁 PREVIEW</button></div></div></header><main id="view"></main></div>
+<div class="emojiPicker" id="emojiPicker"><div class="emojiGrid" id="emojiGrid"></div></div>
+<div class="modalBack" id="modalBack"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<div class="bottomBar" id="bottomBar"><button class="btn" id="bottomToggle">👁 Preview</button><button class="btn" id="bottomSave">💾 Save</button><button class="btn gold" id="bottomCopy">📋 Copy</button></div>
+<input type="file" id="backupInput" hidden>
+<input type="file" id="templateInput" hidden>
+<script>
+const STORE_KEY='mm-eventforge-v3';
+const EMOJIS=['🎉','⚔️','📅','🕘','⏳','🌎','📍','👑','🎒','📋','🏆','📸','🔥','💰','☠️','🛡️','🧠','🎯','💬','✅','❗','⚠️','🔴','🟢','🟡','🔵','🗡️','🏹','🍖','🧪','💀','👥','📢','🏃','⭐','🎁','🥇','🥈','🥉','📝','🧩','🔒','🔓','🔔','🕹️','🎲','🪙','💎','🛠️','🧙','🏰','🌲','🐉','🦀','🪦','🧭','📌','➡️','✨','🚨','❤️','💥','🪄','⛏️','🎣','🌟'];
+const uid=()=>crypto.randomUUID();
+const esc=s=>(s??'').toString().replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clone=o=>structuredClone(o);
+const DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const pad2=n=>String(n).padStart(2,'0');
+const toISO=d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const fromISO=s=>{const[a,b,c]=(s||'').split('-').map(Number);return new Date(a,b-1,c)};
+const addDaysISO=(s,n)=>{const d=fromISO(s);d.setDate(d.getDate()+n);return toISO(d)};
+const daysBetweenISO=(a,b)=>Math.round((fromISO(b)-fromISO(a))/864e5);
+function nextDowISO(dow,extraWeeks=0){const d=new Date();d.setDate(d.getDate()+(dow-d.getDay()+7)%7+extraWeeks*7);return toISO(d)}
+function defaultRecurrence(){return{freq:'none',interval:2,days:[]}}
+function eventDefaults(e){e.recurrence=e.recurrence||defaultRecurrence();if(!Array.isArray(e.recurrence.days))e.recurrence.days=[];if(!(e.recurrence.interval>=1))e.recurrence.interval=2;if(e.repeatNote===undefined)e.repeatNote=false;if(e.rsvp===undefined)e.rsvp=false;e.rsvpEmoji=e.rsvpEmoji||'✅';if(e.dinkNote===undefined)e.dinkNote=false;if(e.multiDay===undefined)e.multiDay=!!(e.endDate&&e.endDate!==e.date);return e}
+function nextOccurrenceISO(dateISO,rec){if(!dateISO)return dateISO;const f=rec?.freq;if(f==='daily')return addDaysISO(dateISO,1);if(f==='weekly')return addDaysISO(dateISO,7);if(f==='biweekly')return addDaysISO(dateISO,14);if(f==='monthly'){const d=fromISO(dateISO),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+1);const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();d.setDate(Math.min(day,last));return toISO(d)}if(f==='custom'){const iv=Math.max(1,rec.interval||1),days=[...(rec.days||[])].sort((a,b)=>a-b);if(!days.length)return addDaysISO(dateISO,7*iv);const cur=fromISO(dateISO).getDay();for(const day of days)if(day>cur)return addDaysISO(dateISO,day-cur);return addDaysISO(dateISO,7*iv-cur+days[0])}return dateISO}
+function recurrenceSummary(rec,dateISO){const f=rec?.freq;if(!f||f==='none')return'';const wd=dateISO?DOW[fromISO(dateISO).getDay()]:'';if(f==='daily')return'Every day';if(f==='weekly')return wd?`Every ${wd}`:'Every week';if(f==='biweekly')return wd?`Every 2 weeks on ${wd}`:'Every 2 weeks';if(f==='monthly')return dateISO?`Monthly on the ${ordinal(fromISO(dateISO).getDate())}`:'Every month';const iv=Math.max(1,rec.interval||1),names=(rec.days||[]).slice().sort((a,b)=>a-b).map(d=>DOW[d].slice(0,3)).join(', ');return`Every ${iv===1?'week':iv+' weeks'}${names?` on ${names}`:''}`}
+function durationText(e){if(!e.date)return'';if(e.endDate&&e.endDate!==e.date){const days=daysBetweenISO(e.date,e.endDate)+1;if(days<=0)return'⚠ Ends before it starts';if(days%7===0)return`${days/7} week${days>7?'s':''}`;return`${days} days`}if(e.endTime&&e.time){const s=zonedUnix(e.date,e.time,e.timezone),x=zonedUnix(e.endDate||e.date,e.endTime,e.timezone);if(s&&x){const h=(x-s)/3600;if(h<=0)return'⚠ Ends before it starts';return h<1?`${Math.round(h*60)} minutes`:`${+h.toFixed(1)} hour${h>=2?'s':''}`}}return''}
+const masterDefaults=()=>({footer:'',importance:{details:'small',requirements:'featured',rules:'normal',prizes:'featured',gear:'normal',submissions:'normal',training:'featured',custom:'normal'},emoji:{details:'📍',requirements:'📋',rules:'⚔️',prizes:'🏆',gear:'🎒',submissions:'📸',training:'🧠',custom:'📝'}});
+const blockFactory={
+ details:()=>({id:uid(),kind:'details',label:'Event Details',emoji:'📍',importance:'small',visible:true,showLabel:false,open:false,world:'329',location:'Clan Hall',host:'',condition:'always'}),
+ requirements:()=>({id:uid(),kind:'requirements',label:'Requirements',emoji:'📋',importance:'featured',visible:true,showLabel:true,open:false,items:[''],condition:'always'}),
+ rules:()=>({id:uid(),kind:'rules',label:'Rules',emoji:'⚔️',importance:'normal',visible:true,showLabel:true,open:false,items:[''],condition:'always'}),
+ prizes:()=>({id:uid(),kind:'prizes',label:'Prizes',emoji:'🏆',importance:'featured',visible:true,showLabel:true,open:false,items:['🥇 1st Place — '],condition:'always'}),
+ gear:()=>({id:uid(),kind:'gear',label:'Gear / Supplies',emoji:'🎒',importance:'normal',visible:true,showLabel:true,open:false,value:'',provided:'',condition:'always'}),
+ submissions:()=>({id:uid(),kind:'submissions',label:'Submissions',emoji:'📸',importance:'normal',visible:true,showLabel:true,open:false,value:'',condition:'always'}),
+ training:()=>({id:uid(),kind:'training',label:'Training Session',emoji:'🧠',importance:'featured',visible:true,showLabel:true,open:false,name:'Training Session',date:'',time:'20:00',timezone:'America/New_York',world:'329',location:'Clan Hall',details:'',condition:'always'}),
+ custom:()=>({id:uid(),kind:'custom',label:'Custom Section',emoji:'📝',importance:'normal',visible:true,showLabel:true,open:false,value:'',condition:'always'}),
+ divider:()=>({id:uid(),kind:'divider',label:'Divider',visible:true,open:false,condition:'always'}),
+ spacer:()=>({id:uid(),kind:'spacer',label:'Spacer',visible:true,open:false,condition:'always'})
+};
+const OSRS_SKILLS=[['Attack','⚔️'],['Strength','💪'],['Defence','🛡️'],['Ranged','🏹'],['Prayer','🙏'],['Magic','🧙'],['Runecraft','🌀'],['Hitpoints','❤️'],['Crafting','🛠️'],['Mining','⛏️'],['Smithing','⚒️'],['Fishing','🎣'],['Cooking','🍳'],['Firemaking','🔥'],['Woodcutting','🪓'],['Agility','🏃'],['Herblore','🧪'],['Thieving','🎭'],['Fletching','🪶'],['Slayer','💀'],['Farming','🌱'],['Construction','🏠'],['Hunter','🐾'],['Sailing','⛵'],['Combat Level','🗡️'],['Total Level','📊'],['Quest Points','📜']];
+const REQ_CHIPS=[['Base 70s','📊 Base 70 stats'],['Base 80s','📊 Base 80 stats'],['Base 90s','📊 Base 90 stats'],['Combat 100+','🗡️ 100+ Combat'],['Quest Cape','📜 Quest Cape'],['Barrows Gloves','🧤 Barrows Gloves']];
+const presets={
+ 'PK Trip':['details','rules','gear','training'], 'PvM Mass':['details','requirements','gear','rules'], 'Competition':['details','requirements','submissions','prizes','rules'], 'Hide & Seek':['details','rules','prizes'], 'Skilling':['details','requirements','prizes'], 'Training':['details','training','requirements'], 'Minigame':['details','rules','prizes'], 'Social':['details','rules'], 'Custom':['details','custom']
+};
+function freshEvent(){return eventDefaults({id:uid(),name:'',type:'Custom',preset:'Custom',date:nextDowISO(6),time:'20:00',endDate:'',endTime:'',timezone:'America/New_York',tags:[],favorite:false,blocks:presets.Custom.map(k=>blockFactory[k]()),results:{summary:'',winners:[]},meta:{created:Date.now(),updated:Date.now()}})}
+function defaultLineEmoji(){return{when:'📅',starts:'⏳',ends:'🏁',world:'🌎',meet:'📍',host:'👑',repeat:'🔁',rsvp:'✅',dink:'💬'}}
+function defaultState(){return {route:'create',mobilePreview:false,event:freshEvent(),events:[],templates:[],customFields:[],mentions:[],settings:{clan:'',timezone:'America/New_York',defaultWorld:'329',defaultLocation:'Clan Hall',master:masterDefaults(),lineEmoji:defaultLineEmoji()},draftHistory:[],postType:'announcement',outputStyle:'classic',templateCategory:'All',autosaveAt:null,dirty:false,filter:'',tagFilter:''}}
+function normalize(s){s.settings=s.settings||defaultState().settings;s.settings.master=Object.assign(masterDefaults(),s.settings.master||{});s.customFields=s.customFields||[];s.mentions=s.mentions||[];s.templates=s.templates||[];s.events=s.events||[];s.event=s.event||freshEvent();s.event.tags=s.event.tags||[];s.event.results=s.event.results||{summary:'',winners:[]};s.event.blocks=s.event.blocks||[];s.postType=s.postType||'announcement';eventDefaults(s.event);s.outputStyle=['classic','minimal','compact'].includes(s.outputStyle)?s.outputStyle:'classic';s.templateCategory=s.templateCategory||'All';s.settings.lineEmoji=Object.assign(defaultLineEmoji(),s.settings.lineEmoji||{});return s}
+function loadState(){try{const raw=localStorage.getItem(STORE_KEY);if(raw)return normalize(JSON.parse(raw))}catch{}return defaultState()}
+let state=loadState();
+function persist(){state.autosaveAt=Date.now();state.event.meta=state.event.meta||{};state.event.meta.updated=Date.now();localStorage.setItem(STORE_KEY,JSON.stringify(state));renderSaveStatus()}
+function markDirty(version=false){state.dirty=true;if(version)pushDraftVersion();clearTimeout(window.__saveT);window.__saveT=setTimeout(persist,300)}
+function pushDraftVersion(){const snap=clone(state.event);snap.__at=Date.now();state.draftHistory.unshift(snap);state.draftHistory=state.draftHistory.slice(0,10)}
+function nav(){return ['create','events','templates','shared','settings'].map(r=>`<button data-route="${r}" class="${state.route===r?'active':''}">${{create:'Create',events:'Events',templates:'Templates',shared:'Shared',settings:'Settings'}[r]}</button>`).join('')}
+function render(opts={}){eventDefaults(state.event);const restoreY=opts.restoreY;document.getElementById('nav').innerHTML=nav();document.getElementById('app').classList.toggle('mobilePreviewMode',!!state.mobilePreview);const v=document.getElementById('view');v.innerHTML=state.route==='create'?createView():state.route==='events'?eventsView():state.route==='templates'?templatesView():state.route==='shared'?sharedView():settingsView();bind();if(state.route==='shared')fetchShared();renderSaveStatus();if(Number.isFinite(restoreY))requestAnimationFrame(()=>window.scrollTo(0,restoreY))}
+function createView(){return `<div class="layout"><section class="builderPane">${builderCard()}${blocksCard()}</section><aside class="desktopPreview">${previewCard()}</aside></div>`}
+function builderCard(){const ready=completeness(),e=state.event,rec=e.recurrence||defaultRecurrence(),multi=!!e.multiDay,recSum=recurrenceSummary(rec,e.date),dur=durationText(e);return `<div class="card"><div class="cardHead"><h2>Event Core</h2><span class="spacer"></span><span class="status" id="saveStatus">Autosave on</span></div><div class="body"><div class="readyRow"><strong>${ready.score}% Ready</strong><div class="meter" style="flex:1"><span style="width:${ready.score}%"></span></div></div>${ready.issues.length?`<div class="hint warning" style="margin:7px 0 12px">${ready.issues.slice(0,3).map(x=>'• '+esc(x)).join(' &nbsp; ')}</div>`:`<div class="hint" style="margin:7px 0 12px">Core event information looks complete.</div>`}<div class="grid"><div class="field full"><label>Event Name <span class="req">*</span></label><input id="eventName" value="${esc(e.name)}" placeholder="P2P PK Trip"></div><div class="field"><label>Event Preset</label><select id="preset">${Object.keys(presets).map(x=>`<option ${e.preset===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Timezone</label><select id="timezone">${tzOptions(e.timezone)}</select></div><div class="field full"><label>Event Length</label><div class="postType"><button class="mini ${!multi?'active':''}" id="singleDayBtn">Single day</button><button class="mini ${multi?'active':''}" id="multiDayBtn">Multi-day</button><span class="hint" id="durationHint" style="align-self:center">${esc(dur)}</span></div></div><div class="field"><label>Start Date <span class="hint">optional</span></label><input id="date" type="date" value="${e.date||''}"><div class="rowBtns" style="margin-top:6px">${[['today','Today'],['tomorrow','Tomorrow'],['thisSat','This Sat'],['nextSat','Next Sat'],['clear','✕ No date']].map(([k,l])=>`<button class="mini quickDate" data-q="${k}">${l}</button>`).join('')}</div></div><div class="field"><label>Start Time <span class="hint">optional</span></label><input id="time" type="time" value="${e.time||''}"></div>${multi?`<div class="field"><label>End Date</label><input id="endDate" type="date" value="${e.endDate||''}"></div>`:''}<div class="field"><label>End Time <span class="hint">optional</span></label><input id="endTime" type="time" value="${e.endTime||''}"></div><div class="field"><label>Repeat</label><select id="recFreq">${[['none','None'],['daily','Daily'],['weekly','Weekly'],['biweekly','Biweekly'],['monthly','Monthly'],['custom','Custom']].map(([k,l])=>`<option value="${k}" ${rec.freq===k?'selected':''}>${l}</option>`).join('')}</select><span class="hint" id="recSummary">${recSum?'🔁 '+esc(recSum):''}</span></div>${rec.freq==='custom'?`<div class="field"><label>Every N Weeks</label><input id="recInterval" type="number" min="1" max="12" value="${rec.interval||1}"></div><div class="field full"><label>On Days</label><div class="rowBtns">${DOW.map((d,i)=>`<button class="mini recDay ${rec.days.includes(i)?'on':''}" data-d="${i}">${d.slice(0,3)}</button>`).join('')}</div></div>`:''}${rec.freq!=='none'?`<div class="field full"><div class="switchline"><label class="switch"><input id="repeatNote" type="checkbox" ${e.repeatNote?'checked':''}><span class="slider"></span></label><span>Add repeat note to the post${recSum?` ("${esc(recSum)}")`:''}</span></div></div>`:''}<div class="field full"><label>Tags</label><input id="tags" value="${esc((e.tags||[]).join(', '))}" placeholder="PK, Wilderness, Weekend"><span class="hint">Comma-separated. Used for search/filtering.</span></div></div><div class="rowBtns" style="margin-top:12px">${rec.freq!=='none'?`<button class="btn gold" id="genNext" title="Clone this event and advance all dates by one interval">⏭ Generate Next</button>`:''}<button class="btn" id="applyMaster">🎨 Apply Master Style</button><button class="btn" id="draftHistoryBtn">🕘 Draft History (${state.draftHistory.length})</button><button class="btn ${e.favorite?'gold':''}" id="favEvent">${e.favorite?'★ Favorite':'☆ Favorite'}</button><button class="btn" id="clearForm">🧹 Clear Form</button></div></div></div>`}
+function blocksCard(){const saved=state.customFields.length?state.customFields.map(f=>`<button class="btn addSavedField" data-id="${f.id}">${esc(f.emoji||'📝')} ${esc(f.name)}</button>`).join(''):'';return `<div class="card" style="margin-top:18px"><div class="cardHead"><h2>Announcement Structure</h2><span class="spacer"></span><button class="btn ghost" id="collapseAll">Collapse All</button></div><div class="body"><div class="hint" style="margin-bottom:10px">Drag blocks into any order. Every text field supports selection-based Discord formatting.</div><div class="sectionList" id="sectionList">${state.event.blocks.map(blockHtml).join('')}</div><div class="addBar">${[['requirements','📋 Requirements'],['rules','⚔️ Rules'],['prizes','🏆 Prizes'],['gear','🎒 Gear'],['submissions','📸 Submissions'],['training','🧠 Session'],['custom','➕ Custom'],['divider','— Divider'],['spacer','↕ Spacer']].map(([k,l])=>`<button class="btn addBlock" data-kind="${k}">${l}</button>`).join('')}</div>${saved?`<div class="divider"></div><div class="hint" style="margin-bottom:8px">Saved custom fields</div><div class="addBar">${saved}</div>`:''}</div></div>`}
+function blockHtml(b){const simple=['divider','spacer'].includes(b.kind);return `<div class="block ${b.open?'open':''} ${!b.visible?'hiddenBlock':''}" draggable="true" data-id="${b.id}"><div class="blockTop"><span class="handle">≡</span>${!simple?`<button class="emojiBtn" data-emoji-id="${b.id}">${b.emoji||'＋'}</button>`:''}<div class="blockTitle"><strong>${esc(b.label||b.kind)}</strong><small>${b.kind} · ${b.importance||'normal'}${!b.visible?' · hidden':''}${b.condition&&b.condition!=='always'?' · conditional':''}</small></div><span class="hdrCtl"><span class="hdrTogs"><span class="hTog" title="Show block in the post"><i class="tIco">👁</i><label class="switch"><input type="checkbox" class="hVisible" ${b.visible?'checked':''}><span class="slider"></span></label></span>${!simple?`<span class="hTog" title="Show the label heading"><i class="tIco">🏷</i><label class="switch"><input type="checkbox" class="hShowLabel" ${b.showLabel?'checked':''}><span class="slider"></span></label></span>`:''}</span><button class="iconBtn moveUp">↑</button><button class="iconBtn moveDown">↓</button><button class="iconBtn hdrDel" title="Delete block">✕</button></span><button class="iconBtn toggleBlock">${b.open?'▾':'▸'}</button></div><div class="blockContent">${blockEditor(b)}</div></div>`}
+function formatBar(targetId){return `<div class="toolbarHint">Highlight text, then tap a formatting button.</div><div class="formatBar" data-target="${targetId}"><button data-fmt="bold" title="Bold"><b>B</b></button><button data-fmt="italic" title="Italic"><i>I</i></button><button data-fmt="underline" title="Underline"><u>U</u></button><button data-fmt="strike" title="Strikethrough"><s>S</s></button><span class="sep"></span><button data-fmt="spoiler">Spoiler</button><button data-fmt="code">Code</button><button data-fmt="quote">❝</button><button data-fmt="bullet">• List</button><button data-fmt="number">1.</button><span class="sep"></span><button data-fmt="mention">@</button><button data-fmt="timestamp">🕐</button><button data-fmt="link">🔗</button><button data-fmt="undo">↶</button><button data-fmt="redo">↷</button></div>`}
+function textArea(id,val,cls='bValue'){return `${formatBar(id)}<textarea id="${id}" class="${cls}" data-rich="1">${esc(val||'')}</textarea>`}
+function blockEditor(b){const base=`<div class="grid"><div class="field"><label>Label</label><input class="bLabel" value="${esc(b.label||'')}"></div><div class="field"><label>Display</label><div class="switchline"><label class="switch"><input class="bVisible" type="checkbox" ${b.visible?'checked':''}><span class="slider"></span></label><span>Show block</span><label class="switch"><input class="bShowLabel" type="checkbox" ${b.showLabel?'checked':''}><span class="slider"></span></label><span>Show label</span></div></div><div class="field full"><label>Importance</label><div class="importance">${['small','normal','medium','featured'].map(x=>`<button class="${b.importance===x?'active':''}" data-importance="${x}">${{small:'Small',normal:'Normal',medium:'Large',featured:'Huge'}[x]}</button>`).join('')}</div></div><div class="field full"><label>Condition</label><select class="bCondition"><option value="always" ${b.condition==='always'?'selected':''}>Always show</option><option value="hasPrize" ${b.condition==='hasPrize'?'selected':''}>Only if a Prizes block has content</option><option value="hasEnd" ${b.condition==='hasEnd'?'selected':''}>Only if event has an end date/time</option><option value="competition" ${b.condition==='competition'?'selected':''}>Only for Competition preset</option><option value="pk" ${b.condition==='pk'?'selected':''}>Only for PK Trip preset</option></select></div></div>`;
+ if(b.kind==='divider'||b.kind==='spacer')return `${base}<div class="rowBtns" style="margin-top:10px">${blockActions()}</div>`;
+ let body='';
+ if(b.kind==='details')body=`<div class="grid"><div class="field"><label>World</label><input class="dWorld" value="${esc(b.world||'')}"></div><div class="field"><label>Starting Location</label><input class="dLocation" value="${esc(b.location||'')}"></div><div class="field full"><label>Host / Leader</label><input class="dHost" value="${esc(b.host||'')}"></div></div>`;
+ else if(['requirements','rules','prizes'].includes(b.kind))body=`${b.kind==='requirements'?`<div class="field"><label>Quick Add — Stat Requirement</label><div class="rowBtns"><select class="reqSkill" style="flex:1;min-width:150px;background:#0d0b08;color:var(--text);border:1px solid #3a2e1a;border-radius:9px;padding:9px 10px">${OSRS_SKILLS.map(([n,em])=>`<option value="${n}">${em} ${n}</option>`).join('')}</select><input class="reqLvl" type="number" min="1" max="2277" value="80" style="width:84px;background:#0d0b08;color:var(--text);border:1px solid #3a2e1a;border-radius:9px;padding:9px 10px"><button class="mini reqAdd">+ Add</button></div><div class="rowBtns" style="margin-top:6px">${REQ_CHIPS.map(([l],i)=>`<button class="mini reqChip" data-i="${i}">${l}</button>`).join('')}</div><span class="hint" style="margin-top:4px">Picks land as editable lines below — tweak the wording or swap the emoji any time.</span></div><div class="divider"></div>`:''}<div class="field"><label>Items</label>${b.items.map((x,j)=>`<div style="margin-bottom:8px">${formatBar(`li-${b.id}-${j}`)}<div style="display:flex;gap:6px;align-items:flex-start"><textarea id="li-${b.id}-${j}" class="listItem" data-j="${j}" data-rich="1" rows="1">${esc(x)}</textarea><button class="mini danger delItem" data-j="${j}">✕</button></div></div>`).join('')}<button class="mini addItem">+ Add Item</button></div>`;
+ else if(b.kind==='training')body=`<div class="grid"><div class="field full"><label>Session Name</label><input class="sName" value="${esc(b.name||'')}"></div><div class="field"><label>Date</label><input class="sDate" type="date" value="${b.date||''}"></div><div class="field"><label>Time</label><input class="sTime" type="time" value="${b.time||''}"></div><div class="field"><label>World</label><input class="sWorld" value="${esc(b.world||'')}"></div><div class="field"><label>Location</label><input class="sLocation" value="${esc(b.location||'')}"></div><div class="field full"><label>Details</label>${textArea(`ta-${b.id}`,b.details,'sDetails')}</div></div>`;
+ else if(b.kind==='gear')body=`<div class="grid"><div class="field"><label>Provided by clan?</label><select class="gProvided"><option value="" ${!b.provided?'selected':''}>Not specified</option><option ${b.provided==='Yes'?'selected':''}>Yes</option><option ${b.provided==='Partially'?'selected':''}>Partially</option><option ${b.provided==='No'?'selected':''}>No</option></select></div><div class="field full"><label>Gear / Supplies Text</label>${textArea(`ta-${b.id}`,b.value)}</div></div>`;
+ else body=`<div class="field"><label>Content</label>${textArea(`ta-${b.id}`,b.value)}</div>`;
+ return `${base}<div class="divider"></div>${body}<div class="rowBtns" style="margin-top:10px">${blockActions()}</div>`}
+function blockActions(){return `<button class="mini dupBlock">Duplicate</button><button class="mini moveTop">Top</button><button class="mini moveBottom">Bottom</button><button class="mini saveField">Save as Field</button><button class="mini danger delBlock">Delete</button>`}
+function previewCard(){const raw=generatePost(state.postType);return `<div class="previewWrap"><div class="card"><div class="cardHead"><h2>Discord Preview</h2><span class="spacer"></span><span class="hint" id="charCount">${raw.length} chars${raw.length>2000?' ⚠️':''}</span></div><div class="body" style="padding-bottom:8px"><div class="postType">${[['announcement','Announcement'],['24h','24h Reminder'],['1h','1h Reminder'],['now','Starting Now'],['results','Results']].map(([k,l])=>`<button class="mini postTypeBtn ${state.postType===k?'active':''}" data-type="${k}">${l}</button>`).join('')}</div><div class="postType" style="margin-top:8px"><span class="hint" style="align-self:center">Style:</span>${[['classic','Classic'],['minimal','Minimal'],['compact','Compact']].map(([k,l])=>`<button class="mini styleBtn ${state.outputStyle===k?'active':''}" data-style="${k}">${l}</button>`).join('')}<button class="mini optBtn ${state.event.rsvp?'on':''}" data-opt="rsvp">${esc(state.settings.lineEmoji?.rsvp||'✅')} RSVP</button><button class="mini optBtn ${state.event.dinkNote?'on':''}" data-opt="dinkNote">💬 Dink note</button></div>${state.event.rsvp?`<div class="rowBtns" style="margin-top:8px"><span class="hint" style="align-self:center">RSVP react emoji:</span><input id="rsvpEmoji" value="${esc(state.event.rsvpEmoji||'✅')}" style="width:72px;background:#0d0b08;color:var(--text);border:1px solid #3a2e1a;border-radius:9px;padding:6px 8px"></div>`:''}</div><div class="discord"><div class="discordMsg">${state.postType==='announcement'&&state.outputStyle!=='compact'?editableDiscordPreview():renderDiscordPreview(raw)}</div></div><div class="body"><div class="rowBtns"><button class="btn gold" id="copyBtn">📋 Copy to Discord</button><button class="btn" id="saveEventBtn">💾 Save Event</button><button class="btn" id="saveTemplateBtn">🧩 Save as Template</button>${state.postType==='results'?'<button class="btn" id="editResultsBtn">🏆 Edit Results</button>':''}</div><details style="margin-top:12px"><summary class="hint">Raw Discord Markdown</summary><div class="raw" style="margin-top:8px">${esc(raw)}</div></details></div></div></div>`}
+function eventsView(){const items=filtered(state.events);return `<div class="card"><div class="cardHead"><h2>Saved Events</h2><span class="spacer"></span><button class="btn" id="exportBackupQuick">Export Backup</button></div><div class="body">${searchBar()}${items.length?`<div class="templateGrid">${items.map(tileEvent).join('')}</div>`:`<div class="hint">No matching saved events.</div>`}</div></div>`}
+const TEMPLATE_CATS=['PvM','Skilling','Minigame','Social','Competition','Other'];
+function templatesView(){const items=filtered(state.templates,true).filter(t=>state.templateCategory==='All'||(t.category||'Other')===state.templateCategory);return `<div class="card"><div class="cardHead"><h2>Templates</h2><span class="spacer"></span><button class="btn gold" id="importTemplateBtn">⬆ Import Template</button><button class="btn" id="applyMasterAll">Apply Master Style to All</button></div><div class="body"><div class="postType" style="margin-bottom:12px">${['All',...TEMPLATE_CATS].map(c=>`<button class="mini catBtn ${state.templateCategory===c?'active':''}" data-cat="${c}">${c}</button>`).join('')}</div>${searchBar()}${items.length?`<div class="templateGrid">${items.map(tileTemplate).join('')}</div>`:`<div class="hint">No matching templates.</div>`}</div></div>`}
+function searchBar(){return `<div class="searchbar"><input id="searchFilter" placeholder="Search name, preset, tags..." value="${esc(state.filter||'')}"><input id="tagFilter" placeholder="Filter by tag" value="${esc(state.tagFilter||'')}"></div>`}
+function filtered(arr,isTemplate=false){const q=(state.filter||'').toLowerCase(),t=(state.tagFilter||'').toLowerCase();return arr.filter(x=>{const e=isTemplate?x.event:x;const name=(isTemplate?x.templateName:e.name)||'';const hay=[name,e.preset,(e.tags||[]).join(' ')].join(' ').toLowerCase();return (!q||hay.includes(q))&&(!t||(e.tags||[]).some(z=>z.toLowerCase().includes(t)))}).sort((a,b)=>((isTemplate?b.favorite:b.favorite)?1:0)-((isTemplate?a.favorite:a.favorite)?1:0))}
+function tileEvent(e){return `<div class="tile"><button class="fav ${e.favorite?'on':''} favSaved" data-id="${e.id}">${e.favorite?'★':'☆'}</button><h3>${esc(e.name||'Untitled Event')}</h3><p>${esc(e.preset||'Custom')} · ${e.date||'No date'}${e.recurrence&&e.recurrence.freq!=='none'?' · 🔁 '+esc(recurrenceSummary(e.recurrence,e.date)):''}</p><div class="chips">${(e.tags||[]).map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div><div class="actions" style="margin-top:12px"><button class="mini loadEvent" data-id="${e.id}">Open</button><button class="mini dupEvent" data-id="${e.id}">Duplicate</button><button class="mini copySaved" data-id="${e.id}">Copy</button><button class="mini historyEvent" data-id="${e.id}">History</button><button class="mini resultEvent" data-id="${e.id}">Results</button><button class="mini danger deleteEvent" data-id="${e.id}">Delete</button></div></div>`}
+function tileTemplate(t){const locked=(t.fillIn||[]).length?`<span class="chip">✏️ Fill-in: ${(t.fillIn||[]).join(', ')}</span>`:'';return `<div class="tile"><button class="fav ${t.favorite?'on':''} favTemplate" data-id="${t.id}">${t.favorite?'★':'☆'}</button><h3>${esc(t.templateName)}</h3><p>${esc(t.category||'Other')} · ${esc(t.event.preset||'Custom')} · ${t.event.blocks.length} blocks ${t.inheritMaster?'· Master style':''}</p><div class="chips">${locked}${(t.event.tags||[]).map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div><div class="actions" style="margin-top:12px"><button class="mini useTemplate" data-id="${t.id}">Use</button><button class="mini previewTemplate" data-id="${t.id}">Preview</button><button class="mini shareTemplate" data-id="${t.id}">Share</button><button class="mini exportTemplate" data-id="${t.id}">⬇ Export</button><button class="mini applyMasterTemplate" data-id="${t.id}">Apply Master</button><button class="mini danger deleteTemplate" data-id="${t.id}">Delete</button></div></div>`}
+function settingsView(){return `<div class="card"><div class="cardHead"><h2>Settings & Toolbox</h2></div><div class="body"><h3 style="margin-top:0">Clan Defaults</h3><div class="grid"><div class="field"><label>Clan Name</label><input id="sClan" value="${esc(state.settings.clan)}"></div><div class="field"><label>Default Timezone</label><select id="sTZ">${tzOptions(state.settings.timezone)}</select></div><div class="field"><label>Default World</label><input id="sWorld" value="${esc(state.settings.defaultWorld)}"></div><div class="field"><label>Default Meeting Location</label><input id="sLoc" value="${esc(state.settings.defaultLocation)}"></div></div><div class="divider"></div><h3>Master Template Style</h3><div class="grid"><div class="field full"><label>Global Footer <span class="hint">optional; appended to announcements</span></label>${textArea('masterFooter',state.settings.master.footer,'masterFooter')}</div></div><div class="hint" style="margin-top:8px">Master Style lets templates inherit your default block emojis and importance. Applying it never changes the actual event text.</div><div class="rowBtns" style="margin-top:10px"><button class="btn" id="editMasterStyle">Edit Master Block Defaults</button></div><div class="divider"></div><h3>Output Line Emoji</h3><div class="hint" style="margin-bottom:8px">Swap the emoji used on the core lines of every post (e.g. replace the flag on Ends with a clock). Leave one blank to remove it. The Minimal output style ignores these.</div><div class="grid">${[['when','When'],['starts','Starts'],['ends','Ends'],['world','World'],['meet','Meet'],['host','Host'],['repeat','Repeat note'],['rsvp','RSVP line'],['dink','Dink note']].map(([k,l])=>`<div class="field"><label>${l}</label><input class="lineEmojiInput" data-k="${k}" value="${esc(state.settings.lineEmoji[k]||'')}"></div>`).join('')}</div><div class="divider"></div><h3>Saved Discord Mentions</h3><div class="toolboxList">${state.mentions.map(m=>`<div class="smallCard"><strong>${esc(m.name)}</strong><div class="hint">${esc(m.code)}</div><div class="rowBtns" style="margin-top:8px"><button class="mini danger delMention" data-id="${m.id}">Delete</button></div></div>`).join('')||'<div class="hint">No mentions saved yet.</div>'}</div><button class="btn" id="addMention" style="margin-top:10px">+ Add Mention</button><div class="divider"></div><h3>Reusable Custom Fields</h3><div class="toolboxList">${state.customFields.map(f=>`<div class="smallCard"><strong>${esc(f.emoji||'📝')} ${esc(f.name)}</strong><div class="hint">${esc(f.defaultValue||'No default text')}</div><div class="rowBtns" style="margin-top:8px"><button class="mini danger delCustomField" data-id="${f.id}">Delete</button></div></div>`).join('')||'<div class="hint">No custom fields saved yet. Save any block as a reusable field from Create.</div>'}</div><button class="btn" id="addCustomField" style="margin-top:10px">+ Add Custom Field</button><div class="divider"></div><h3>Backup & Restore</h3><div class="rowBtns"><button class="btn gold" id="exportBackup">⬇ Export Full Backup</button><button class="btn" id="importBackup">⬆ Import Backup</button><button class="btn" id="copyBackup">📋 Copy Backup</button><button class="btn" id="pasteBackup">📥 Paste Backup</button></div><div class="hint" style="margin-top:8px">Backup includes saved events, templates, custom fields, mentions, settings, versions, and the current draft. On a phone, the clipboard route is easiest: <strong>Copy Backup</strong> here, send the text to yourself (notes app, Discord DM), then <strong>Paste Backup</strong> on the other device — no files involved.</div><div class="divider"></div><h3>Offline / Portable App</h3><div class="rowBtns"><button class="btn gold" id="downloadApp">💾 Download EventForge</button></div><div class="hint" style="margin-top:8px">Saves the entire tool as a single <strong>eventforge.html</strong> file. Open it in any browser — phone or computer — and it works fully offline: no internet, no install. The downloaded copy keeps its own separate data, so use Export Full Backup here and Import Backup there to carry your events and templates over.</div><div class="divider"></div><div class="rowBtns"><button class="btn gold" id="saveSettings">Save Settings</button><button class="btn danger" id="wipeData">Reset App Data</button></div></div></div>`}
+// Shared saves state
+let sharedSaves = [];
+let sharedLoading = false;
+let sharedError = '';
+
+function getUser() {
+  let u = localStorage.getItem('mm-eventforge-user');
+  if (!u) {
+    u = prompt('Enter your display name (shown when you save):');
+    if (u) localStorage.setItem('mm-eventforge-user', u.trim());
+  }
+  return (u || '').trim();
+}
+
+async function fetchShared() {
+  sharedLoading = true;
+  sharedError = '';
+  renderSharedContent();
+  try {
+    const res = await fetch('/api/eventforge');
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    sharedSaves = data.saves || [];
+  } catch (e) {
+    sharedError = 'Could not load shared saves';
+    sharedSaves = [];
+  }
+  sharedLoading = false;
+  renderSharedContent();
+}
+
+function renderSharedContent() {
+  const el = document.getElementById('sharedContent');
+  if (!el) return;
+  if (sharedLoading) { el.innerHTML = '<div class="hint">Loading shared saves...</div>'; return; }
+  if (sharedError) { el.innerHTML = '<div class="hint warning">' + esc(sharedError) + '</div>'; return; }
+  const evts = sharedSaves.filter(s => s.type === 'event');
+  const tpls = sharedSaves.filter(s => s.type === 'template');
+  let html = '';
+  if (evts.length) {
+    html += '<h3 style="margin:0 0 10px">Shared Events</h3><div class="templateGrid">' + evts.map(sharedTile).join('') + '</div>';
+  }
+  if (tpls.length) {
+    html += '<h3 style="margin:18px 0 10px">Shared Templates</h3><div class="templateGrid">' + tpls.map(sharedTile).join('') + '</div>';
+  }
+  if (!evts.length && !tpls.length) {
+    html = '<div class="hint">No shared saves yet. Save an event or template to share it with the clan.</div>';
+  }
+  el.innerHTML = html;
+  bindSharedItems();
+}
+
+function sharedTile(s) {
+  const ago = timeAgo(s.updated_at);
+  return '<div class="tile"><span class="chip" style="position:absolute;right:10px;top:10px">' + esc(s.category) + '</span><h3>' + esc(s.name) + '</h3><p>' + esc(s.type) + ' · v' + s.version + ' · ' + esc(s.updated_by) + ' · ' + ago + '</p><div class="actions" style="margin-top:12px"><button class="mini loadShared" data-id="' + s.id + '">Load</button><button class="mini updateShared" data-id="' + s.id + '">Update</button><button class="mini danger deleteShared" data-id="' + s.id + '">Delete</button></div></div>';
+}
+
+function timeAgo(iso) {
+  const sec = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+  if (sec < 60) return 'just now';
+  if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+  if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+  return Math.floor(sec / 86400) + 'd ago';
+}
+
+function sharedView() {
+  return '<div class="card"><div class="cardHead"><h2>Shared Saves</h2><span class="spacer"></span><button class="btn gold" id="shareCurrentBtn">Share Current Event</button><button class="btn" id="shareAsTemplateBtn">Share as Template</button></div><div class="body"><div class="hint" style="margin-bottom:14px">Events and templates saved here are visible to all clan leaders. Pick a clear name and category.</div><div id="sharedContent"><div class="hint">Loading...</div></div></div></div>';
+}
+
+function bindShared() {
+  document.getElementById('shareCurrentBtn')?.addEventListener('click', () => shareToCloud('event'));
+  document.getElementById('shareAsTemplateBtn')?.addEventListener('click', () => shareToCloud('template'));
+  bindSharedItems();
+}
+
+function bindSharedItems() {
+  document.querySelectorAll('.loadShared').forEach(x => x.onclick = () => loadFromCloud(x.dataset.id));
+  document.querySelectorAll('.updateShared').forEach(x => x.onclick = () => updateInCloud(x.dataset.id));
+  document.querySelectorAll('.deleteShared').forEach(x => x.onclick = () => deleteFromCloud(x.dataset.id));
+}
+
+function shareToCloud(type) {
+  const user = getUser();
+  if (!user) { toast('Name required to save'); return; }
+  const cats = ['PvM', 'Skilling', 'Minigame', 'Social', 'Competition', 'Other'];
+  const guess = { 'PvM Mass': 'PvM', 'PK Trip': 'PvM', 'Competition': 'Competition', 'Skilling': 'Skilling', 'Minigame': 'Minigame', 'Social': 'Social', 'Hide & Seek': 'Minigame', 'Training': 'PvM' }[state.event.preset] || 'Other';
+  showModal('Share ' + (type === 'template' ? 'Template' : 'Event'), '<div class="field"><label>Name <span class="req">*</span></label><input id="shareName" value="' + esc(state.event.name || '') + '" placeholder="Weekend CoX Mass"></div><div class="field" style="margin-top:10px"><label>Category <span class="req">*</span></label><select id="shareCat">' + cats.map(c => '<option ' + (c === guess ? 'selected' : '') + '>' + c + '</option>').join('') + '</select></div>', async () => {
+    const name = document.getElementById('shareName').value.trim();
+    const category = document.getElementById('shareCat').value;
+    if (!name) { toast('Name is required'); return; }
+    try {
+      const body = { type, name, category, user, data: type === 'template' ? { templateName: name, category, event: clone(state.event) } : clone(state.event) };
+      const res = await fetch('/api/eventforge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (!res.ok) throw new Error('Save failed');
+      const result = await res.json();
+      state.event._sharedId = result.save.id;
+      state.event._sharedVersion = result.save.version;
+      markDirty();
+      closeModal();
+      toast('Shared with clan');
+      fetchShared();
+    } catch (e) { toast('Save failed -- try again'); }
+  });
+}
+
+async function loadFromCloud(id) {
+  try {
+    const res = await fetch('/api/eventforge?id=' + encodeURIComponent(id));
+    if (!res.ok) throw new Error();
+    const { save } = await res.json();
+    const data = JSON.parse(save.data);
+    if (save.type === 'template') {
+      const tpl = data;
+      const e = eventDefaults(clone(tpl.event || data));
+      e.id = uid();
+      e._sharedId = save.id;
+      e._sharedVersion = save.version;
+      state.event = e;
+    } else {
+      const e = eventDefaults(clone(data));
+      e._sharedId = save.id;
+      e._sharedVersion = save.version;
+      state.event = e;
+    }
+    state.route = 'create';
+    markDirty();
+    render();
+    toast('Loaded "' + save.name + '"');
+  } catch { toast('Failed to load'); }
+}
+
+async function updateInCloud(id) {
+  const user = getUser();
+  if (!user) { toast('Name required'); return; }
+  const save = sharedSaves.find(s => s.id === id);
+  if (!save) return;
+  const localVersion = state.event._sharedVersion || save.version;
+  try {
+    const res = await fetch('/api/eventforge', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, name: save.name, category: save.category, data: clone(state.event), user, version: localVersion })
+    });
+    const result = await res.json();
+    if (res.status === 409) {
+      showModal('Version Conflict', '<p>' + esc(result.updatedBy) + ' saved a newer version (' + timeAgo(result.updatedAt) + '). Load their version first, or force overwrite.</p>', async () => {
+        const r2 = await fetch('/api/eventforge', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name: save.name, category: save.category, data: clone(state.event), user, version: result.currentVersion })
+        });
+        if (r2.ok) {
+          const r2j = await r2.json();
+          state.event._sharedVersion = r2j.save.version;
+          markDirty();
+          closeModal();
+          toast('Force saved');
+          fetchShared();
+        } else { toast('Save failed'); }
+      });
+      document.getElementById('mSave').textContent = 'Force Overwrite';
+      const cancelBtn = document.getElementById('mCancel');
+      cancelBtn.textContent = 'Load Theirs';
+      cancelBtn.onclick = () => { closeModal(); loadFromCloud(id); };
+      return;
+    }
+    if (!res.ok) throw new Error();
+    state.event._sharedVersion = result.save.version;
+    markDirty();
+    toast('Updated shared save');
+    fetchShared();
+  } catch { toast('Update failed'); }
+}
+
+async function deleteFromCloud(id) {
+  showModal('Delete Shared Save', '<p>This removes the save for everyone. Are you sure?</p>', async () => {
+    try {
+      await fetch('/api/eventforge', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      closeModal();
+      toast('Deleted');
+      fetchShared();
+    } catch { toast('Delete failed'); }
+  });
+}
+
+function tzOptions(sel){return ['America/New_York','America/Chicago','America/Denver','America/Los_Angeles','UTC','Europe/London','Europe/Berlin','Australia/Sydney'].map(x=>`<option ${sel===x?'selected':''}>${x}</option>`).join('')}
+function completeness(){let score=0,issues=[];const checks=[[!!state.event.name,25,'Add an event name'],[!!state.event.date,20,'Choose a date'],[!!state.event.time,15,'Choose a time'],[state.event.blocks.some(b=>b.kind==='details'&&b.world),15,'Add a world'],[state.event.blocks.some(b=>b.kind==='details'&&b.location),15,'Add a starting location'],[state.event.blocks.some(b=>hasContent(b)),10,'Add at least one announcement section']];checks.forEach(([ok,pts,msg])=>ok?score+=pts:issues.push(msg));return{score,issues}}
+function hasContent(b){if(!b.visible)return false;if(b.items)return b.items.some(x=>x.trim());if(b.kind==='details')return !!(b.world||b.location||b.host);if(b.kind==='training')return !!(b.date||b.details);return !!(b.value||b.provided)}
+function conditionOK(b){if(!b.visible)return false;if(!b.condition||b.condition==='always')return true;if(b.condition==='hasPrize')return state.event.blocks.some(x=>x.kind==='prizes'&&hasContent(x));if(b.condition==='hasEnd')return !!(state.event.endDate||state.event.endTime);if(b.condition==='competition')return state.event.preset==='Competition';if(b.condition==='pk')return state.event.preset==='PK Trip';return true}
+function lem(k){if(state.outputStyle==='minimal')return'';const v=(state.settings.lineEmoji||defaultLineEmoji())[k];return v?v+' ':''}
+function importancePrefix(b){if(!b.showLabel)return'';const emo=state.outputStyle==='minimal'?'':(b.emoji||'');const title=`${emo} ${b.label||''}`.trim();if(b.importance==='featured')return `# ${title}`;if(b.importance==='medium')return `## ${title}`;if(b.importance==='small')return `${emo} **${b.label}:**`.trim();return `### ${title}`}
+function zonedUnix(date,time,tz){if(!date||!time)return null;const [Y,M,D]=date.split('-').map(Number),[h,m]=time.split(':').map(Number);let guess=Date.UTC(Y,M-1,D,h,m,0);for(let k=0;k<3;k++){const parts=new Intl.DateTimeFormat('en-US',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(guess));const get=t=>+parts.find(p=>p.type===t).value;const asUTC=Date.UTC(get('year'),get('month')-1,get('day'),get('hour'),get('minute'));guess+=Date.UTC(Y,M-1,D,h,m)-asUTC}return Math.floor(guess/1000)}
+function mainTimestamp(style='F'){const u=zonedUnix(state.event.date,state.event.time,state.event.timezone);return u?`<t:${u}:${style}>`:''}
+function blockToText(b){if(!conditionOK(b))return'';if(b.kind==='spacer')return '\n';if(b.kind==='divider')return'────────────';const head=importancePrefix(b);let content='';if(b.kind==='details'){const lines=[];if(b.world)lines.push(`${lem('world')}**World:** ${b.world}`);if(b.location)lines.push(`${lem('meet')}**Meet:** ${b.location}`);if(b.host)lines.push(`${lem('host')}**Host:** ${b.host}`);content=lines.join('\n')}else if(['requirements','rules','prizes'].includes(b.kind)){content=(b.items||[]).filter(x=>x.trim()).map(x=>x.trim().match(/^(\d+[.)]|[-•*])/)?x:`• ${x}`).join('\n')}else if(b.kind==='gear'){const lines=[];if(b.provided)lines.push(`**Provided by clan:** ${b.provided}`);if(b.value)lines.push(b.value);content=lines.join('\n')}else if(b.kind==='training'){const lines=[];if(b.name&&b.name!==b.label)lines.push(`**${b.name}**`);const u=zonedUnix(b.date,b.time,b.timezone||state.event.timezone);if(u)lines.push(`${lem('when')}<t:${u}:F>\n${lem('starts')}<t:${u}:R>`);if(b.world)lines.push(`${lem('world')}**World:** ${b.world}`);if(b.location)lines.push(`${lem('meet')}**Meet:** ${b.location}`);if(b.details)lines.push(b.details);content=lines.join('\n')}else content=b.value||'';if(!head)return content;if(b.importance==='small'&&content&&!content.includes('\n'))return `${head} ${content}`;return [head,content].filter(Boolean).join('\n')}
+function announcementPost(){if(state.outputStyle==='compact')return compactPost();const e=state.event,arr=[];if(e.name)arr.push(`# ${e.name}`);const su=zonedUnix(e.date,e.time,e.timezone),multi=e.endDate&&e.endDate!==e.date,eu=(e.endDate||e.endTime)?zonedUnix(e.endDate||e.date,e.endTime||e.time,e.timezone):null;if(su){if(multi&&eu)arr.push(`${lem('when')}**When:** <t:${su}:D> — <t:${eu}:D>\n${lem('starts')}**Starts:** <t:${su}:F> (<t:${su}:R>)`);else arr.push(`${lem('when')}**When:** <t:${su}:F>\n${lem('starts')}**Starts:** <t:${su}:R>`)}if(eu)arr.push(`${lem('ends')}**Ends:** <t:${eu}:F>`);e.blocks.forEach(b=>{const t=blockToText(b);if(t)arr.push(t)});const extras=extraLines();if(extras)arr.push(extras);if(state.settings.master.footer)arr.push(state.settings.master.footer);return arr.join('\n\n').trim()}
+function extraLines(){const e=state.event,out=[];if(e.repeatNote&&e.recurrence?.freq!=='none'){const s=recurrenceSummary(e.recurrence,e.date);if(s)out.push(`${lem('repeat')}*Repeats: ${s}*`)}if(e.rsvp)out.push(`${lem('rsvp')}**React with ${e.rsvpEmoji||'✅'} if you plan to make it!**`);if(e.dinkNote)out.push(`${lem('dink')}*Running **Dink**? Keep it on so your drops and highlights post straight to Discord.*`);return out.join('\n')}
+function compactPost(){const e=state.event,d=e.blocks.find(b=>b.kind==='details'&&b.visible),su=zonedUnix(e.date,e.time,e.timezone),parts=[`**${e.name||'Event'}**`];if(su)parts.push(`<t:${su}:f>`);if(e.endDate&&e.endDate!==e.date){const eu=zonedUnix(e.endDate,e.endTime||e.time,e.timezone);if(eu)parts.push(`ends <t:${eu}:d>`)}if(d?.world)parts.push(`${lem('world')}W${d.world}`);if(d?.location)parts.push(`${lem('meet')}${d.location}`);let out=parts.join(' • ');if(e.repeatNote&&e.recurrence?.freq!=='none'){const s=recurrenceSummary(e.recurrence,e.date);if(s)out+=` • ${lem('repeat')}${s}`}if(e.rsvp)out+=`\n${lem('rsvp')}React ${e.rsvpEmoji||'✅'} if you're in!`;return out}
+function reminderPost(kind){const time=mainTimestamp('F'),rel=mainTimestamp('R'),details=state.event.blocks.find(b=>b.kind==='details'),world=details?.world?`\n${lem('world')}**World:** ${details.world}`:'',loc=details?.location?`\n${lem('meet')}**Meet:** ${details.location}`:'';if(kind==='24h')return `# 🔔 24-HOUR REMINDER — ${state.event.name||'EVENT'}\n\nOur event is coming up ${rel||'soon'}.\n\n📅 ${time}${world}${loc}\n\nGet ready and we'll see you there.`;if(kind==='1h')return `# 🚨 1-HOUR WARNING — ${state.event.name||'EVENT'}\n\nWe start ${rel||'in about an hour'}.\n\n📅 ${time}${world}${loc}\n\nBe ready to group up.`;if(kind==='now')return `# 🔥 STARTING NOW — ${state.event.name||'EVENT'}\n\nThe event is live.${world}${loc}\n\nGet in and group up.`;return announcementPost()}
+function resultsPost(){const r=state.event.results||{summary:'',winners:[]},arr=[`# 🏆 ${state.event.name||'EVENT'} — RESULTS`];if(r.summary)arr.push(r.summary);if(r.winners?.length){arr.push(r.winners.map((w,i)=>`${['🥇','🥈','🥉'][i]||'🏅'} **${w.place||ordinal(i+1)}:** ${w.name||'TBD'}${w.prize?` — ${w.prize}`:''}`).join('\n'))}else arr.push('Results have not been entered yet.');return arr.join('\n\n')}
+function ordinal(n){return n+(n%10===1&&n%100!==11?'st':n%10===2&&n%100!==12?'nd':n%10===3&&n%100!==13?'rd':'th')}
+function generatePost(kind=state.postType){return kind==='announcement'?announcementPost():kind==='results'?resultsPost():reminderPost(kind)}
+function renderDiscordPreview(raw){const lines=raw.split('\n'),out=[];let inUl=false,inOl=false;for(let line of lines){const safe=inline(esc(line));if(/^# /.test(line)){if(inUl){out.push('</ul>');inUl=false}if(inOl){out.push('</ol>');inOl=false}out.push(`<h1>${inline(esc(line.slice(2)))}</h1>`)}else if(/^## /.test(line))out.push(`<h2>${inline(esc(line.slice(3)))}</h2>`);else if(/^### /.test(line))out.push(`<h3>${inline(esc(line.slice(4)))}</h3>`);else if(/^> /.test(line))out.push(`<blockquote>${inline(esc(line.slice(2)))}</blockquote>`);else if(/^• |^- |^\* /.test(line)){if(!inUl){out.push('<ul>');inUl=true}out.push(`<li>${inline(esc(line.replace(/^(• |- |\* )/,'')))}</li>`)}else if(/^\d+\. /.test(line)){if(!inOl){out.push('<ol>');inOl=true}out.push(`<li>${inline(esc(line.replace(/^\d+\. /,'')))}</li>`)}else{if(inUl){out.push('</ul>');inUl=false}if(inOl){out.push('</ol>');inOl=false}out.push(line.trim()?`<p>${safe}</p>`:'<div style="height:8px"></div>')}}if(inUl)out.push('</ul>');if(inOl)out.push('</ol>');return out.join('')}
+function inline(s){return s.replace(/&lt;t:(\d+):([tTdDfFR])&gt;/g,(m,u,st)=>`<span class="timestampChip">${formatTimestamp(+u,st)}</span>`).replace(/&lt;#\d+&gt;/g,'<span class="mentionChip">#channel</span>').replace(/&lt;@&amp;\d+&gt;/g,'<span class="mentionChip">@role</span>').replace(/&lt;@!?\d+&gt;/g,'<span class="mentionChip">@user</span>').replace(/\|\|(.+?)\|\|/g,'<span style="background:#1e1f22;color:#1e1f22;border-radius:3px;padding:0 3px">$1</span>').replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/__(.+?)__/g,'<u>$1</u>').replace(/~~(.+?)~~/g,'<s>$1</s>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>').replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<span style="color:#00a8fc">$1</span>')}
+function formatTimestamp(u,style){const d=new Date(u*1000);if(style==='R')return relativeText(d);if(style==='t')return d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});if(style==='T')return d.toLocaleTimeString();if(style==='d')return d.toLocaleDateString();if(style==='D')return d.toLocaleDateString([],{dateStyle:'long'});if(style==='f')return d.toLocaleString([],{dateStyle:'long',timeStyle:'short'});return d.toLocaleString([],{dateStyle:'full',timeStyle:'short'})}
+function relativeText(d){const sec=Math.round((d-Date.now())/1000),abs=Math.abs(sec);const [n,u]=abs<60?[abs,'second']:abs<3600?[Math.round(abs/60),'minute']:abs<86400?[Math.round(abs/3600),'hour']:[Math.round(abs/86400),'day'];return sec>=0?`in ${n} ${u}${n!==1?'s':''}`:`${n} ${u}${n!==1?'s':''} ago`}
+function fts(u,st){return `<span class="timestampChip">${formatTimestamp(u,st)}</span>`}
+function editableDiscordPreview(){if(state.outputStyle==='compact')return renderDiscordPreview(compactPost());const e=state.event,out=[];out.push(`<h1><span contenteditable="true" class="pedit" data-field="eventName" data-ph="Event Name">${esc(e.name)}</span></h1>`);const su=zonedUnix(e.date,e.time,e.timezone),multi=e.endDate&&e.endDate!==e.date,eu=(e.endDate||e.endTime)?zonedUnix(e.endDate||e.date,e.endTime||e.time,e.timezone):null;if(su){if(multi&&eu){out.push(`<p>${esc(lem('when'))}<strong>When:</strong> ${fts(su,'D')} — ${fts(eu,'D')}</p>`);out.push(`<p>${esc(lem('starts'))}<strong>Starts:</strong> ${fts(su,'F')} (${fts(su,'R')})</p>`)}else{out.push(`<p>${esc(lem('when'))}<strong>When:</strong> ${fts(su,'F')}</p>`);out.push(`<p>${esc(lem('starts'))}<strong>Starts:</strong> ${fts(su,'R')}</p>`)}}if(eu)out.push(`<p>${esc(lem('ends'))}<strong>Ends:</strong> ${fts(eu,'F')}</p>`);e.blocks.forEach(b=>{if(!conditionOK(b))return;if(b.kind==='spacer'){out.push('<div style="height:8px"></div>');return}if(b.kind==='divider'){out.push('<p>────────────</p>');return}peBlockHead(b,out);peBlockBody(b,out)});const extras=extraLines();if(extras)out.push(renderDiscordPreview(extras));if(state.settings.master.footer)out.push(renderDiscordPreview(state.settings.master.footer));return out.join('')}
+function peBlockHead(b,out){if(!b.showLabel)return;const emo=state.outputStyle==='minimal'?'':(b.emoji||''),pre=emo?emo+' ':'',lbl=`<span contenteditable="true" class="pedit" data-bid="${b.id}" data-field="label" data-ph="Label">${esc(b.label||'')}</span>`;if(b.importance==='featured')out.push(`<h1>${pre}${lbl}</h1>`);else if(b.importance==='medium')out.push(`<h2>${pre}${lbl}</h2>`);else if(b.importance==='small')out.push(`<p>${pre}<strong>${lbl}:</strong></p>`);else out.push(`<h3>${pre}${lbl}</h3>`)}
+function peBlockBody(b,out){const pe=`<span contenteditable="true" class="pedit"`;if(b.kind==='details'){if(b.world)out.push(`<p>${esc(lem('world'))}<strong>World:</strong> ${pe} data-bid="${b.id}" data-field="world" data-ph="World">${esc(b.world)}</span></p>`);if(b.location)out.push(`<p>${esc(lem('meet'))}<strong>Meet:</strong> ${pe} data-bid="${b.id}" data-field="location" data-ph="Location">${esc(b.location)}</span></p>`);if(b.host)out.push(`<p>${esc(lem('host'))}<strong>Host:</strong> ${pe} data-bid="${b.id}" data-field="host" data-ph="Host">${esc(b.host)}</span></p>`)}else if(['requirements','rules','prizes'].includes(b.kind)){let has=false;(b.items||[]).forEach((x,i)=>{if(!x.trim())return;if(!has){out.push('<ul>');has=true}out.push(`<li>${pe} data-bid="${b.id}" data-field="item" data-idx="${i}" data-ph="Item">${esc(x)}</span></li>`)});if(has)out.push('</ul>')}else if(b.kind==='gear'){if(b.provided)out.push(`<p><strong>Provided by clan:</strong> ${esc(b.provided)}</p>`);if(b.value)out.push(`<div contenteditable="true" class="pedit pedit-ml" data-bid="${b.id}" data-field="value" data-ph="Gear details">${esc(b.value).replace(/\n/g,'<br>')}</div>`)}else if(b.kind==='training'){if(b.name&&b.name!==b.label)out.push(`<p><strong>${pe} data-bid="${b.id}" data-field="name" data-ph="Session name">${esc(b.name)}</span></strong></p>`);const u=zonedUnix(b.date,b.time,b.timezone||state.event.timezone);if(u)out.push(`<p>${esc(lem('when'))}${fts(u,'F')}</p><p>${esc(lem('starts'))}${fts(u,'R')}</p>`);if(b.world)out.push(`<p>${esc(lem('world'))}<strong>World:</strong> ${pe} data-bid="${b.id}" data-field="world" data-ph="World">${esc(b.world)}</span></p>`);if(b.location)out.push(`<p>${esc(lem('meet'))}<strong>Meet:</strong> ${pe} data-bid="${b.id}" data-field="location" data-ph="Location">${esc(b.location)}</span></p>`);if(b.details)out.push(`<div contenteditable="true" class="pedit pedit-ml" data-bid="${b.id}" data-field="details" data-ph="Details">${esc(b.details).replace(/\n/g,'<br>')}</div>`)}else{if(b.value)out.push(`<div contenteditable="true" class="pedit pedit-ml" data-bid="${b.id}" data-field="value" data-ph="Content">${esc(b.value).replace(/\n/g,'<br>')}</div>`)}}
+function showCreateChooser(){const hasDraft=!!(state.event.name||state.event.blocks.some(b=>hasContent(b)));const templates=state.templates;let html='<div style="display:flex;flex-direction:column;gap:10px">';html+='<button class="btn gold fullWidth createOpt" data-action="blank">📄 Blank Event</button>';if(hasDraft)html+='<button class="btn fullWidth createOpt" data-action="draft">✏️ Continue Current Draft</button>';if(templates.length){html+='<div class="divider"></div><div class="hint" style="margin-bottom:6px">Or start from a saved template:</div>';html+='<div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto">';templates.forEach(t=>{html+=`<button class="btn fullWidth createOpt" data-action="template" data-id="${t.id}">${t.favorite?'★ ':''}${esc(t.templateName)} <span class="hint" style="margin-left:6px">${esc(t.event.preset||'Custom')} · ${t.event.blocks.length} blocks</span></button>`});html+='</div>'}html+='</div>';showModal('New Event',html,closeModal);document.getElementById('mSave').style.display='none';document.querySelectorAll('.createOpt').forEach(x=>x.onclick=()=>{const action=x.dataset.action;if(action==='blank'){state.event=freshEvent();state.draftHistory=[];markDirty(true)}else if(action==='template'){const t=state.templates.find(y=>y.id===x.dataset.id);if(t){const e=eventDefaults(clone(t.event));e.id=uid();e.versions=[];if(t.inheritMaster)applyMaster(e);applyFillIn(e,t);state.event=e;markDirty()}}state.route='create';state.mobilePreview=false;closeModal();render()})}
+function bind(){document.querySelectorAll('[data-route]').forEach(x=>x.onclick=()=>{if(x.dataset.route==='create'&&state.route!=='create'){showCreateChooser();return}state.route=x.dataset.route;state.mobilePreview=false;render()});const me=document.getElementById('mEdit'),mp=document.getElementById('mPreview');if(me){me.onclick=()=>{const y=state.mobileEditScrollY||0;state.mobilePreview=false;render({restoreY:y})};mp.onclick=()=>{state.mobileEditScrollY=window.scrollY;state.mobilePreview=true;render({restoreY:state.mobilePreviewScrollY||0})};me.classList.toggle('active',!state.mobilePreview);mp.classList.toggle('active',state.mobilePreview)}const bb=document.getElementById('bottomBar');bb.style.display=state.route==='create'?'':'none';const bt=document.getElementById('bottomToggle');bt.textContent=state.mobilePreview?'✏️ Edit':'👁 Preview';bt.onclick=()=>{if(state.mobilePreview){state.mobilePreviewScrollY=window.scrollY;const y=state.mobileEditScrollY||0;state.mobilePreview=false;render({restoreY:y})}else{state.mobileEditScrollY=window.scrollY;const y=state.mobilePreviewScrollY||0;state.mobilePreview=true;render({restoreY:y})}};document.getElementById('bottomCopy').onclick=copyCurrent;document.getElementById('bottomSave').onclick=saveEvent;if(state.route==='create')bindCreate();else if(state.route==='events')bindEvents();else if(state.route==='templates')bindTemplates();else if(state.route==='shared')bindShared();else bindSettings();bindFormatting();}
+function bindCreate(){[['eventName','name'],['date','date'],['time','time'],['endDate','endDate'],['endTime','endTime'],['timezone','timezone']].forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.oninput=()=>{state.event[k]=el.value;el.classList.remove('missingField');markDirty();updateDurationHints();refreshPreview()}});document.getElementById('tags').oninput=e=>{state.event.tags=e.target.value.split(',').map(x=>x.trim()).filter(Boolean);markDirty()};document.getElementById('preset').onchange=e=>resetPreset(e.target.value);document.getElementById('collapseAll').onclick=()=>{state.event.blocks.forEach(b=>b.open=false);render()};document.querySelectorAll('.addBlock').forEach(x=>x.onclick=()=>{const nb=blockFactory[x.dataset.kind]();nb.open=true;state.event.blocks.push(nb);markDirty(true);render()});document.querySelectorAll('.addSavedField').forEach(x=>x.onclick=()=>addSavedField(x.dataset.id));document.querySelectorAll('.block').forEach(bindBlock);setupDrag();document.querySelectorAll('.postTypeBtn').forEach(x=>x.onclick=()=>{state.postType=x.dataset.type;render()});document.getElementById('copyBtn')?.addEventListener('click',copyCurrent);document.getElementById('saveEventBtn')?.addEventListener('click',saveEvent);document.getElementById('saveTemplateBtn')?.addEventListener('click',askTemplateName);document.getElementById('editResultsBtn')?.addEventListener('click',editResults);document.getElementById('applyMaster').onclick=()=>{applyMaster(state.event);markDirty(true);render();toast('Master style applied')};document.getElementById('draftHistoryBtn').onclick=showDraftHistory;document.getElementById('favEvent').onclick=()=>{state.event.favorite=!state.event.favorite;markDirty();render()};document.querySelectorAll('.quickDate').forEach(x=>x.onclick=()=>{const q=x.dataset.q;if(q==='clear'){state.event.date='';state.event.time='';state.event.endDate='';state.event.endTime='';state.event.multiDay=false}else{const t=new Date();let iso;if(q==='today')iso=toISO(t);else if(q==='tomorrow'){t.setDate(t.getDate()+1);iso=toISO(t)}else iso=nextDowISO(6,q==='nextSat'?1:0);state.event.date=iso;if(!state.event.time)state.event.time='20:00'}markDirty();render()});document.getElementById('singleDayBtn')?.addEventListener('click',()=>{state.event.multiDay=false;state.event.endDate='';markDirty();render()});document.getElementById('multiDayBtn')?.addEventListener('click',()=>{state.event.multiDay=true;if(!state.event.endDate&&state.event.date)state.event.endDate=addDaysISO(state.event.date,1);markDirty();render()});document.getElementById('recFreq')?.addEventListener('change',e=>{state.event.recurrence.freq=e.target.value;if(e.target.value==='none')state.event.repeatNote=false;markDirty();render()});document.getElementById('recInterval')?.addEventListener('input',e=>{state.event.recurrence.interval=Math.max(1,+e.target.value||1);markDirty();updateDurationHints();refreshPreview()});document.querySelectorAll('.recDay').forEach(x=>x.onclick=()=>{const d=+x.dataset.d,arr=state.event.recurrence.days,i=arr.indexOf(d);i>=0?arr.splice(i,1):arr.push(d);markDirty();render()});document.getElementById('repeatNote')?.addEventListener('change',e=>{state.event.repeatNote=e.target.checked;markDirty();refreshPreview()});document.getElementById('genNext')?.addEventListener('click',generateNext);document.getElementById('clearForm')?.addEventListener('click',clearForm);document.querySelectorAll('.styleBtn').forEach(x=>x.onclick=()=>{state.outputStyle=x.dataset.style;persist();render()});document.querySelectorAll('.optBtn').forEach(x=>x.onclick=()=>{const k=x.dataset.opt;state.event[k]=!state.event[k];markDirty();render()});document.getElementById('rsvpEmoji')?.addEventListener('input',e=>{state.event.rsvpEmoji=e.target.value;markDirty();refreshPreview()})}
+function updateDurationHints(){const d=document.getElementById('durationHint');if(d)d.textContent=durationText(state.event);const r=document.getElementById('recSummary');if(r){const s=recurrenceSummary(state.event.recurrence,state.event.date);r.textContent=s?'🔁 '+s:''}}
+function generateNext(){const e=state.event;if(!e.date){toast('Set a start date first');return}const rec=e.recurrence;if(!rec||rec.freq==='none')return;pushDraftVersion();const next=nextOccurrenceISO(e.date,rec),delta=daysBetweenISO(e.date,next);const c=clone(e);c.id=uid();c.versions=[];c.meta={created:Date.now(),updated:Date.now()};c.date=next;if(c.endDate)c.endDate=addDaysISO(c.endDate,delta);c.blocks.forEach(b=>{if(b.kind==='training'&&b.date)b.date=addDaysISO(b.date,delta)});c.results={summary:'',winners:[]};state.event=c;markDirty();render();toast(`Next occurrence ready — ${DOW[fromISO(next).getDay()]} ${next}`)}
+function clearForm(){pushDraftVersion();const p=state.event.preset||'Custom',e=freshEvent();e.preset=p;e.type=p;e.blocks=(presets[p]||presets.Custom).map(k=>blockFactory[k]());const d=e.blocks.find(b=>b.kind==='details');if(d){d.world=state.settings.defaultWorld;d.location=state.settings.defaultLocation}applyMaster(e);state.event=e;markDirty();render();toast('Form cleared — preset kept')}
+function requiredMissing(){return (state.event.name||'').trim()?[]:['Event Name']}
+function flagMissing(){const el=document.getElementById('eventName');if(el){el.classList.add('missingField');el.scrollIntoView({behavior:'smooth',block:'center'})}}
+function resetPreset(name){const old=state.event,blocks=(presets[name]||presets.Custom).map(k=>blockFactory[k]());const d=blocks.find(b=>b.kind==='details');if(d){d.world=state.settings.defaultWorld;d.location=state.settings.defaultLocation}state.event={...old,preset:name,type:name,blocks};applyMaster(state.event);markDirty(true);render()}
+function bindBlock(el){const b=state.event.blocks.find(x=>x.id===el.dataset.id),idx=()=>state.event.blocks.findIndex(x=>x.id===b.id);el.querySelector('.toggleBlock').onclick=()=>{b.open=!b.open;render()};el.querySelector('.moveUp').onclick=()=>move(idx(),-1);el.querySelector('.moveDown').onclick=()=>move(idx(),1);el.querySelector('[data-emoji-id]')?.addEventListener('click',e=>openEmoji(e.currentTarget,b));el.querySelector('.bLabel')?.addEventListener('input',e=>{b.label=e.target.value;markDirty();refreshPreview()});el.querySelector('.bVisible')?.addEventListener('change',e=>{b.visible=e.target.checked;markDirty();render()});el.querySelector('.bShowLabel')?.addEventListener('change',e=>{b.showLabel=e.target.checked;markDirty();refreshPreview()});el.querySelector('.hVisible')?.addEventListener('change',e=>{b.visible=e.target.checked;markDirty();render()});el.querySelector('.hShowLabel')?.addEventListener('change',e=>{b.showLabel=e.target.checked;markDirty();render()});const hd=el.querySelector('.hdrDel');if(hd)hd.onclick=()=>{if(hd.classList.contains('arm')){pushDraftVersion();state.event.blocks.splice(idx(),1);markDirty();render();toast('Block deleted — restorable from Draft History')}else{hd.classList.add('arm');hd.textContent='Sure?';clearTimeout(hd.__t);hd.__t=setTimeout(()=>{hd.classList.remove('arm');hd.textContent='✕'},2500)}};el.querySelector('.bCondition')?.addEventListener('change',e=>{b.condition=e.target.value;markDirty();refreshPreview()});el.querySelectorAll('[data-importance]').forEach(x=>x.onclick=()=>{b.importance=x.dataset.importance;markDirty();render()});el.querySelector('.bValue')?.addEventListener('input',e=>{b.value=e.target.value;markDirty();refreshPreview()});el.querySelectorAll('.listItem').forEach(x=>x.oninput=e=>{b.items[+x.dataset.j]=e.target.value;markDirty();refreshPreview()});el.querySelector('.addItem')?.addEventListener('click',()=>{b.items.push('');markDirty(true);render()});const pushReq=t=>{if(b.items.length===1&&!b.items[0].trim())b.items[0]=t;else b.items.push(t);markDirty(true);render()};el.querySelector('.reqAdd')?.addEventListener('click',()=>{const skill=el.querySelector('.reqSkill').value,lvl=Math.max(1,+el.querySelector('.reqLvl').value||1),em=(OSRS_SKILLS.find(([n])=>n===skill)||[])[1]||'';pushReq(skill==='Quest Points'?`${em} ${lvl}+ Quest Points`:`${em} ${lvl}+ ${skill}`)});el.querySelectorAll('.reqChip').forEach(x=>x.onclick=()=>pushReq(REQ_CHIPS[+x.dataset.i][1]));el.querySelectorAll('.delItem').forEach(x=>x.onclick=()=>{b.items.splice(+x.dataset.j,1);markDirty(true);render()});[['dWorld','world'],['dLocation','location'],['dHost','host'],['sName','name'],['sDate','date'],['sTime','time'],['sWorld','world'],['sLocation','location'],['sDetails','details']].forEach(([c,k])=>el.querySelector('.'+c)?.addEventListener('input',e=>{b[k]=e.target.value;markDirty();refreshPreview()}));el.querySelector('.gProvided')?.addEventListener('change',e=>{b.provided=e.target.value;markDirty();refreshPreview()});el.querySelector('.dupBlock').onclick=()=>{const c=clone(b);c.id=uid();state.event.blocks.splice(idx()+1,0,c);markDirty(true);render()};el.querySelector('.moveTop').onclick=()=>{state.event.blocks.unshift(state.event.blocks.splice(idx(),1)[0]);markDirty(true);render()};el.querySelector('.moveBottom').onclick=()=>{state.event.blocks.push(state.event.blocks.splice(idx(),1)[0]);markDirty(true);render()};el.querySelector('.delBlock').onclick=()=>{state.event.blocks.splice(idx(),1);markDirty(true);render()};el.querySelector('.saveField').onclick=()=>saveBlockAsField(b)}
+function bindFormatting(){document.querySelectorAll('[data-rich="1"]').forEach(el=>{el.onfocus=()=>window.__activeRich=el;el.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['b','i','u'].includes(e.key.toLowerCase())){e.preventDefault();applyFormat(el,{b:'bold',i:'italic',u:'underline'}[e.key.toLowerCase()])}});el.addEventListener('paste',e=>{const url=((e.clipboardData||window.clipboardData)?.getData('text')||'').trim();if(!/^https?:\/\/\S+$/.test(url))return;e.preventDefault();const a=el.selectionStart??0,b=el.selectionEnd??0,sel=el.value.slice(a,b);if(sel.trim()){el.setRangeText(`[${sel}](${url})`,a,b,'end');el.dispatchEvent(new Event('input',{bubbles:true}));return}const ch=url.match(/^https?:\/\/(?:www\.)?(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?:\d+|@me)\/(\d+)\/?$/);if(ch){el.setRangeText(`<#${ch[1]}>`,a,b,'end');el.dispatchEvent(new Event('input',{bubbles:true}));toast('Converted to a channel mention — Discord shows the real #name')}else pasteLinkModal(el,url)})});document.querySelectorAll('.formatBar button[data-fmt]').forEach(btn=>btn.onclick=e=>{e.preventDefault();const bar=btn.closest('.formatBar'),target=document.getElementById(bar.dataset.target)||window.__activeRich;if(!target)return;const fmt=btn.dataset.fmt;if(fmt==='mention')return mentionModal(target);if(fmt==='timestamp')return timestampModal(target);if(fmt==='link')return linkModal(target);if(fmt==='undo'){document.execCommand('undo');return}if(fmt==='redo'){document.execCommand('redo');return}applyFormat(target,fmt)})}
+function applyFormat(el,fmt){el.focus();const a=el.selectionStart??0,b=el.selectionEnd??0,sel=el.value.slice(a,b),pairs={bold:['**','**'],italic:['*','*'],underline:['__','__'],strike:['~~','~~'],spoiler:['||','||'],code:['`','`'],quote:['> ',''],bullet:['• ',''],number:['1. ','']},p=pairs[fmt];if(!p)return;const rep=p[0]+sel+p[1];el.setRangeText(rep,a,b,'select');el.dispatchEvent(new Event('input',{bubbles:true}))}
+function insertAt(el,text){el.focus();const a=el.selectionStart??el.value.length,b=el.selectionEnd??a;el.setRangeText(text,a,b,'end');el.dispatchEvent(new Event('input',{bubbles:true}))}
+function mentionModal(target){const list=state.mentions.map(m=>`<button class="btn mentionPick" data-code="${esc(m.code)}">${esc(m.name)}</button>`).join('');showModal('Insert Discord Mention',`${list?`<div class="rowBtns">${list}</div><div class="divider"></div>`:''}<div class="field"><label>Raw mention / text</label><input id="rawMention" placeholder="<@&ROLE_ID> or @Events"></div>`,()=>{const v=document.getElementById('rawMention').value.trim();if(v){insertAt(target,v);closeModal()}});document.querySelectorAll('.mentionPick').forEach(x=>x.onclick=()=>{insertAt(target,x.dataset.code);closeModal()})}
+function timestampModal(target){const today=new Date().toISOString().slice(0,10);showModal('Insert Localized Discord Timestamp',`<div class="grid"><div class="field"><label>Date</label><input id="tsDate" type="date" value="${state.event.date||today}"></div><div class="field"><label>Time</label><input id="tsTime" type="time" value="${state.event.time||'21:00'}"></div><div class="field"><label>Timezone</label><select id="tsTZ">${tzOptions(state.event.timezone)}</select></div><div class="field"><label>Display Style</label><select id="tsStyle"><option value="F">Full date + time</option><option value="f">Short date + time</option><option value="D">Long date</option><option value="d">Short date</option><option value="t">Short time</option><option value="R">Relative time</option></select></div></div>`,()=>{const u=zonedUnix(document.getElementById('tsDate').value,document.getElementById('tsTime').value,document.getElementById('tsTZ').value);if(u){insertAt(target,`<t:${u}:${document.getElementById('tsStyle').value}>`);closeModal()}})}
+function pasteLinkModal(target,url){const isDiscord=/discord(app)?\.com\/(channels|events)\//.test(url);showModal('Format Pasted Link',`<div class="hint" style="margin-bottom:8px">Give this link a display name — the post will show the name instead of the raw URL.</div><div class="field"><label>Link Name</label><input id="linkText" placeholder="${isDiscord?'e.g. #event-submissions':'e.g. Sign-up sheet'}"></div><div class="field" style="margin-top:8px"><label>URL</label><input id="linkUrl" value="${esc(url)}"></div>`,()=>{const t=document.getElementById('linkText').value.trim(),u=document.getElementById('linkUrl').value.trim();if(!u)return;insertAt(target,t?`[${t}](${u})`:u);closeModal()});document.getElementById('mSave').textContent='Insert Named Link';const c=document.getElementById('mCancel');c.textContent='Paste Raw URL';c.onclick=()=>{insertAt(target,url);closeModal()};setTimeout(()=>document.getElementById('linkText')?.focus(),60)}
+function linkModal(target){showModal('Insert Masked Link',`<div class="field"><label>Link Text</label><input id="linkText" value="${esc(target.value.slice(target.selectionStart||0,target.selectionEnd||0))}"></div><div class="field"><label>URL</label><input id="linkUrl" placeholder="https://..."></div>`,()=>{const t=document.getElementById('linkText').value||'Link',u=document.getElementById('linkUrl').value.trim();if(u){insertAt(target,`[${t}](${u})`);closeModal()}})}
+function refreshPreview(){const p=document.querySelector('.discordMsg'),r=document.querySelector('.raw'),cc=document.getElementById('charCount'),raw=generatePost();if(p&&!p.querySelector('.pedit:focus'))p.innerHTML=state.postType==='announcement'&&state.outputStyle!=='compact'?editableDiscordPreview():renderDiscordPreview(raw);if(r)r.textContent=raw;if(cc)cc.textContent=`${raw.length} chars${raw.length>2000?' ⚠️':''}`}
+function move(i,d){const j=i+d;if(j<0||j>=state.event.blocks.length)return;[state.event.blocks[i],state.event.blocks[j]]=[state.event.blocks[j],state.event.blocks[i]];markDirty(true);render()}
+function setupDrag(){let src=null;document.querySelectorAll('.block').forEach(el=>{el.ondragstart=()=>{src=el.dataset.id;el.classList.add('dragging')};el.ondragend=()=>el.classList.remove('dragging');el.ondragover=e=>e.preventDefault();el.ondrop=e=>{e.preventDefault();const target=el.dataset.id;if(!src||src===target)return;const a=state.event.blocks.findIndex(x=>x.id===src),b=state.event.blocks.findIndex(x=>x.id===target),[item]=state.event.blocks.splice(a,1);state.event.blocks.splice(b,0,item);markDirty(true);render()}})}
+function openEmoji(btn,b){const p=document.getElementById('emojiPicker'),r=btn.getBoundingClientRect();p.style.left=Math.min(innerWidth-392,Math.max(12,r.left))+'px';p.style.top=Math.min(innerHeight-405,r.bottom+6)+'px';document.getElementById('emojiGrid').innerHTML=EMOJIS.map(e=>`<button>${e}</button>`).join('');p.classList.add('open');document.querySelectorAll('#emojiGrid button').forEach(x=>x.onclick=()=>{b.emoji=x.textContent;markDirty();p.classList.remove('open');render()});setTimeout(()=>document.addEventListener('click',e=>{if(!p.contains(e.target))p.classList.remove('open')},{once:true}),0)}
+async function copyCurrent(){if(state.route==='create'){const miss=requiredMissing();if(miss.length){toast('⚠ Fill in: '+miss.join(', '));if(state.mobilePreview){state.mobilePreview=false;render()}flagMissing();return}}const text=generatePost();try{await navigator.clipboard.writeText(text);toast('Copied Discord post')}catch{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Copied Discord post')}}
+function saveEvent(){const cur=clone(state.event),i=state.events.findIndex(e=>e.id===cur.id);cur.versions=(i>=0?state.events[i].versions||[]:cur.versions||[]);if(i>=0){const prior=clone(state.events[i]);delete prior.versions;cur.versions.unshift({at:Date.now(),event:prior});cur.versions=cur.versions.slice(0,12);state.events[i]=cur}else state.events.unshift(cur);state.dirty=false;persist();showModal('Event Saved ✓',`<p class="hint">"${esc(cur.name||'Untitled Event')}" is saved to your Events tab with a version recorded.</p><div class="rowBtns" style="margin-top:10px"><button class="btn" id="expEventFile">⬇ Export File</button><button class="btn" id="saveTplToo">🧩 Save as Template</button></div><p class="hint" style="margin-top:8px">Export gives you a file you can send to any device or leader — they import it with Import Template on the Templates tab. Save as Template keeps it reusable for future events.</p>`,closeModal);document.getElementById('mSave').textContent='Done';document.getElementById('mCancel').style.display='none';document.getElementById('expEventFile').onclick=()=>{exportEventFile(cur);closeModal()};document.getElementById('saveTplToo').onclick=askTemplateName}
+function askTemplateName(){const guess={'PvM Mass':'PvM','PK Trip':'PvM','Competition':'Competition','Skilling':'Skilling','Minigame':'Minigame','Social':'Social','Hide & Seek':'Minigame','Training':'PvM'}[state.event.preset]||'Other';showModal('Save as Template',`<div class="field"><label>Template Name</label><input id="templateName" value="${esc(state.event.name||'')}" placeholder="Weekend Competition"></div><div class="field" style="margin-top:10px"><label>Category</label><select id="templateCat">${TEMPLATE_CATS.map(c=>`<option ${c===guess?'selected':''}>${c}</option>`).join('')}</select></div><div class="switchline" style="margin-top:10px"><label class="switch"><input id="inheritMaster" type="checkbox" checked><span class="slider"></span></label><span>Inherit Master Style when used</span></div><div class="divider"></div><div class="hint" style="margin-bottom:6px">Highlighted fields are <strong>fill-in</strong>: cleared every time the template is used so nobody forgets to update them. The rest stay <strong>locked</strong> to the template's saved value.</div><div class="rowBtns">${[['date','Date'],['time','Time'],['name','Event Name'],['world','World'],['location','Meet']].map(([k,l])=>`<button class="mini fillInBtn ${k==='date'?'on':''}" data-k="${k}">${l}</button>`).join('')}</div>`,()=>{const n=document.getElementById('templateName').value.trim();if(!n)return;const fillIn=[...document.querySelectorAll('.fillInBtn.on')].map(x=>x.dataset.k);state.templates.unshift({id:uid(),templateName:n,category:document.getElementById('templateCat').value,fillIn,event:clone(state.event),inheritMaster:document.getElementById('inheritMaster').checked,favorite:false});persist();const saved=state.templates[0];showModal('Template Saved ✓',`<p class="hint">"${esc(saved.templateName)}" is on your Templates tab.</p><div class="rowBtns" style="margin-top:10px"><button class="btn" id="tplExpFile">⬇ Export File</button><button class="btn" id="tplShareLink">🔗 Copy Share Link</button></div><p class="hint" style="margin-top:8px">Export a file to send anywhere, or copy a link another leader can open to import it.</p>`,closeModal);document.getElementById('mSave').textContent='Done';document.getElementById('mCancel').style.display='none';document.getElementById('tplExpFile').onclick=()=>{exportTemplate(saved.id);closeModal()};document.getElementById('tplShareLink').onclick=()=>{shareTemplate(saved.id);closeModal()}});document.querySelectorAll('.fillInBtn').forEach(x=>x.onclick=()=>x.classList.toggle('on'))}
+function applyFillIn(e,t){(t.fillIn||[]).forEach(k=>{if(k==='name')e.name='';else if(k==='date'){e.date='';e.endDate=''}else if(k==='time'){e.time='';e.endTime=''}else{const d=e.blocks.find(b=>b.kind==='details');if(d){if(k==='world')d.world='';if(k==='location')d.location=''}}})}
+function previewTemplate(id){const t=state.templates.find(x=>x.id===id);if(!t)return;const cur=state.event,curType=state.postType;state.event=eventDefaults(clone(t.event));state.postType='announcement';const raw=announcementPost();state.event=cur;state.postType=curType;showModal(`Preview — ${esc(t.templateName)}`,`<div class="discord" style="border-radius:10px;min-height:0"><div class="discordMsg">${renderDiscordPreview(raw)}</div></div>`,closeModal);document.getElementById('mSave').style.display='none'}
+function shareTemplate(id){const t=state.templates.find(x=>x.id===id);if(!t)return;const payload={app:'eventforge-template',v:1,template:{templateName:t.templateName,category:t.category||'Other',fillIn:t.fillIn||[],inheritMaster:!!t.inheritMaster,event:clone(t.event)}};const enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');const url=`${location.origin}${location.pathname}#template=${enc}`;navigator.clipboard.writeText(url).then(()=>toast('Share link copied — send it to another leader')).catch(()=>{showModal('Share Template',`<div class="field"><label>Share URL</label><textarea readonly style="min-height:120px">${esc(url)}</textarea></div>`,closeModal)})}
+function downloadTemplatePayload(payload,label){const name=(label||'template').replace(/[^a-zA-Z0-9_-]+/g,'_').toLowerCase();const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${name}-eventforge.json`;a.click();URL.revokeObjectURL(a.href);toast('Exported — import it on any device with Import Template')}
+function exportTemplate(id){const t=state.templates.find(x=>x.id===id);if(!t)return;downloadTemplatePayload({app:'eventforge-template',v:1,template:{templateName:t.templateName,category:t.category||'Other',fillIn:t.fillIn||[],inheritMaster:!!t.inheritMaster,event:clone(t.event)}},t.templateName)}
+function exportEventFile(ev){downloadTemplatePayload({app:'eventforge-template',v:1,template:{templateName:ev.name||'Event',category:'Other',fillIn:[],inheritMaster:false,event:clone(ev)}},ev.name||'event')}
+function checkTemplateImport(){const m=location.hash.match(/#template=([A-Za-z0-9_-]+)/);if(!m)return;let t=null;try{let b=m[1].replace(/-/g,'+').replace(/_/g,'/');b+='='.repeat((4-b.length%4)%4);t=JSON.parse(decodeURIComponent(escape(atob(b))))}catch{}history.replaceState(null,'',location.pathname+location.search);const tpl=t?.template;if(!tpl||!tpl.event||!Array.isArray(tpl.event.blocks)){toast('That template link is not valid');return}showModal('Import Shared Template',`<p>Import template <strong>${esc(tpl.templateName||'Untitled')}</strong> (${esc(tpl.category||'Other')} · ${tpl.event.blocks.length} blocks) into your EventForge?</p><p class="hint">Shared by another leader via link. It will appear in your Templates tab.</p>`,()=>{state.templates.unshift({id:uid(),templateName:tpl.templateName||'Imported Template',category:TEMPLATE_CATS.includes(tpl.category)?tpl.category:'Other',fillIn:Array.isArray(tpl.fillIn)?tpl.fillIn:[],inheritMaster:!!tpl.inheritMaster,favorite:false,event:eventDefaults(Object.assign(clone(tpl.event),{id:uid()}))});persist();state.route='templates';closeModal();render();toast('Template imported')})}
+function importTemplateFile(e){const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);let tpl=null;if(parsed.app==='eventforge-template'&&parsed.template){tpl=parsed.template}else if(parsed.templateName&&parsed.event&&Array.isArray(parsed.event.blocks)){tpl=parsed}if(!tpl||!tpl.event||!Array.isArray(tpl.event.blocks))throw new Error('Not a valid template');showModal('Import Template',`<p>Import template <strong>${esc(tpl.templateName||'Untitled')}</strong> (${esc(tpl.category||'Other')} · ${tpl.event.blocks.length} blocks) into your EventForge?</p><p class="hint">This will add it to your Templates tab.</p>`,()=>{state.templates.unshift({id:uid(),templateName:tpl.templateName||'Imported Template',category:TEMPLATE_CATS.includes(tpl.category)?tpl.category:'Other',fillIn:Array.isArray(tpl.fillIn)?tpl.fillIn:[],inheritMaster:!!tpl.inheritMaster,favorite:false,event:eventDefaults(Object.assign(clone(tpl.event),{id:uid()}))});persist();state.route='templates';closeModal();render();toast('Template imported')})}catch{toast('Not a valid EventForge template file')}};reader.readAsText(f);e.target.value=''}
+function applyMaster(event){const m=state.settings.master;event.blocks.forEach(b=>{if(m.importance[b.kind])b.importance=m.importance[b.kind];if(m.emoji[b.kind])b.emoji=m.emoji[b.kind]})}
+function saveBlockAsField(b){showModal('Save Reusable Custom Field',`<div class="field"><label>Field Name</label><input id="fieldName" value="${esc(b.label||'Custom Field')}"></div>`,()=>{const n=document.getElementById('fieldName').value.trim();if(!n)return;state.customFields.unshift({id:uid(),name:n,emoji:b.emoji||'📝',importance:b.importance||'normal',kind:b.kind==='custom'?'custom':b.kind,defaultValue:b.value||'',template:clone(b)});persist();closeModal();toast('Reusable field saved')})}
+function addSavedField(id){const f=state.customFields.find(x=>x.id===id);if(!f)return;const b=clone(f.template||blockFactory.custom());b.id=uid();b.label=f.name;b.emoji=f.emoji||b.emoji;b.open=true;state.event.blocks.push(b);markDirty(true);render()}
+function showDraftHistory(){const html=state.draftHistory.length?state.draftHistory.map((v,i)=>`<div class="smallCard" style="margin-bottom:8px"><strong>${new Date(v.__at).toLocaleString()}</strong><div class="hint">${esc(v.name||'Untitled')} · ${v.blocks?.length||0} blocks</div><button class="mini restoreDraft" data-i="${i}" style="margin-top:7px">Restore</button></div>`).join(''):'<div class="hint">No draft versions yet. Structural changes create snapshots.</div>';showModal('Draft History',html,closeModal);document.querySelectorAll('.restoreDraft').forEach(x=>x.onclick=()=>{const v=clone(state.draftHistory[+x.dataset.i]);delete v.__at;state.event=v;closeModal();markDirty();render()})}
+function editResults(eventId=null){if(eventId){const e=state.events.find(x=>x.id===eventId);if(e)state.event=clone(e)}const r=state.event.results||{summary:'',winners:[]},rows=(r.winners.length?r.winners:[{place:'1st',name:'',prize:''},{place:'2nd',name:'',prize:''}]);showModal('Event Results',`<div class="field"><label>Result Summary</label>${textArea('resultSummary',r.summary||'','resultSummary')}</div><div id="winnerRows">${rows.map((w,i)=>winnerRow(w,i)).join('')}</div><button class="mini" id="addWinner">+ Add Winner</button>`,()=>{const winners=[...document.querySelectorAll('.winnerRow')].map(row=>({place:row.querySelector('.wPlace').value,name:row.querySelector('.wName').value,prize:row.querySelector('.wPrize').value})).filter(w=>w.name||w.prize);state.event.results={summary:document.getElementById('resultSummary').value,winners};state.postType='results';markDirty(true);closeModal();render()});bindFormatting();document.getElementById('addWinner').onclick=()=>{document.getElementById('winnerRows').insertAdjacentHTML('beforeend',winnerRow({place:ordinal(document.querySelectorAll('.winnerRow').length+1),name:'',prize:''},document.querySelectorAll('.winnerRow').length))}}
+function winnerRow(w,i){return `<div class="grid winnerRow smallCard" style="margin-bottom:8px"><div class="field"><label>Place</label><input class="wPlace" value="${esc(w.place||ordinal(i+1))}"></div><div class="field"><label>Winner</label><input class="wName" value="${esc(w.name||'')}"></div><div class="field full"><label>Prize / Note</label><input class="wPrize" value="${esc(w.prize||'')}"></div></div>`}
+function bindEvents(){bindSearch();document.getElementById('exportBackupQuick').onclick=exportBackup;document.querySelectorAll('.loadEvent').forEach(x=>x.onclick=()=>{const e=state.events.find(y=>y.id===x.dataset.id);state.event=clone(e);state.route='create';render()});document.querySelectorAll('.dupEvent').forEach(x=>x.onclick=()=>{const e=clone(state.events.find(y=>y.id===x.dataset.id));e.id=uid();e.name=(e.name||'Event')+' Copy';e.versions=[];state.event=e;state.route='create';markDirty(true);render()});document.querySelectorAll('.copySaved').forEach(x=>x.onclick=async()=>{const cur=state.event,e=state.events.find(y=>y.id===x.dataset.id);state.event=e;await copyCurrent();state.event=cur});document.querySelectorAll('.deleteEvent').forEach(x=>x.onclick=()=>{state.events=state.events.filter(y=>y.id!==x.dataset.id);persist();render()});document.querySelectorAll('.favSaved').forEach(x=>x.onclick=()=>{const e=state.events.find(y=>y.id===x.dataset.id);e.favorite=!e.favorite;persist();render()});document.querySelectorAll('.historyEvent').forEach(x=>x.onclick=()=>showEventHistory(x.dataset.id));document.querySelectorAll('.resultEvent').forEach(x=>x.onclick=()=>editResults(x.dataset.id))}
+function showEventHistory(id){const e=state.events.find(x=>x.id===id),vs=e?.versions||[];const html=vs.length?vs.map((v,i)=>`<div class="smallCard" style="margin-bottom:8px"><strong>${new Date(v.at).toLocaleString()}</strong><div class="hint">${esc(v.event.name||'Untitled')}</div><button class="mini restoreSavedVersion" data-i="${i}">Restore to Editor</button></div>`).join(''):'<div class="hint">No prior saved versions yet.</div>';showModal('Saved Event History',html,closeModal);document.querySelectorAll('.restoreSavedVersion').forEach(x=>x.onclick=()=>{state.event=clone(vs[+x.dataset.i].event);state.route='create';closeModal();render()})}
+function bindTemplates(){bindSearch();document.getElementById('importTemplateBtn').onclick=()=>document.getElementById('templateInput').click();document.getElementById('templateInput').onchange=importTemplateFile;document.getElementById('applyMasterAll').onclick=()=>{state.templates.forEach(t=>applyMaster(t.event));persist();render();toast('Master style applied to templates')};document.querySelectorAll('.useTemplate').forEach(x=>x.onclick=()=>{const t=state.templates.find(y=>y.id===x.dataset.id),e=eventDefaults(clone(t.event));e.id=uid();e.versions=[];if(t.inheritMaster)applyMaster(e);applyFillIn(e,t);state.event=e;state.route='create';markDirty();render()});document.querySelectorAll('.catBtn').forEach(x=>x.onclick=()=>{state.templateCategory=x.dataset.cat;persist();render()});document.querySelectorAll('.previewTemplate').forEach(x=>x.onclick=()=>previewTemplate(x.dataset.id));document.querySelectorAll('.shareTemplate').forEach(x=>x.onclick=()=>shareTemplate(x.dataset.id));document.querySelectorAll('.exportTemplate').forEach(x=>x.onclick=()=>exportTemplate(x.dataset.id));document.querySelectorAll('.deleteTemplate').forEach(x=>x.onclick=()=>{state.templates=state.templates.filter(y=>y.id!==x.dataset.id);persist();render()});document.querySelectorAll('.favTemplate').forEach(x=>x.onclick=()=>{const t=state.templates.find(y=>y.id===x.dataset.id);t.favorite=!t.favorite;persist();render()});document.querySelectorAll('.applyMasterTemplate').forEach(x=>x.onclick=()=>{const t=state.templates.find(y=>y.id===x.dataset.id);applyMaster(t.event);persist();render();toast('Master style applied')})}
+function bindSearch(){document.getElementById('searchFilter').oninput=e=>{state.filter=e.target.value;render()};document.getElementById('tagFilter').oninput=e=>{state.tagFilter=e.target.value;render()}}
+function bindSettings(){document.getElementById('saveSettings').onclick=()=>{state.settings.clan=document.getElementById('sClan').value;state.settings.timezone=document.getElementById('sTZ').value;state.settings.defaultWorld=document.getElementById('sWorld').value;state.settings.defaultLocation=document.getElementById('sLoc').value;state.settings.master.footer=document.getElementById('masterFooter').value;document.querySelectorAll('.lineEmojiInput').forEach(x=>state.settings.lineEmoji[x.dataset.k]=x.value.trim());persist();toast('Settings saved')};document.getElementById('addMention').onclick=addMentionModal;document.querySelectorAll('.delMention').forEach(x=>x.onclick=()=>{state.mentions=state.mentions.filter(y=>y.id!==x.dataset.id);persist();render()});document.getElementById('addCustomField').onclick=addCustomFieldModal;document.querySelectorAll('.delCustomField').forEach(x=>x.onclick=()=>{state.customFields=state.customFields.filter(y=>y.id!==x.dataset.id);persist();render()});document.getElementById('editMasterStyle').onclick=editMasterStyle;document.getElementById('exportBackup').onclick=exportBackup;document.getElementById('downloadApp').onclick=downloadApp;document.getElementById('importBackup').onclick=()=>document.getElementById('backupInput').click();document.getElementById('backupInput').onchange=importBackup;document.getElementById('copyBackup').onclick=copyBackup;document.getElementById('pasteBackup').onclick=pasteBackupModal;document.getElementById('wipeData').onclick=()=>showModal('Reset App Data','<p class="hint">This permanently deletes EventForge data stored on this device.</p>',()=>{localStorage.removeItem(STORE_KEY);state=defaultState();closeModal();render();toast('App reset')})}
+function addMentionModal(){showModal('Add Discord Mention',`<div class="field"><label>Friendly Name</label><input id="mentionName" placeholder="Events Role"></div><div class="field"><label>Discord Syntax</label><input id="mentionCode" placeholder="<@&123456789012345678>"></div><div class="hint" style="margin-top:7px">Role: &lt;@&amp;ROLE_ID&gt; · User: &lt;@USER_ID&gt; · Channel: &lt;#CHANNEL_ID&gt;</div>`,()=>{const name=document.getElementById('mentionName').value.trim(),code=document.getElementById('mentionCode').value.trim();if(name&&code){state.mentions.push({id:uid(),name,code});persist();closeModal();render()}})}
+function addCustomFieldModal(){showModal('Add Reusable Custom Field',`<div class="grid"><div class="field"><label>Name</label><input id="cfName" placeholder="Combat Requirement"></div><div class="field"><label>Emoji</label><input id="cfEmoji" value="📝"></div><div class="field full"><label>Default Text</label><textarea id="cfValue"></textarea></div></div>`,()=>{const name=document.getElementById('cfName').value.trim();if(!name)return;const b=blockFactory.custom();b.label=name;b.emoji=document.getElementById('cfEmoji').value||'📝';b.value=document.getElementById('cfValue').value;state.customFields.push({id:uid(),name,emoji:b.emoji,importance:'normal',defaultValue:b.value,template:b});persist();closeModal();render()})}
+function editMasterStyle(){const kinds=['details','requirements','rules','prizes','gear','submissions','training','custom'];showModal('Master Block Defaults',kinds.map(k=>`<div class="grid smallCard" style="margin-bottom:8px"><div class="field"><label>${k} Emoji</label><input class="msEmoji" data-k="${k}" value="${esc(state.settings.master.emoji[k]||'')}"></div><div class="field"><label>Importance</label><select class="msImp" data-k="${k}">${['small','normal','medium','featured'].map(x=>`<option ${state.settings.master.importance[k]===x?'selected':''}>${x}</option>`).join('')}</select></div></div>`).join(''),()=>{document.querySelectorAll('.msEmoji').forEach(x=>state.settings.master.emoji[x.dataset.k]=x.value);document.querySelectorAll('.msImp').forEach(x=>state.settings.master.importance[x.dataset.k]=x.value);persist();closeModal();toast('Master style updated')})}
+function downloadApp(){const kb=Math.max(1,Math.round(document.documentElement.outerHTML.length/1024));showModal('Download EventForge',`<p>This saves the <strong>entire tool</strong> as one small file — <strong>eventforge.html</strong> (~${kb} KB). Open it in any browser on any computer or phone and it works fully offline. Nothing to install.</p><p class="hint warning" style="margin:10px 0">⚠ Your saved events, templates, and drafts do <strong>not</strong> travel inside the file — each copy keeps its own data. To bring yours along, export a backup now and use <strong>Import Backup</strong> in the downloaded copy.</p><div class="rowBtns" style="margin:10px 0"><button class="btn" id="exportFirst">⬇ Export Backup First</button></div><p class="hint">The file is a snapshot of today's version. Re-download any time to get the latest updates.</p>`,doDownloadApp);document.getElementById('mSave').textContent='💾 Download';document.getElementById('exportFirst').onclick=exportBackup}
+async function doDownloadApp(){try{const res=await fetch(location.href,{cache:'no-cache'});if(!res.ok)throw new Error();const html=await res.text();if(!html.includes('EventForge'))throw new Error();const blob=new Blob([html],{type:'text/html'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='eventforge.html';a.click();URL.revokeObjectURL(a.href);closeModal();toast('Downloaded — open eventforge.html in any browser')}catch{closeModal();toast('Download failed — try again later')}}
+function exportBackup(){const blob=new Blob([JSON.stringify({app:'MM EventForge',version:2,exportedAt:new Date().toISOString(),data:state},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`eventforge-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href);toast('Backup exported')}
+function restoreBackupText(text){try{const parsed=JSON.parse(text),data=parsed.data||parsed;if(!data.event||!Array.isArray(data.events))throw new Error('Invalid backup');showModal('Import Backup','<p>This will replace the EventForge data currently stored on this device.</p>',()=>{state=normalize(data);persist();closeModal();render();toast('Backup restored')});return true}catch{return false}}
+function importBackup(e){const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{if(!restoreBackupText(reader.result))toast('That file is not an EventForge backup')};reader.readAsText(f);e.target.value=''}
+function backupText(){return JSON.stringify({app:'MM EventForge',version:2,exportedAt:new Date().toISOString(),data:state})}
+async function copyBackup(){const text=backupText();try{await navigator.clipboard.writeText(text);toast('Backup copied — save the text anywhere, restore with Paste Backup')}catch{showModal('Copy Backup',`<div class="field"><label>Backup Text — select all and copy</label><textarea id="copyArea" readonly style="min-height:160px">${esc(text)}</textarea></div>`,closeModal);document.getElementById('copyArea').select()}}
+function pasteBackupModal(){showModal('Paste Backup',`<div class="field"><label>Paste backup text here</label><textarea id="pasteArea" style="min-height:160px" placeholder='Paste the copied backup text — it starts with {"app":"MM EventForge"...'></textarea></div><p class="hint">Restoring replaces the EventForge data currently on this device.</p>`,()=>{if(!restoreBackupText(document.getElementById('pasteArea').value.trim()))toast('That text is not an EventForge backup')})}
+function showModal(title,html,onSave){const back=document.getElementById('modalBack'),m=document.getElementById('modal');m.innerHTML=`<h3>${title}</h3>${html}<div class="actions"><button class="btn" id="mCancel">Cancel</button><button class="btn gold" id="mSave">Save</button></div>`;back.classList.add('open');document.getElementById('mCancel').onclick=closeModal;document.getElementById('mSave').onclick=onSave}
+function closeModal(){document.getElementById('modalBack').classList.remove('open')}
+function renderSaveStatus(){const el=document.getElementById('saveStatus');if(el)el.textContent=state.autosaveAt?'✓ Draft autosaved':'Autosave on'}
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.classList.remove('show'),1800)}
+window.addEventListener('beforeunload',persist);
+
+/* --- Shared Saves (D1 cloud storage) --- */
+const SHARED_USER_KEY='mm-eventforge-user';
+const SHARED_CATS=['PvM','Skilling','Minigame','Social','Competition','Other'];
+let _sharedCache=null;
+let _sharedLoading=false;
+
+function getSharedUser(){try{return localStorage.getItem(SHARED_USER_KEY)}catch(e){return null}}
+function setSharedUser(name){try{localStorage.setItem(SHARED_USER_KEY,name)}catch(e){}}
+function ensureSharedUser(){
+  let u=getSharedUser();
+  if(u)return u;
+  u=prompt('Enter your name (RSN or Discord name):');
+  if(!u||!u.trim())return null;
+  u=u.trim();setSharedUser(u);return u;
+}
+
+async function fetchSharedList(force){
+  if(_sharedCache&&!force)return _sharedCache;
+  _sharedLoading=true;
+  try{
+    const r=await fetch('/api/eventforge');
+    if(!r.ok)throw new Error('API error');
+    const d=await r.json();
+    _sharedCache=d.saves||[];
+    return _sharedCache;
+  }catch(e){toast('Could not load shared saves');return _sharedCache||[]}
+  finally{_sharedLoading=false}
+}
+async function fetchSharedItem(id){
+  const r=await fetch('/api/eventforge?id='+encodeURIComponent(id));
+  if(!r.ok)throw new Error('Not found');
+  return r.json();
+}
+async function saveToCloud(type,name,category,data){
+  const user=ensureSharedUser();if(!user)return null;
+  const r=await fetch('/api/eventforge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({type,name,category,data,user})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));toast(e.error||'Save failed');return null}
+  _sharedCache=null;
+  return r.json();
+}
+async function updateInCloud(id,version,updates){
+  const user=ensureSharedUser();if(!user)return null;
+  const body={id,version,user,...updates};
+  const r=await fetch('/api/eventforge',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  if(r.status===409){
+    const conflict=await r.json();
+    const overwrite=confirm(`This save was updated by ${conflict.updatedBy} at ${new Date(conflict.updatedAt).toLocaleString()}.\n\nDo you want to overwrite their changes?`);
+    if(overwrite){
+      body.version=conflict.currentVersion;
+      const r2=await fetch('/api/eventforge',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+      if(!r2.ok){toast('Overwrite failed');return null}
+      _sharedCache=null;return r2.json();
+    }
+    return null;
+  }
+  if(!r.ok){const e=await r.json().catch(()=>({}));toast(e.error||'Update failed');return null}
+  _sharedCache=null;return r.json();
+}
+async function deleteFromCloud(id){
+  const r=await fetch('/api/eventforge',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({id})});
+  if(!r.ok){toast('Delete failed');return false}
+  _sharedCache=null;return true;
+}
+
+function sharedView(){
+  const list=_sharedCache||[];
+  const userDisplay=getSharedUser();
+  const events=list.filter(s=>s.type==='event');
+  const templates=list.filter(s=>s.type==='template');
+  return `<div class="card"><div class="cardHead"><h2>Shared Saves</h2><span class="spacer"></span>${userDisplay?`<span class="hint" style="cursor:pointer" id="changeSharedUser" title="Click to change">Logged in as <strong>${esc(userDisplay)}</strong></span>`:`<button class="btn" id="setSharedUser">Set Your Name</button>`}</div><div class="body">
+    <div class="hint" style="margin-bottom:14px">Saves visible to all clan leaders. Share events and templates so anyone can load, edit, and reuse them.</div>
+    <div class="rowBtns" style="margin-bottom:16px">
+      <button class="btn gold" id="shareCurrentEvent">☁️ Share Current Event</button>
+      <button class="btn" id="shareCurrentTemplate">☁️ Share as Template</button>
+      <button class="btn" id="refreshShared">🔄 Refresh</button>
+    </div>
+    ${events.length?`<h3 style="margin:16px 0 8px">Events (${events.length})</h3><div class="shared-list">${events.map(sharedItemHtml).join('')}</div>`:''}
+    ${templates.length?`<h3 style="margin:16px 0 8px">Templates (${templates.length})</h3><div class="shared-list">${templates.map(sharedItemHtml).join('')}</div>`:''}
+    ${!events.length&&!templates.length?`<div class="shared-empty">${_sharedLoading?'Loading...':'No shared saves yet. Share an event or template to get started.'}</div>`:''}
+  </div></div>`;
+}
+
+function sharedItemHtml(s){
+  const icon=s.type==='event'?'📅':'🧩';
+  const ago=timeAgo(s.updated_at);
+  return `<div class="shared-item" data-id="${s.id}" data-type="${s.type}">
+    <div class="si-icon">${icon}</div>
+    <div class="si-info"><div class="si-name">${esc(s.name)}</div><div class="si-meta">by ${esc(s.updated_by)} ${ago}</div></div>
+    <span class="si-cat">${esc(s.category)}</span>
+    <div class="si-actions">
+      <button class="mini loadShared" data-id="${s.id}" data-type="${s.type}">Load</button>
+      <button class="mini danger deleteShared" data-id="${s.id}">✕</button>
+    </div>
+  </div>`;
+}
+
+function timeAgo(iso){
+  if(!iso)return '';
+  const d=Date.now()-new Date(iso).getTime();
+  if(d<60000)return 'just now';
+  if(d<3600000)return Math.floor(d/60000)+'m ago';
+  if(d<86400000)return Math.floor(d/3600000)+'h ago';
+  return Math.floor(d/86400000)+'d ago';
+}
+
+function bindShared(){
+  document.getElementById('changeSharedUser')?.addEventListener('click',()=>{
+    const cur=getSharedUser()||'';
+    const u=prompt('Enter your name (RSN or Discord name):',cur);
+    if(u&&u.trim()){setSharedUser(u.trim());render()}
+  });
+  document.getElementById('setSharedUser')?.addEventListener('click',()=>{
+    const u=ensureSharedUser();if(u)render();
+  });
+  document.getElementById('refreshShared')?.addEventListener('click',async()=>{
+    toast('Refreshing...');await fetchSharedList(true);render();
+  });
+  document.getElementById('shareCurrentEvent')?.addEventListener('click',()=>shareCurrentToCloud('event'));
+  document.getElementById('shareCurrentTemplate')?.addEventListener('click',()=>shareCurrentToCloud('template'));
+  document.querySelectorAll('.loadShared').forEach(x=>x.addEventListener('click',async(e)=>{
+    e.stopPropagation();
+    const id=x.dataset.id;
+    try{
+      const item=await fetchSharedItem(id);
+      const data=typeof item.data==='string'?JSON.parse(item.data):item.data;
+      if(item.type==='template'){
+        const t={id:uid(),templateName:item.name,category:item.category||'Other',fillIn:[],event:eventDefaults(clone(data)),inheritMaster:false,favorite:false,_cloudId:item.id,_cloudVersion:item.version};
+        state.templates.unshift(t);persist();
+        toast('Template loaded to your Templates tab');
+      }else{
+        state.event=eventDefaults(clone(data));
+        state.event._cloudId=item.id;
+        state.event._cloudVersion=item.version;
+        state.event._cloudName=item.name;
+        state.event._cloudCategory=item.category;
+        state.route='create';markDirty();
+        toast('Event loaded to editor');
+      }
+      render();
+    }catch(err){toast('Failed to load save')}
+  }));
+  document.querySelectorAll('.deleteShared').forEach(x=>x.addEventListener('click',async(e)=>{
+    e.stopPropagation();
+    if(!confirm('Delete this shared save? This cannot be undone.'))return;
+    if(await deleteFromCloud(x.dataset.id)){toast('Deleted');await fetchSharedList(true);render()}
+  }));
+}
+
+function shareCurrentToCloud(type){
+  const user=ensureSharedUser();if(!user)return;
+  const e=state.event;
+  const guess={'PvM Mass':'PvM','PK Trip':'PvM','Competition':'Competition','Skilling':'Skilling','Minigame':'Minigame','Social':'Social','Hide & Seek':'Minigame','Training':'PvM'}[e.preset]||'Other';
+  showModal('Share to Cloud',`
+    <div class="field"><label>Name <span class="req">*</span></label><input id="shareName" value="${esc(e.name||'')}" placeholder="${type==='template'?'Weekend PK Template':'Friday PK Event'}"></div>
+    <div class="field" style="margin-top:10px"><label>Category <span class="req">*</span></label><select id="shareCat">${SHARED_CATS.map(c=>`<option ${c===guess?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="hint" style="margin-top:10px">This will be visible to all clan leaders on the Shared tab.</div>
+  `,async()=>{
+    const name=document.getElementById('shareName').value.trim();
+    const cat=document.getElementById('shareCat').value;
+    if(!name){toast('Name is required');return}
+    const data=clone(state.event);
+    delete data._cloudId;delete data._cloudVersion;delete data._cloudName;delete data._cloudCategory;
+    const result=await saveToCloud(type,name,cat,data);
+    if(result){
+      if(type==='event'){state.event._cloudId=result.id;state.event._cloudVersion=result.version;state.event._cloudName=name;state.event._cloudCategory=cat}
+      closeModal();toast('Shared to cloud');await fetchSharedList(true);
+    }
+  });
+}
+
+fetchSharedList(false);
+render();
+checkTemplateImport();
+</script>
+<script>
+/* ============================================================
+   EventForge QoL enhancement layer (additive — no app logic changed)
+   1) Text selection inside draggable blocks
+   2) Spellcheck + autocapitalize + autocorrect (spelling / caps / word suggestions)
+   3) Auto-growing textareas
+   4) Discord 2000-char limit meter
+   5) Keyboard shortcuts: Ctrl/Cmd+S = Save Event, Ctrl/Cmd+Enter = Copy to Discord
+   ============================================================ */
+(function(){
+  var app=document.getElementById('app'); if(!app) return;
+  var FIELD='input,textarea,select';
+
+  /* 1) A block is draggable="true"; pressing a field inside it starts a drag
+        instead of selecting text. Disable the block's drag the moment a field
+        is pressed, restore it on release — so highlighting works, reorder still does too. */
+  document.addEventListener('pointerdown',function(e){
+    var f=e.target.closest(FIELD); if(!f) return;
+    var bl=f.closest('.block'); if(bl){ bl.setAttribute('data-nodrag','1'); bl.setAttribute('draggable','false'); }
+  },true);
+  function restoreDrag(){ document.querySelectorAll('.block[data-nodrag]').forEach(function(bl){ bl.removeAttribute('data-nodrag'); bl.setAttribute('draggable','true'); }); }
+  document.addEventListener('pointerup',restoreDrag,true);
+  document.addEventListener('pointercancel',restoreDrag,true);
+  /* never let a drag start from within a field (belt & suspenders) */
+  document.addEventListener('dragstart',function(e){ if(e.target.closest(FIELD)||e.target.closest('a,label')) e.preventDefault(); },true);
+
+  /* 2/3) enhance fields after every render */
+  function isTexty(el){
+    if(el.tagName==='TEXTAREA') return true;
+    var t=(el.getAttribute('type')||'text').toLowerCase();
+    return el.tagName==='INPUT' && (t==='text'||t==='search'||t==='');
+  }
+  function enhance(){
+    app.querySelectorAll('textarea, input').forEach(function(el){
+      if(isTexty(el)){
+        el.setAttribute('spellcheck','true');
+        el.setAttribute('autocorrect','on');
+        var idc=(el.id+' '+el.className).toLowerCase();
+        if(el.id==='eventName') el.setAttribute('autocapitalize','characters');            /* event name -> ALL CAPS keyboard */
+        else if(!/world|url|link|code|time|date|number|host|leader/.test(idc)) el.setAttribute('autocapitalize','sentences');
+        if(!el.getAttribute('autocomplete')) el.setAttribute('autocomplete','on');
+      }
+      if(el.tagName==='TEXTAREA' && !el.dataset.grow){
+        el.dataset.grow='1';
+        var grow=function(){ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; };  /* grow to fit, uncapped */
+        el.addEventListener('input',grow);
+        requestAnimationFrame(grow);
+      }
+    });
+    /* 4) Discord 2000-char limit meter */
+    var cc=document.getElementById('charCount');
+    if(cc){
+      var mm=(cc.textContent||'').match(/\d[\d,]*/);            /* first number only — never re-parse our own "/ 2000" suffix */
+      var n=mm?parseInt(mm[0].replace(/,/g,''),10):0;
+      var want=n.toLocaleString()+' / 2000';
+      if(cc.textContent!==want) cc.textContent=want;
+      cc.classList.toggle('over',n>2000);
+      cc.classList.toggle('warn',n>=1600&&n<=2000);
+    }
+  }
+
+  /* run enhance on load + on every re-render, without self-triggering the observer */
+  var pending=false, cfg={childList:true,subtree:true};
+  var obs=new MutationObserver(function(){
+    if(pending) return; pending=true;
+    requestAnimationFrame(function(){ pending=false; obs.disconnect(); try{enhance();}catch(_){}; obs.observe(app,cfg); });
+  });
+  try{ enhance(); }catch(_){}
+  obs.observe(app,cfg);
+
+  /* 5) keyboard shortcuts (don't clash with the app's Ctrl+B/I/U inside fields) */
+  document.addEventListener('keydown',function(e){
+    if(!(e.ctrlKey||e.metaKey)) return;
+    var k=(e.key||'').toLowerCase();
+    if(k==='s'){ e.preventDefault(); var b=document.getElementById('saveEventBtn'); if(b) b.click(); }
+    else if(k==='enter'){ e.preventDefault(); var c=document.getElementById('copyBtn')||document.getElementById('bottomCopy'); if(c) c.click(); }
+  });
+
+  /* 6) Preview inline editing — click-to-edit in the Discord preview, changes save back to state + form */
+  document.addEventListener('keydown',function(e){
+    var pe=e.target.closest&&e.target.closest('.pedit');if(!pe)return;
+    if(e.key==='Enter'&&!pe.classList.contains('pedit-ml')){e.preventDefault();pe.blur()}
+    if(e.key==='Escape')pe.blur();
+  },true);
+  document.addEventListener('paste',function(e){
+    var pe=e.target.closest&&e.target.closest('.pedit');if(!pe)return;
+    e.preventDefault();
+    var text=(e.clipboardData||window.clipboardData).getData('text/plain');
+    document.execCommand('insertText',false,text);
+  },true);
+  document.addEventListener('focusout',function(e){
+    var pe=e.target.closest&&e.target.closest('.pedit');
+    if(!pe||!pe.closest('.discordMsg'))return;
+    var field=pe.dataset.field,bid=pe.dataset.bid,idx=pe.dataset.idx,val=pe.innerText||'';
+    if(field==='eventName'){state.event.name=val;var el=document.getElementById('eventName');if(el)el.value=val}
+    else if(bid){var b=state.event.blocks.find(function(x){return x.id===bid});if(!b)return;var blEl=document.querySelector('.block[data-id="'+bid+'"]');if(field==='label'){b.label=val;if(blEl){var l=blEl.querySelector('.bLabel');if(l)l.value=val}}else if(field==='item'&&idx!=null){b.items[+idx]=val;if(blEl){var li=blEl.querySelector('.listItem[data-j="'+idx+'"]');if(li)li.value=val}}else if(field==='world'){b.world=val;if(blEl){var w=blEl.querySelector('.dWorld,.sWorld');if(w)w.value=val}}else if(field==='location'){b.location=val;if(blEl){var l2=blEl.querySelector('.dLocation,.sLocation');if(l2)l2.value=val}}else if(field==='host'){b.host=val;if(blEl){var h=blEl.querySelector('.dHost');if(h)h.value=val}}else if(field==='value'){b.value=val;if(blEl){var v=blEl.querySelector('.bValue');if(v)v.value=val}}else if(field==='name'){b.name=val;if(blEl){var n2=blEl.querySelector('.sName');if(n2)n2.value=val}}else if(field==='details'){b.details=val;if(blEl){var d=blEl.querySelector('.sDetails');if(d)d.value=val}}}
+    markDirty();
+    var raw=generatePost(),r=document.querySelector('.raw'),cc=document.getElementById('charCount');
+    if(r)r.textContent=raw;
+    if(cc){var len=raw.length;cc.textContent=len+' chars'+(len>2000?' ⚠️':'');cc.classList.toggle('over',len>2000);cc.classList.toggle('warn',len>=1600&&len<=2000)}
+  },true);
+})();
+</script>
+
+<footer class="ef-footer">
+  <div class="foot-links">
+    <a href="/armoury.html">The Armoury</a><a href="/">Main Site</a>
+  </div>
+  <div class="disclaimer">
+    Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
+    RuneScape and Old School RuneScape are trademarks of Jagex Ltd.
+  </div>
+</footer>
+
+</body>
+</html>

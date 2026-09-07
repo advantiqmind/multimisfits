@@ -40,6 +40,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - strats.html / strats.js      Strat Finder (OSRS Wiki strategy guide launcher, categorized boss tiles)
 - bracket.html / bracket.js    Bracket Knockout (code-locked giveaway drawing tool, dice-based HP combat)
 - armoury.html                 The Armoury landing page (leader tools hub, self-contained styles)
+- eventforge.html              EventForge (Discord event post designer, shared saves via D1, self-contained styles)
 - ideaboard.html               Idea Board (kanban for event ideas, Discord-sourced, self-contained styles)
 - clandink.html                Clan Dink Settings page (copy button for Dink plugin import)
 - dink-config.txt              Dink plugin settings JSON (edit this file to update what members copy)
@@ -52,6 +53,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
 - functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image only (message text never shown; just image + posted-by)
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
+- functions/api/eventforge.js  GET/POST/PUT/DELETE /api/eventforge -> shared EventForge saves CRUD, D1 storage, optimistic locking, cached 30s
 - functions/api/ideaboard.js   GET/POST /api/ideaboard -> reads Discord thread ideas, D1 column positions + dismiss tracking, cached 1min
 - functions/api/dink-auth.js   POST /api/dink-auth -> validates access code against DINK_ACCESS_CODE env var
 - functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
@@ -255,6 +257,21 @@ to the Loot Value leaderboard but for GP contributions.
 - Website display: participant count on event cards ("X joined"), themed participant button
   in CTA row next to RSVP. Clicking opens a popup modal (z-index 90) with participant chips.
   Modal themed per event type (default green, ev-wild red, ev-social green, ev-pvm purple).
+
+### EventForge
+- eventforge.html: Discord event post designer ported from 1box.online. Self-contained (inline CSS/JS).
+- Armoury-only tool (not on main site nav). Part of The Armoury leader tools.
+- Features: block-based event builder, Discord markdown generation, live preview with inline
+  editing, timezone-smart timestamps, recurrence system, template system, export/import,
+  text formatting toolbar, event results/winners, keyboard shortcuts, mobile-responsive.
+- Shared saves: events and templates stored in D1 (eventforge_saves table) via /api/eventforge.
+  Visible to all clan leaders. Required category (PvM/Skilling/Minigame/Social/Competition/Other)
+  and name when saving to shared. Optimistic locking with version numbers for conflict resolution.
+- User identity via localStorage (mm-eventforge-user), prompted on first shared save.
+- Local saves: events and templates in localStorage (mm_eventforge_v2), unaffected by shared saves.
+- D1 table: eventforge_saves (id, type, name, category, data, created_by, updated_by, version,
+  created_at, updated_at). Auto-created on first use.
+- Post types: announcement, reminder, results, compact. Output styles: standard, minimal.
 
 ### Loot Wheel
 - wheel.html: client-side prize wheel ported from the 1BOX wheel (1box.online copy untouched).
