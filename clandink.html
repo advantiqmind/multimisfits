@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clan Dink Settings | Multi-Misfits</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Jersey+15&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+<style>
+.dink-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:40px 20px;text-align:center}
+.dink-wrap h1{font-family:'Cinzel',serif;color:var(--gold);font-size:clamp(26px,5vw,42px);margin:0 0 12px}
+.dink-wrap p{color:var(--parchment);opacity:.8;max-width:480px;margin:0 0 32px;line-height:1.5}
+.dink-btn{font-family:'Jersey 15',monospace;font-size:22px;padding:16px 48px;background:var(--gold);color:var(--bg);border:none;border-radius:6px;cursor:pointer;transition:background .2s,transform .15s;letter-spacing:1px}
+.dink-btn:hover{background:var(--bronze);transform:scale(1.04)}
+.dink-btn:active{transform:scale(.97)}
+.dink-btn.copied{background:#2ecc71;color:#fff}
+.dink-note{color:var(--parchment);opacity:.5;font-size:13px;margin-top:20px}
+.dink-steps{color:var(--parchment);opacity:.7;max-width:420px;margin:0 auto 28px;text-align:left;line-height:1.7;font-size:15px}
+.dink-steps li{margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="discord" viewBox="0 0 71 55"><path d="M60 4.6A58 58 0 0 0 45.5.1a41 41 0 0 0-2 4.2 54 54 0 0 0-16 0 41 41 0 0 0-2-4.2A58 58 0 0 0 11 4.6 60 60 0 0 0 .6 45.3a58 58 0 0 0 17.7 9 44 44 0 0 0 3.8-6.2 38 38 0 0 1-6-2.9l1.5-1.1a41 41 0 0 0 35 0l1.5 1.1a38 38 0 0 1-6 2.9 44 44 0 0 0 3.8 6.2 58 58 0 0 0 17.7-9A60 60 0 0 0 60 4.6ZM23.7 36.5c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.5 3.3 6.4 7.2c0 4-2.8 7.2-6.4 7.2Zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.5 3.3 6.4 7.2c0 4-2.8 7.2-6.4 7.2Z"/></symbol>
+</svg>
+
+<header>
+  <div class="bar">
+    <a class="brand" href="/">
+      <img class="crest" src="/assets/crest.png" alt="Multi-Misfits crest">
+      <span><b>MULTI-MISFITS</b><small>OSRS CLAN</small></span>
+    </a>
+
+    <nav class="main" id="nav">
+      <a href="/">Home</a>
+      <a href="/events.html">Events</a>
+      <a href="/achievements.html">Achievements</a>
+      <a href="/gallery.html">Gallery</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/ge.html">Grand Exchange</a>
+      <a href="/strats.html">Guides</a>
+    </nav>
+
+    <button class="hamburger" id="burger" aria-label="Menu">≡</button>
+
+    <div class="actions">
+      <a class="btn icon-coin" href="/ge.html">Grand Exchange</a>
+      <a class="btn" href="/roster.html">Leaderboard</a>
+      <a class="btn join" data-discord href="#" aria-label="Join our Discord"><svg fill="#1a1305" aria-hidden="true"><use href="#discord"/></svg>JOIN</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="dink-wrap">
+  <h1>Clan Dink Settings</h1>
+  <p>Copy the clan's Dink plugin settings and import them into RuneLite. This keeps everyone's notifications synced to our chest channel.</p>
+  <ol class="dink-steps">
+    <li>Click <strong>Copy Settings</strong> below</li>
+    <li>Open RuneLite, go to the Dink plugin config</li>
+    <li>Click the <strong>Import</strong> button at the bottom</li>
+    <li>Paste and confirm</li>
+  </ol>
+  <button class="dink-btn" id="dink-copy">COPY SETTINGS</button>
+  <div class="dink-note" id="dink-status">Settings loaded and ready</div>
+</div>
+</main>
+
+<footer>
+  <div class="foot-brand"><img src="/assets/crest.png" width="32" height="32" alt=""> Multi-Misfits</div>
+  <div class="foot-links">
+    <a href="/">Home</a><a href="/events.html">Events</a><a href="/achievements.html">Achievements</a><a href="/gallery.html">Gallery</a>
+    <a href="/faq.html">FAQ</a><a href="/roster.html">Leaderboard</a><a href="/ge.html">Grand Exchange</a><a data-discord href="#">Discord</a>
+  </div>
+  <div class="disclaimer">
+    Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
+    RuneScape and Old School RuneScape are trademarks of Jagex Ltd.
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  var settings = '';
+  var statusEl = document.getElementById('dink-status');
+  var btn = document.getElementById('dink-copy');
+
+  fetch('/dink-config.txt')
+    .then(function(r){ return r.ok ? r.text() : Promise.reject('fetch failed'); })
+    .then(function(t){ settings = t.trim(); })
+    .catch(function(){
+      statusEl.textContent = 'Could not load settings';
+      btn.disabled = true;
+      btn.style.opacity = '.5';
+    });
+
+  btn.addEventListener('click', function(){
+    if(!settings) return;
+    navigator.clipboard.writeText(settings).then(function(){
+      btn.textContent = 'COPIED!';
+      btn.classList.add('copied');
+      setTimeout(function(){
+        btn.textContent = 'COPY SETTINGS';
+        btn.classList.remove('copied');
+      }, 2000);
+    }).catch(function(){
+      var ta = document.createElement('textarea');
+      ta.value = settings;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      btn.textContent = 'COPIED!';
+      btn.classList.add('copied');
+      setTimeout(function(){
+        btn.textContent = 'COPY SETTINGS';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

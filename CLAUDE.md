@@ -41,6 +41,8 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - bracket.html / bracket.js    Bracket Knockout (code-locked giveaway drawing tool, dice-based HP combat)
 - armoury.html                 The Armoury landing page (leader tools hub, self-contained styles)
 - ideaboard.html               Idea Board (kanban for event ideas, Discord-sourced, self-contained styles)
+- clandink.html                Clan Dink Settings page (copy button for Dink plugin import)
+- dink-config.txt              Dink plugin settings JSON (edit this file to update what members copy)
 - style.css                    theme
 - app.js                       nav, toasts, Discord links, all panel rendering
 - functions/_middleware.js     pass-through middleware (no auth gate)
