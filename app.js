@@ -946,7 +946,7 @@ function showCountdownToast(events) {
     if (!best || diff < (new Date(best.startTime).getTime() - now)) best = ev;
   }
   if (!best) {
-    if (existing) { existing.classList.remove("cd-toast-show"); bumpWinnerToast(false); setTimeout(function() { existing.remove(); }, 600); }
+    if (existing) { existing.classList.remove("cd-toast-show"); setTimeout(function() { existing.remove(); }, 600); }
     return;
   }
   if (sessionStorage.getItem("cd-toast-closed")) return;
@@ -970,30 +970,23 @@ function showCountdownToast(events) {
       '<span class="cd-toast-sep">:</span>' +
       '<div class="cd-toast-dg"><span class="cd-toast-digits cd-sc">00</span><span class="cd-toast-unit">SEC</span></div>' +
     '</div>';
-  var winnerToast = document.querySelector(".ga-winner-toast");
-  if (winnerToast) document.body.insertBefore(el, winnerToast);
-  else document.body.appendChild(el);
+  document.body.appendChild(el);
   updateCountdownDigits(el, best.startTime);
-  requestAnimationFrame(function() { el.classList.add("cd-toast-show"); bumpWinnerToast(true); });
+  requestAnimationFrame(function() { el.classList.add("cd-toast-show"); });
   el.querySelector(".cd-toast-close").addEventListener("click", function(e) {
     e.preventDefault();
     e.stopPropagation();
     el.classList.remove("cd-toast-show");
-    bumpWinnerToast(false);
     sessionStorage.setItem("cd-toast-closed", "1");
     setTimeout(function() { el.remove(); }, 600);
   });
   startCountdownToastTick();
 }
 
-function bumpWinnerToast(bump) {
-  var wt = document.querySelector(".ga-winner-toast");
-  if (wt) { if (bump) wt.classList.add("cd-bumped"); else wt.classList.remove("cd-bumped"); }
-}
 
 function updateCountdownDigits(el, iso) {
   var diff = new Date(iso).getTime() - Date.now();
-  if (diff <= 0) { el.classList.remove("cd-toast-show"); bumpWinnerToast(false); setTimeout(function() { el.remove(); }, 600); return; }
+  if (diff <= 0) { el.classList.remove("cd-toast-show"); setTimeout(function() { el.remove(); }, 600); return; }
   var h = Math.floor(diff / 3600000);
   var m = Math.floor((diff % 3600000) / 60000);
   var s = Math.floor((diff % 60000) / 1000);
@@ -1705,9 +1698,7 @@ async function showWinnerToast() {
         (roundName ? '<div class="ga-winner-toast-round">' + esc(roundName) + '</div>' : '') +
       '</div>' +
       '<button class="ga-winner-toast-close" aria-label="Close">&times;</button>';
-    document.body.appendChild(toast);
-    var cdToast = document.getElementById("cd-toast");
-    if (cdToast && cdToast.classList.contains("cd-toast-show")) toast.classList.add("cd-bumped");
+    document.querySelector("header").appendChild(toast);
     requestAnimationFrame(function() {
       toast.classList.add("ga-winner-toast-show");
       var colors = ["#ffd700","#ffcb2f","#c9a227","#fff0a0","#e0a81f","#ffa500"];
