@@ -313,7 +313,7 @@ th.sortable.sort-desc::after{content:"▼";opacity:1;color:var(--gold)}
 .ga-winner-toast-show{transform:translate(-50%,0);opacity:1;animation:ga-glow-pulse 2.5s 1.2s ease-in-out infinite}
 @keyframes ga-shimmer{to{left:100%}}
 @keyframes ga-glow-pulse{0%,100%{border-bottom-color:var(--gold-dim);box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 10px rgba(255,215,0,.08)}50%{border-bottom-color:#ffd700;box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 16px rgba(255,215,0,.18)}}
-.ga-winner-toast-icon{font-size:1.6rem;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(255,215,0,.3))}
+.ga-winner-toast-icon{flex-shrink:0;filter:drop-shadow(0 0 4px rgba(255,215,0,.3))}.ga-winner-toast-icon img{height:30px;width:auto;max-height:30px}
 .ga-winner-toast-body{flex:none;text-align:center}
 .ga-winner-toast-title{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
 .ga-winner-toast-name{font-family:"Cinzel",serif;font-weight:800;font-size:1.3rem;color:#ffd700;margin-top:2px;text-shadow:0 0 8px rgba(255,215,0,.3)}
@@ -851,11 +851,14 @@ nav.main a[href="/ge.html"]{display:none}
   position:relative;width:54px;height:54px;flex:0 0 auto;border-radius:5px;overflow:hidden;
   background:radial-gradient(circle at 50% 38%, var(--panel-2) 0%, var(--void-2) 78%);
   border:1px solid var(--bronze);display:flex;align-items:center;justify-content:center;
+  transition:border-color .25s ease,box-shadow .25s ease;
 }
 .st-npc-init{
   font-family:"Cinzel",serif;font-weight:900;font-size:15px;color:var(--gold-dim);text-shadow:1px 1px 0 #000;
 }
-.st-npc img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:2px;box-sizing:border-box}
+.st-npc img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:2px;box-sizing:border-box;transition:transform .25s ease,filter .25s ease}
+.st-tile:hover .st-npc img{transform:scale(1.12);filter:brightness(1.15) drop-shadow(0 0 4px rgba(255,203,47,.25))}
+.st-tile:hover .st-npc{border-color:var(--st-c,var(--gold-dim));box-shadow:0 0 8px rgba(255,203,47,.15)}
 .st-npc.has-img .st-npc-init{visibility:hidden}
 .st-tinfo{min-width:0}
 .st-tname{display:block;font-weight:700;font-size:13px;color:var(--parchment);line-height:1.25}

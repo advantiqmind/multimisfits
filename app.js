@@ -1698,7 +1698,7 @@ async function showWinnerToast() {
     try { if (localStorage.getItem(key)) return; } catch (e) {}
     var toast = document.createElement("div");
     toast.className = "ga-winner-toast";
-    toast.innerHTML = '<span class="ga-winner-toast-icon">&#127942;</span>' +
+    toast.innerHTML = '<span class="ga-winner-toast-icon"><img src="/assets/bracket-trophy-mm.png" alt="Trophy" height="30" width="29"></span>' +
       '<div class="ga-winner-toast-body">' +
         '<div class="ga-winner-toast-title">Giveaway Winner!</div>' +
         '<div class="ga-winner-toast-name">' + esc(winner) + '</div>' +
