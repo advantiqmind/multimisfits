@@ -103,17 +103,6 @@ Runtime 1-2 minutes. Most complex drawing option -- canvas animation, collision 
 zone shrinking. Would live alongside the bracket/slot machine drawing tools.
 Planned for later, after the slot machine is done.
 
-### Idea Board Tag Colors
-Color-code idea board cards by tag. Proposed palette:
-- **#website** - teal/cyan (digital feel, distinct from medieval theme)
-- **#discord** - Discord blurple (#5865F2)
-- **#events** - warm gold/amber base
-- Event sub-categories (match existing event theme hues):
-  - **#pvm** - purple (ev-pvm theme)
-  - **#wild** - red (ev-wild theme)
-  - **#social** - green (ev-social theme)
-  - **#skilling** - blue/teal variant
-- Open questions: Do sub-categories replace #events or stack? Keep old tags (#boss, #team, #hunt)?
 
 ### Giveaway Donation Leaderboard
 Add optional `gp` parameter to /giveaway-entry slash command (defaults to gpPerEntry rate,
@@ -164,7 +153,9 @@ to the Loot Value leaderboard but for GP contributions.
 ### Idea Board
 - Discord thread (IDEABOARD_THREAD_ID) is the single source of truth for ideas.
 - Leaders post ideas as messages in the thread. First line = title, remaining lines = notes.
-- Hashtags (#boss, #team, etc.) in messages become tags on the cards.
+- Hashtags in messages become colored tag chips. Six known tags:
+  #website (teal), #discord (blurple), #pvm (purple), #wild (red),
+  #social (green), #skilling (blue). Unknown tags get default grey.
 - Author resolved via nick map (same fetchNickMap/resolveName pattern as events/giveaways).
 - Backend: GET /api/ideaboard fetches all thread messages, parses ideas, joins with D1
   `idea_positions` table for column placement and dismiss state. Cached 1min.

@@ -312,14 +312,12 @@ body {
   color: #a99b78;
   border: 1px solid rgba(169,155,120,0.3);
 }
-.tag-skill { background: rgba(42,90,138,0.3); color: #6ab0e8; border: 1px solid rgba(42,90,138,0.5); }
-.tag-boss { background: rgba(160,48,48,0.3); color: #e87070; border: 1px solid rgba(160,48,48,0.5); }
-.tag-social { background: rgba(138,42,90,0.3); color: #e870b0; border: 1px solid rgba(138,42,90,0.5); }
-.tag-team { background: rgba(106,58,138,0.3); color: #b870e8; border: 1px solid rgba(106,58,138,0.5); }
-.tag-clue { background: rgba(26,106,106,0.3); color: #70d8d8; border: 1px solid rgba(26,106,106,0.5); }
-.tag-hunt { background: rgba(138,90,26,0.3); color: #e8b870; border: 1px solid rgba(138,90,26,0.5); }
-.tag-wom { background: rgba(42,122,58,0.3); color: #70e888; border: 1px solid rgba(42,122,58,0.5); }
+.tag-website { background: rgba(26,140,140,0.3); color: #5ee0e0; border: 1px solid rgba(26,140,140,0.5); }
 .tag-discord { background: rgba(88,101,242,0.3); color: #99a8f8; border: 1px solid rgba(88,101,242,0.5); }
+.tag-pvm { background: rgba(106,58,138,0.3); color: #b870e8; border: 1px solid rgba(106,58,138,0.5); }
+.tag-wild { background: rgba(160,48,48,0.3); color: #e87070; border: 1px solid rgba(160,48,48,0.5); }
+.tag-social { background: rgba(42,122,58,0.3); color: #70e888; border: 1px solid rgba(42,122,58,0.5); }
+.tag-skilling { background: rgba(42,90,168,0.3); color: #6ab0f0; border: 1px solid rgba(42,90,168,0.5); }
 
 /* DISMISSED SECTION */
 .dismissed-section {
@@ -474,14 +472,12 @@ body {
 <div class="filters" id="filters">
   <span class="filter-label">Filter:</span>
   <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
-  <button class="filter-btn" data-filter="skill" onclick="setFilter('skill')">Skill</button>
-  <button class="filter-btn" data-filter="boss" onclick="setFilter('boss')">Boss</button>
-  <button class="filter-btn" data-filter="team" onclick="setFilter('team')">Team</button>
-  <button class="filter-btn" data-filter="hunt" onclick="setFilter('hunt')">Hunt</button>
-  <button class="filter-btn" data-filter="clue" onclick="setFilter('clue')">Clue</button>
-  <button class="filter-btn" data-filter="social" onclick="setFilter('social')">Social</button>
-  <button class="filter-btn" data-filter="wom" onclick="setFilter('wom')">WOM</button>
+  <button class="filter-btn" data-filter="website" onclick="setFilter('website')">Website</button>
   <button class="filter-btn" data-filter="discord" onclick="setFilter('discord')">Discord</button>
+  <button class="filter-btn" data-filter="pvm" onclick="setFilter('pvm')">PVM</button>
+  <button class="filter-btn" data-filter="wild" onclick="setFilter('wild')">Wild</button>
+  <button class="filter-btn" data-filter="social" onclick="setFilter('social')">Social</button>
+  <button class="filter-btn" data-filter="skilling" onclick="setFilter('skilling')">Skilling</button>
 </div>
 
 <div id="boardMsg" class="board-msg"><span class="spinner"></span> Loading ideas...</div>
@@ -538,7 +534,7 @@ body {
 <div class="ib-toast" id="ibToast"></div>
 
 <script>
-var KNOWN_TAGS = ['skill','boss','team','hunt','clue','social','wom','discord'];
+var KNOWN_TAGS = ['website','discord','pvm','wild','social','skilling'];
 
 var ideas = [];
 var activeFilter = 'all';
