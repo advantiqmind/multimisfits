@@ -1464,7 +1464,7 @@ img.bk-icon-trophy{width:32px;height:auto;display:block}
 .st-foot{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted);letter-spacing:1px;text-align:center;margin-top:8px}
 
 /* ---------- armoury nav (.arm-*) ---------- */
-.arm-nav{display:flex;align-items:center;padding:10px 20px;background:var(--panel-3);border-bottom:1px solid var(--bronze);gap:16px;flex-wrap:wrap}
+.arm-nav{display:flex;align-items:center;padding:10px 20px;background:var(--panel-3);border-top:1px solid var(--bronze);border-bottom:1px solid var(--bronze);gap:16px;flex-wrap:wrap}
 .arm-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
 .arm-brand img{width:28px;height:28px}
 .arm-brand span{font-family:"Cinzel",serif;font-weight:700;font-size:14px;color:var(--gold);letter-spacing:3px}
