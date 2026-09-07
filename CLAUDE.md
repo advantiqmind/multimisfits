@@ -15,6 +15,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - Events      -> Discord forum channel (bot reads threads; EventForge dates parsed)
 - Achievements -> Discord "chest" channel (Dink plugin posts drops/pets/CAs)
 - Giveaways   -> Discord giveaway forum channel (reaction-based entries, trophy winners)
+- Idea Board  -> Discord thread (leaders post ideas as messages; kanban on site via D1)
 - Roster/ranks/stats -> Wise Old Man (WOM) group, synced from in-game via RuneLite
 
 ## Stack (keep it this way)
@@ -39,7 +40,9 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - strats.html / strats.js      Strat Finder (OSRS Wiki strategy guide launcher, categorized boss tiles)
 - bracket.html / bracket.js    Bracket Knockout (code-locked giveaway drawing tool, dice-based HP combat)
 - armoury.html                 The Armoury landing page (leader tools hub, self-contained styles)
-- ideaboard.html               Idea Board (kanban for event ideas, self-contained styles, localStorage)
+- ideaboard.html               Idea Board (kanban for event ideas, Discord-sourced, self-contained styles)
+- clandink.html                Clan Dink Settings page (copy button for Dink plugin import)
+- dink-config.txt              Dink plugin settings JSON (edit this file to update what members copy)
 - style.css                    theme
 - app.js                       nav, toasts, Discord links, all panel rendering
 - functions/_middleware.js     pass-through middleware (no auth gate)
@@ -49,6 +52,8 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
 - functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image only (message text never shown; just image + posted-by)
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
+- functions/api/ideaboard.js   GET/POST /api/ideaboard -> reads Discord thread ideas, D1 column positions + dismiss tracking, cached 1min
+- functions/api/dink-auth.js   POST /api/dink-auth -> validates access code against DINK_ACCESS_CODE env var
 - functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
 - functions/api/discord.js    Discord interactions endpoint (slash commands); GET = register commands
@@ -64,6 +69,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     DISCORD_GUILD_ID         (plain)  <- events + giveaways
     EVENTS_CHANNEL_ID        (plain)  <- events forum channel
     GIVEAWAY_CHANNEL_ID      (plain)  <- giveaway forum channel
+    IDEABOARD_THREAD_ID      (plain)  <- Discord thread for idea board (1481866333116436577)
     PUBLISH_REACTION         (optional, e.g. "check" emoji, to gate news)
     REFERRAL_CODES           (plain)  <- comma-separated codes, e.g. "TEQUILA,FLASH,KOI"
     DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
@@ -72,9 +78,10 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     LOOT_WEBHOOK_KEY         (secret) <- auth key for Dink loot webhooks (?key=VALUE)
     LOOT_DISCORD_WEBHOOK     (secret, optional) <- Discord webhook URL for chest channel (forwarding proxy)
     LOOT_DISCORD_MIN_VALUE   (plain, optional)  <- min total value to forward to Discord (default 150000)
+    DINK_ACCESS_CODE         (secret) <- passphrase to unlock /clandink settings page
 
 ## Bindings (Cloudflare Pages > Settings > Functions)
-    DB  ->  D1 database "multimisfits-auth"  (loot_entries table)
+    DB  ->  D1 database "multimisfits-auth"  (loot_entries, idea_positions tables)
 
 ## Status
 LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster,
@@ -95,6 +102,7 @@ Final 5 get health bars, final 2 get a 1v1 duel animation, winner gets a crown.
 Runtime 1-2 minutes. Most complex drawing option -- canvas animation, collision logic,
 zone shrinking. Would live alongside the bracket/slot machine drawing tools.
 Planned for later, after the slot machine is done.
+
 
 ### Giveaway Donation Leaderboard
 Add optional `gp` parameter to /giveaway-entry slash command (defaults to gpPerEntry rate,
@@ -141,6 +149,32 @@ to the Loot Value leaderboard but for GP contributions.
 - Giveaway threads filtered from events feed (by name containing "giveaway").
 - Tab state persists via URL hash (#giveaways).
 - Forum tags (Bond, Item, Kit, Random, Goodie Bag, GP) set in Discord for categorization.
+
+### Idea Board
+- Discord thread (IDEABOARD_THREAD_ID) is the single source of truth for ideas.
+- Leaders post ideas as messages in the thread. First line = title, remaining lines = notes.
+- Hashtags in messages become colored tag chips. Ten known tags:
+  #website (teal), #discord (blurple), #pvm (purple), #pvp (orange-red),
+  #wild (red), #social (green), #skilling (blue), #weekend (amber),
+  #1day (gold), #teams (purple). Unknown tags get default grey.
+- Discord channel mentions: when a hashtag like #pvm matches a Discord channel
+  name, Discord auto-links it to `<#CHANNEL_ID>`. Backend fetches guild channels
+  (fetchChannelMap), resolves channel IDs to names, and adds matching known tags.
+- Tag regex `/#((?=\w*[a-zA-Z])\w+)/g` allows digit-starting tags like #1day
+  while excluding pure-numeric Discord IDs.
+- Author resolved via nick map (same fetchNickMap/resolveName pattern as events/giveaways).
+- Backend: GET /api/ideaboard fetches all thread messages, parses ideas, joins with D1
+  `idea_positions` table for column placement and dismiss state. Cached 1min.
+- POST /api/ideaboard: actions "move" (column), "dismiss" (with user attribution), "restore".
+- D1 table `idea_positions`: message_id (PK), column_name, dismissed, dismissed_by, moved_by, updated_at.
+- Frontend: kanban board with 4 columns (Ideas, Planned, In Progress, Completed).
+  Drag-and-drop moves cards between columns (optimistic UI, reverts on API error).
+- Cards show title, author, date, tags. Click to expand hidden notes.
+- Dismiss records who dismissed it. Dismissed cards viewable via toggle, restorable.
+- "Post in Discord" button links to the Discord thread for new ideas.
+- User identity stored in localStorage (mm-ideaboard-user), prompted on first dismiss.
+- Self-contained page (no style.css/app.js imports). Part of The Armoury leader tools.
+- Channel link: https://discord.com/channels/1454526817141784759/1464731160968953898
 
 ### Loot Value Leaderboard
 - Events tagged `[Loot Value]` in the thread name track cumulative boss loot per player.
