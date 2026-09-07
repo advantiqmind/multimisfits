@@ -153,10 +153,15 @@ to the Loot Value leaderboard but for GP contributions.
 ### Idea Board
 - Discord thread (IDEABOARD_THREAD_ID) is the single source of truth for ideas.
 - Leaders post ideas as messages in the thread. First line = title, remaining lines = notes.
-- Hashtags in messages become colored tag chips. Six known tags:
-  #website (teal), #discord (blurple), #pvm (purple), #wild (red),
-  #social (green), #skilling (blue), #weekend (amber), #1day (gold).
-  Unknown tags get default grey.
+- Hashtags in messages become colored tag chips. Ten known tags:
+  #website (teal), #discord (blurple), #pvm (purple), #pvp (orange-red),
+  #wild (red), #social (green), #skilling (blue), #weekend (amber),
+  #1day (gold), #teams (purple). Unknown tags get default grey.
+- Discord channel mentions: when a hashtag like #pvm matches a Discord channel
+  name, Discord auto-links it to `<#CHANNEL_ID>`. Backend fetches guild channels
+  (fetchChannelMap), resolves channel IDs to names, and adds matching known tags.
+- Tag regex `/#((?=\w*[a-zA-Z])\w+)/g` allows digit-starting tags like #1day
+  while excluding pure-numeric Discord IDs.
 - Author resolved via nick map (same fetchNickMap/resolveName pattern as events/giveaways).
 - Backend: GET /api/ideaboard fetches all thread messages, parses ideas, joins with D1
   `idea_positions` table for column placement and dismiss state. Cached 1min.

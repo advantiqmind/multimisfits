@@ -1,5 +1,6 @@
 const CACHE_TTL = 60;
 const VALID_COLUMNS = ["ideas", "planned", "active", "done"];
+const KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams'];
 const BASE = "https://discord.com/api/v10";
 
 let _tableReady = false;
@@ -44,6 +45,22 @@ async function fetchNickMap(guildId, headers) {
   return map;
 }
 
+async function fetchChannelMap(guildId, headers) {
+  const map = new Map();
+  try {
+    const res = await fetch(
+      `${BASE}/guilds/${guildId}/channels`,
+      { headers }
+    );
+    if (!res.ok) return map;
+    const channels = await res.json();
+    for (const ch of channels) {
+      if (ch.id && ch.name) map.set(ch.id, ch.name.toLowerCase());
+    }
+  } catch (_) {}
+  return map;
+}
+
 function resolveName(user, nickMap) {
   if (nickMap && user && user.id && nickMap.has(user.id))
     return nickMap.get(user.id);
@@ -51,27 +68,40 @@ function resolveName(user, nickMap) {
   return (user && user.username) || "Unknown";
 }
 
-function parseIdea(msg, nickMap) {
+function parseIdea(msg, nickMap, channelMap) {
   let content = (msg.content || "").trim();
   if (!content) return null;
 
-  // Strip Discord channel mentions <#ID> before parsing
+  const tags = [];
+
+  // Resolve Discord channel mentions <#ID> to tags when channel name matches a known tag
+  const mentionRx = /<#(\d+)>/g;
+  let cm;
+  while ((cm = mentionRx.exec(content)) !== null) {
+    const chName = channelMap && channelMap.get(cm[1]);
+    if (chName && KNOWN_TAGS.includes(chName) && !tags.includes(chName)) {
+      tags.push(chName);
+    }
+  }
+
+  // Strip Discord channel mentions before parsing hashtags
   content = content.replace(/<#\d+>/g, "");
 
   const lines = content.split("\n");
 
-  const tags = [];
-  const tagRx = /#([a-zA-Z]\w*)/g;
+  // Match hashtags that contain at least one letter (excludes pure-numeric Discord IDs)
+  const tagRx = /#((?=\w*[a-zA-Z])\w+)/g;
   let m;
   while ((m = tagRx.exec(content)) !== null) {
     const t = m[1].toLowerCase();
     if (!tags.includes(t)) tags.push(t);
   }
 
-  const title = lines[0].replace(/#[a-zA-Z]\w*/g, "").trim();
+  const stripRx = /#(?=\w*[a-zA-Z])\w+/g;
+  const title = lines[0].replace(stripRx, "").trim();
   if (!title) return null;
 
-  const noteLines = lines.slice(1).map((l) => l.replace(/#[a-zA-Z]\w*/g, "").trim());
+  const noteLines = lines.slice(1).map((l) => l.replace(stripRx, "").trim());
   while (noteLines.length && !noteLines[0]) noteLines.shift();
   while (noteLines.length && !noteLines[noteLines.length - 1])
     noteLines.pop();
@@ -127,13 +157,14 @@ async function handleGet(context) {
     before = batch[batch.length - 1].id;
   }
 
-  const nickMap = guildId
-    ? await fetchNickMap(guildId, headers)
-    : new Map();
+  const [nickMap, channelMap] = await Promise.all([
+    guildId ? fetchNickMap(guildId, headers) : Promise.resolve(new Map()),
+    guildId ? fetchChannelMap(guildId, headers) : Promise.resolve(new Map()),
+  ]);
 
   const ideas = messages
     .filter((m) => !m.author?.bot && m.type === 0)
-    .map((m) => parseIdea(m, nickMap))
+    .map((m) => parseIdea(m, nickMap, channelMap))
     .filter(Boolean);
 
   const db = context.env.DB;
