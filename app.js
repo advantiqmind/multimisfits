@@ -1128,7 +1128,7 @@ function renderEvents(events, { cached } = {}) {
   if (evWinnerWrap) {
     var winnerName = prevWinner ? esc(prevWinner) : "TBA";
     var evEventHtml = prevWinnerEvent ? '<span class="ev-winner-dot">&#8226;</span><span class="ev-winner-event">' + esc(prevWinnerEvent) + '</span>' : "";
-    evWinnerWrap.innerHTML = '<div class="ev-winner-bar"><img class="ev-winner-bar-icon" src="/assets/bracket-trophy-mm.png" alt="Trophy"><div class="ev-winner-bar-main"><span class="ev-winner-bar-label">Prev. Winner</span><span class="ev-winner-bar-name">' + winnerName + '</span>' + evEventHtml + '</div></div>';
+    evWinnerWrap.innerHTML = '<div class="ev-winner-bar"><img class="ev-winner-bar-icon" src="/assets/bracket-trophy-mm.png" alt="Trophy" height="35" width="34"><div class="ev-winner-bar-main"><span class="ev-winner-bar-label">Prev. Winner</span><span class="ev-winner-bar-name">' + winnerName + '</span>' + evEventHtml + '</div></div>';
     evWinnerWrap.style.display = "";
   }
 
@@ -1582,7 +1582,7 @@ function renderGiveaways(rounds, { cached } = {}) {
   if (gaWinnerWrap) {
     var gaWinnerName = prevRoundWinner ? esc(prevRoundWinner) : "TBA";
     var gaEventHtml = prevRoundName ? '<span class="ev-winner-dot">&#8226;</span><span class="ev-winner-event">' + esc(prevRoundName) + '</span>' : "";
-    gaWinnerWrap.innerHTML = '<div class="ev-winner-bar"><img class="ev-winner-bar-icon" src="/assets/bracket-trophy-mm.png" alt="Trophy"><div class="ev-winner-bar-main"><span class="ev-winner-bar-label">Prev. Winner</span><span class="ev-winner-bar-name">' + gaWinnerName + '</span>' + gaEventHtml + '</div></div>';
+    gaWinnerWrap.innerHTML = '<div class="ev-winner-bar"><img class="ev-winner-bar-icon" src="/assets/bracket-trophy-mm.png" alt="Trophy" height="35" width="34"><div class="ev-winner-bar-main"><span class="ev-winner-bar-label">Prev. Winner</span><span class="ev-winner-bar-name">' + gaWinnerName + '</span>' + gaEventHtml + '</div></div>';
     gaWinnerWrap.style.display = "";
   }
 
