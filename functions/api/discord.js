@@ -118,7 +118,7 @@ const COMMANDS = [
   },
   {
     name: "inactives",
-    description: "Show members who haven't authenticated on the site recently",
+    description: "Show clan members inactive on the hiscores (via Wise Old Man)",
     type: 1,
     options: [
       {
@@ -910,7 +910,6 @@ async function handleStatus(interaction, env, appId) {
     { name: "Giveaways", ok: !!(env.GIVEAWAY_CHANNEL_ID) },
     { name: "Referral Tracking", ok: !!(env.REFERRAL_THREAD_ID) },
     { name: "Spotlight", ok: !!(env.SPOTLIGHT_CHANNEL_ID) },
-    { name: "Auth Gate", ok: !!(env.DB && env.DISCORD_CLIENT_ID) },
   ];
 
   const lines = checks.map((c) => `${c.ok ? "✅" : "❌"} ${c.name}`);
@@ -1960,47 +1959,53 @@ async function handleHelp(interaction, appId) {
 }
 
 // ---------------------------------------------------------------------------
-// /inactives [days]
+// /inactives [days]  --  powered by Wise Old Man hiscores data
 // ---------------------------------------------------------------------------
-async function handleInactives(interaction, env, appId) {
-  if (!env.DB) {
-    return patchFollowup(appId, interaction.token, {
-      content: "Authentication database is not configured.",
-      flags: 64,
-    });
-  }
+const WOM_INACTIVES_URL = "https://api.wiseoldman.net/v2/groups/26075";
 
+async function fetchWomMembers() {
+  const r = await fetch(WOM_INACTIVES_URL, {
+    headers: { "User-Agent": "Multi-Misfits clan website (WOM group 26075)" },
+  });
+  if (!r.ok) return null;
+  const group = await r.json();
+  const memberships = Array.isArray(group && group.memberships) ? group.memberships : [];
+  return memberships.map((m) => {
+    const p = (m && m.player) || {};
+    return {
+      name: p.displayName || p.username || "Unknown",
+      lastChangedAt: p.lastChangedAt || null,
+    };
+  });
+}
+
+async function handleInactives(interaction, env, appId) {
   const options = (interaction.data && interaction.data.options) || [];
   const daysOpt = options.find((o) => o.name === "days");
   const days = daysOpt ? daysOpt.value : 30;
 
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-
-  let allUsers;
-  try {
-    const result = await env.DB.prepare(
-      "SELECT discord_id, discord_username, MAX(last_auth_at) as latest_auth FROM sessions GROUP BY discord_id"
-    ).all();
-    allUsers = result.results || [];
-  } catch (e) {
+  const members = await fetchWomMembers();
+  if (!members) {
     return patchFollowup(appId, interaction.token, {
-      content: "Could not query the authentication database.",
+      content: "Could not reach Wise Old Man. Try again later.",
       flags: 64,
     });
   }
 
-  const overdue = allUsers
-    .filter((u) => u.latest_auth < cutoff)
-    .sort((a, b) => a.latest_auth.localeCompare(b.latest_auth));
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-  const total = allUsers.length;
+  const overdue = members
+    .filter((m) => !m.lastChangedAt || m.lastChangedAt < cutoff)
+    .sort((a, b) => (a.lastChangedAt || "").localeCompare(b.lastChangedAt || ""));
+
+  const total = members.length;
 
   if (!overdue.length) {
     return patchFollowup(appId, interaction.token, {
       embeds: [{
         title: "No Inactive Members",
         color: 0x2ecc71,
-        description: `All ${total} authenticated members have signed in within the last ${days} days.`,
+        description: `All ${total} clan members have been active within the last ${days} days.`,
       }],
       flags: 64,
     });
@@ -2009,7 +2014,7 @@ async function handleInactives(interaction, env, appId) {
   const embed = {
     title: `Inactive Members (${days}+ days)`,
     color: 0xe74c3c,
-    description: `**${overdue.length}** of ${total} authenticated members have not signed in within ${days} days.`,
+    description: `**${overdue.length}** of ${total} clan members have not gained XP or completed activities within ${days} days.`,
     flags: 64,
   };
 
@@ -2036,31 +2041,19 @@ async function handleInactivesPage(interaction, env, appId) {
   const page = parseInt(parts[2], 10) || 0;
   const pageSize = 25;
 
-  if (!env.DB) {
+  const members = await fetchWomMembers();
+  if (!members) {
     return patchFollowup(appId, interaction.token, {
-      content: "Authentication database is not configured.",
+      content: "Could not reach Wise Old Man. Try again later.",
       flags: 64,
     });
   }
 
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-  let allUsers;
-  try {
-    const result = await env.DB.prepare(
-      "SELECT discord_id, discord_username, MAX(last_auth_at) as latest_auth FROM sessions GROUP BY discord_id"
-    ).all();
-    allUsers = result.results || [];
-  } catch (e) {
-    return patchFollowup(appId, interaction.token, {
-      content: "Could not query the authentication database.",
-      flags: 64,
-    });
-  }
-
-  const overdue = allUsers
-    .filter((u) => u.latest_auth < cutoff)
-    .sort((a, b) => a.latest_auth.localeCompare(b.latest_auth));
+  const overdue = members
+    .filter((m) => !m.lastChangedAt || m.lastChangedAt < cutoff)
+    .sort((a, b) => (a.lastChangedAt || "").localeCompare(b.lastChangedAt || ""));
 
   const start = page * pageSize;
   const slice = overdue.slice(start, start + pageSize);
@@ -2073,9 +2066,9 @@ async function handleInactivesPage(interaction, env, appId) {
     });
   }
 
-  const lines = slice.map((u, i) => {
-    const lastSeen = u.latest_auth ? new Date(u.latest_auth).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "never";
-    return `**${start + i + 1}.** ${u.discord_username} -- last seen ${lastSeen}`;
+  const lines = slice.map((m, i) => {
+    const lastSeen = m.lastChangedAt ? new Date(m.lastChangedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "never";
+    return `**${start + i + 1}.** ${m.name} -- last active ${lastSeen}`;
   });
 
   const components = [];

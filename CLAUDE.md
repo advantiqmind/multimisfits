@@ -34,17 +34,13 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - roster.html                  leaderboard page (full clan roster from WOM, data-full="1")
 - ge.html                      Grand Exchange -- full-page iframe embed of 1box.online GE tool
 - events.html                  Events + Giveaways tabs (hash-based: #giveaways persists on refresh)
-- gate.html                    auth gate landing page (referral code + Discord OAuth)
 - wheel.html / wheel.js        Loot Wheel page (spin for a winner; loads event participants)
 - wheel-popout.html            popout wheel window (canvas + spin only, synced via BroadcastChannel)
 - strats.html / strats.js      Strat Finder (OSRS Wiki strategy guide launcher, categorized boss tiles)
 - bracket.html / bracket.js    Bracket Knockout (code-locked giveaway drawing tool, dice-based HP combat)
 - style.css                    theme
 - app.js                       nav, toasts, Discord links, all panel rendering
-- functions/_middleware.js     auth middleware (redirects unauthenticated to gate.html)
-- functions/api/auth/login.js  POST validates referral code, returns OAuth URL; GET redirects to OAuth
-- functions/api/auth/callback.js Discord OAuth callback, creates D1 session
-- functions/api/auth/logout.js clears session cookie + D1 record
+- functions/_middleware.js     pass-through middleware (no auth gate)
 - functions/api/wom.js         GET /api/wom  -> WOM group, cached 6h, sorted roster
 - functions/api/news.js        GET /api/news -> reads #announcements via Discord bot
 - functions/api/events.js      GET /api/events -> reads forum threads (filters out giveaway threads), cached 5min
@@ -71,14 +67,12 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
     REFERRAL_THREAD_ID       (plain, optional) <- forum thread ID for referral tracking
     DISCORD_PUBLIC_KEY       (plain) <- from Discord Developer Portal, for slash commands
-    DISCORD_CLIENT_ID        (plain)  <- OAuth2 client ID from Discord Developer Portal
-    DISCORD_CLIENT_SECRET    (secret) <- OAuth2 client secret
     LOOT_WEBHOOK_KEY         (secret) <- auth key for Dink loot webhooks (?key=VALUE)
     LOOT_DISCORD_WEBHOOK     (secret, optional) <- Discord webhook URL for chest channel (forwarding proxy)
     LOOT_DISCORD_MIN_VALUE   (plain, optional)  <- min total value to forward to Discord (default 150000)
 
 ## Bindings (Cloudflare Pages > Settings > Functions)
-    DB  ->  D1 database "multimisfits-auth"  (sessions + loot_entries tables)
+    DB  ->  D1 database "multimisfits-auth"  (loot_entries table)
 
 ## Status
 LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster,
@@ -303,7 +297,6 @@ to the Loot Value leaderboard but for GP contributions.
 - Discord invite URL is NOT in client-side code. Server returns it only after code validation.
 - POST /api/referral validates code against REFERRAL_CODES env var, returns invite URL on success.
 - Tracking: valid redemptions post an embed to a Discord forum thread (REFERRAL_THREAD_ID).
-- Auth endpoints (gate.html, /api/auth/*) and D1 sessions table still exist but are dormant.
 
 ### Offline indicators
 - Amber tint on panel badges when API returns unconfigured/error state.
