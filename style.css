@@ -1462,3 +1462,22 @@ img.bk-icon-trophy{width:32px;height:auto;display:block}
   }
 }
 .st-foot{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted);letter-spacing:1px;text-align:center;margin-top:8px}
+
+/* ---------- armoury nav (.arm-*) ---------- */
+.arm-nav{display:flex;align-items:center;padding:10px 20px;background:var(--panel-3);border-bottom:1px solid var(--bronze);gap:16px;flex-wrap:wrap}
+.arm-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.arm-brand img{width:28px;height:28px}
+.arm-brand span{font-family:"Cinzel",serif;font-weight:700;font-size:14px;color:var(--gold);letter-spacing:3px}
+.arm-links{display:flex;gap:4px;flex:1}
+.arm-links a{font-family:"Cinzel",serif;font-size:12px;font-weight:600;color:var(--muted);text-decoration:none;letter-spacing:1px;padding:6px 12px;border-radius:4px;transition:color .2s,background .2s}
+.arm-links a:hover{color:var(--gold);background:rgba(255,203,47,.06)}
+.arm-links a.active{color:var(--gold);background:rgba(255,203,47,.1)}
+.arm-site{font-family:"Jersey 15",monospace;font-size:14px;color:var(--muted);text-decoration:none;letter-spacing:1px;transition:color .2s}
+.arm-site:hover{color:var(--gold-dim)}
+@media(max-width:600px){
+  .arm-nav{padding:10px 14px;gap:10px}
+  .arm-brand span{font-size:12px;letter-spacing:2px}
+  .arm-links{order:3;width:100%;justify-content:center}
+  .arm-links a{font-size:11px;padding:5px 8px}
+  .arm-site{font-size:13px}
+}

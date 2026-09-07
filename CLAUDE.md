@@ -38,6 +38,8 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - wheel-popout.html            popout wheel window (canvas + spin only, synced via BroadcastChannel)
 - strats.html / strats.js      Strat Finder (OSRS Wiki strategy guide launcher, categorized boss tiles)
 - bracket.html / bracket.js    Bracket Knockout (code-locked giveaway drawing tool, dice-based HP combat)
+- armoury.html                 The Armoury landing page (leader tools hub, self-contained styles)
+- ideaboard.html               Idea Board (kanban for event ideas, self-contained styles, localStorage)
 - style.css                    theme
 - app.js                       nav, toasts, Discord links, all panel rendering
 - functions/_middleware.js     pass-through middleware (no auth gate)

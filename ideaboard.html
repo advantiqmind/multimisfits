@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Idea Board | Multi-Misfits</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600&family=Jersey+15&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-dark: #0d0a05;
+  --bg-card: #1a1209;
+  --bg-column: #13100a;
+  --gold: #d4a017;
+  --gold-dim: #8b6914;
+  --gold-bright: #e8c547;
+  --gold-muted: #6b5210;
+  --text: #c9b88a;
+  --text-dim: #8a7a55;
+  --border: #2a2010;
+  --red: #a03030;
+  --red-hover: #c04040;
+  --green: #2a7a3a;
+  --blue: #2a5a8a;
+  --purple: #6a3a8a;
+  --orange: #8a5a1a;
+  --teal: #1a6a6a;
+  --pink: #8a2a5a;
+}
+
+body {
+  background: var(--bg-dark);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+/* Armoury nav (inline for this page) */
+.arm-nav{display:flex;align-items:center;padding:10px 20px;background:#241e14;border-bottom:1px solid #6b5836;gap:16px;flex-wrap:wrap}
+.arm-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.arm-brand img{width:28px;height:28px}
+.arm-brand span{font-family:"Cinzel",serif;font-weight:700;font-size:14px;color:#ffcb2f;letter-spacing:3px}
+.arm-links{display:flex;gap:4px;flex:1}
+.arm-links a{font-family:"Cinzel",serif;font-size:12px;font-weight:600;color:#a99b78;text-decoration:none;letter-spacing:1px;padding:6px 12px;border-radius:4px;transition:color .2s,background .2s}
+.arm-links a:hover{color:#ffcb2f;background:rgba(255,203,47,.06)}
+.arm-links a.active{color:#ffcb2f;background:rgba(255,203,47,.1)}
+.arm-site{font-family:"Jersey 15",monospace;font-size:14px;color:#a99b78;text-decoration:none;letter-spacing:1px;transition:color .2s}
+.arm-site:hover{color:#c9a227}
+@media(max-width:600px){
+  .arm-nav{padding:10px 14px;gap:10px}
+  .arm-brand span{font-size:12px;letter-spacing:2px}
+  .arm-links{order:3;width:100%;justify-content:center}
+  .arm-links a{font-size:11px;padding:5px 8px}
+  .arm-site{font-size:13px}
+}
+
+/* HEADER */
+.page-header {
+  text-align: center;
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.page-header h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+}
+.page-header p {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.page-header .ib-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+/* FILTERS */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.filter-btn:hover, .filter-btn.active {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+  background: rgba(212,160,23,0.06);
+}
+.filter-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-right: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* BOARD */
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 12px 24px 40px;
+  min-height: 60vh;
+}
+@media (max-width: 900px) {
+  .board { grid-template-columns: 1fr; }
+}
+
+/* COLUMNS */
+.column {
+  background: var(--bg-column);
+  border: 1px solid var(--border);
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.column-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+.column-count {
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--bg-dark);
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+}
+.column-body {
+  flex: 1;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100px;
+}
+.column-body.drag-over {
+  background: rgba(212,160,23,0.04);
+}
+
+/* CARDS */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  cursor: grab;
+  transition: all 0.15s;
+  position: relative;
+}
+.card:hover {
+  border-color: var(--gold-dim);
+}
+.card.dragging {
+  opacity: 0.4;
+}
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-bright);
+  line-height: 1.3;
+}
+.card-delete {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all 0.15s;
+}
+.card:hover .card-delete { opacity: 1; }
+.card-delete:hover { color: var(--red-hover); }
+.card-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.card-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.tag-skill { background: rgba(42,90,138,0.3); color: #6ab0e8; border: 1px solid rgba(42,90,138,0.5); }
+.tag-boss { background: rgba(160,48,48,0.3); color: #e87070; border: 1px solid rgba(160,48,48,0.5); }
+.tag-social { background: rgba(138,42,90,0.3); color: #e870b0; border: 1px solid rgba(138,42,90,0.5); }
+.tag-team { background: rgba(106,58,138,0.3); color: #b870e8; border: 1px solid rgba(106,58,138,0.5); }
+.tag-clue { background: rgba(26,106,106,0.3); color: #70d8d8; border: 1px solid rgba(26,106,106,0.5); }
+.tag-hunt { background: rgba(138,90,26,0.3); color: #e8b870; border: 1px solid rgba(138,90,26,0.5); }
+.tag-wom { background: rgba(42,122,58,0.3); color: #70e888; border: 1px solid rgba(42,122,58,0.5); }
+.tag-discord { background: rgba(88,101,242,0.3); color: #99a8f8; border: 1px solid rgba(88,101,242,0.5); }
+
+/* MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg-card);
+  border: 2px solid var(--gold-dim);
+  max-width: 460px;
+  width: 100%;
+  padding: 0;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-header h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--gold); }
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--gold-dim);
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-group select { cursor: pointer; }
+.form-group select option { background: var(--bg-dark); }
+.tag-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tag-option {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.tag-option.selected { opacity: 1; }
+.tag-option:hover { opacity: 0.8; }
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Buttons */
+.ib-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border: 1px solid var(--gold-dim);
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.ib-btn:hover {
+  background: rgba(212,160,23,0.1);
+  border-color: var(--gold);
+}
+.ib-btn-primary {
+  background: var(--gold-dim);
+  color: var(--bg-dark);
+  border-color: var(--gold-dim);
+}
+.ib-btn-primary:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+/* Footer */
+.ib-footer {
+  padding: 24px;
+  text-align: center;
+}
+.ib-footer .ib-foot-links {
+  margin-bottom: 12px;
+}
+.ib-footer .ib-foot-links a {
+  font-family: 'Jersey 15', monospace;
+  font-size: 14px;
+  color: var(--text-dim);
+  text-decoration: none;
+  letter-spacing: 1px;
+  margin: 0 12px;
+}
+.ib-footer .ib-foot-links a:hover { color: var(--gold-dim); }
+.ib-footer .ib-disclaimer {
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.4;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<nav class="arm-nav">
+  <a class="arm-brand" href="/armoury.html">
+    <img src="/assets/crest.png" alt="Multi-Misfits" width="28" height="28">
+    <span>THE ARMOURY</span>
+  </a>
+  <div class="arm-links">
+    <a href="/wheel.html">Wheel</a>
+    <a href="/bracket.html">Bracket</a>
+    <a href="/ideaboard.html" class="active">Idea Board</a>
+    <a href="https://1box.online/tools/eventforge/" target="_blank" rel="noopener">EventForge &#8599;</a>
+  </div>
+  <a class="arm-site" href="/">Main Site</a>
+</nav>
+
+<div class="page-header">
+  <h2>Event Ideas</h2>
+  <p>Drag cards between columns to track progress. Click + to add new ideas.</p>
+  <div class="ib-actions">
+    <button class="ib-btn" onclick="exportData()">Export</button>
+    <button class="ib-btn ib-btn-primary" onclick="openModal()">+ New Idea</button>
+  </div>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+  <button class="filter-btn" data-filter="skill" onclick="setFilter('skill')">Skill</button>
+  <button class="filter-btn" data-filter="boss" onclick="setFilter('boss')">Boss</button>
+  <button class="filter-btn" data-filter="team" onclick="setFilter('team')">Team</button>
+  <button class="filter-btn" data-filter="hunt" onclick="setFilter('hunt')">Hunt</button>
+  <button class="filter-btn" data-filter="clue" onclick="setFilter('clue')">Clue</button>
+  <button class="filter-btn" data-filter="social" onclick="setFilter('social')">Social</button>
+  <button class="filter-btn" data-filter="wom" onclick="setFilter('wom')">WOM</button>
+  <button class="filter-btn" data-filter="discord" onclick="setFilter('discord')">Discord</button>
+</div>
+
+<div class="board">
+  <div class="column" data-col="ideas">
+    <div class="column-header">
+      <span class="column-title">Ideas</span>
+      <span class="column-count" id="count-ideas">0</span>
+    </div>
+    <div class="column-body" id="col-ideas"></div>
+  </div>
+  <div class="column" data-col="planned">
+    <div class="column-header">
+      <span class="column-title">Planned</span>
+      <span class="column-count" id="count-planned">0</span>
+    </div>
+    <div class="column-body" id="col-planned"></div>
+  </div>
+  <div class="column" data-col="active">
+    <div class="column-header">
+      <span class="column-title">In Progress</span>
+      <span class="column-count" id="count-active">0</span>
+    </div>
+    <div class="column-body" id="col-active"></div>
+  </div>
+  <div class="column" data-col="done">
+    <div class="column-header">
+      <span class="column-title">Completed</span>
+      <span class="column-count" id="count-done">0</span>
+    </div>
+    <div class="column-body" id="col-done"></div>
+  </div>
+</div>
+
+<!-- CREATE MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>New Event Idea</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Event Name</label>
+        <input type="text" id="input-name" placeholder="e.g. Vorkath KC Race">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="input-desc" placeholder="Brief description of the event format and rules"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Column</label>
+        <select id="input-col">
+          <option value="ideas">Ideas</option>
+          <option value="planned">Planned</option>
+          <option value="active">In Progress</option>
+          <option value="done">Completed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tags (click to toggle)</label>
+        <div class="tag-select" id="tag-select"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="ib-btn" onclick="closeModal()">Cancel</button>
+      <button class="ib-btn ib-btn-primary" onclick="addCard()">Add Idea</button>
+    </div>
+  </div>
+</div>
+
+<div class="ib-footer">
+  <div class="ib-foot-links">
+    <a href="/armoury.html">The Armoury</a>
+    <a href="/">Main Site</a>
+  </div>
+  <div class="ib-disclaimer">
+    Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
+    RuneScape and Old School RuneScape are trademarks of Jagex Ltd.
+  </div>
+</div>
+
+<script>
+var TAG_TYPES = [
+  { id: 'skill', label: 'Skill', cls: 'tag-skill' },
+  { id: 'boss', label: 'Boss', cls: 'tag-boss' },
+  { id: 'team', label: 'Team', cls: 'tag-team' },
+  { id: 'hunt', label: 'Hunt', cls: 'tag-hunt' },
+  { id: 'clue', label: 'Clue', cls: 'tag-clue' },
+  { id: 'social', label: 'Social', cls: 'tag-social' },
+  { id: 'wom', label: 'WOM', cls: 'tag-wom' },
+  { id: 'discord', label: 'Discord', cls: 'tag-discord' },
+];
+
+var DEFAULT_CARDS = [
+  { id: 1, col: 'ideas', title: 'Skill of the Week', desc: 'Pick one skill. Highest XP gained over the weekend wins. Tracked automatically by WOM competitions.', tags: ['skill','wom'] },
+  { id: 2, col: 'ideas', title: 'Boss KC Race', desc: 'Pick a boss. Most kills over the weekend wins. WOM tracks kill counts automatically.', tags: ['boss','wom'] },
+  { id: 3, col: 'ideas', title: 'EHP/EHB Competition', desc: 'Efficient Hours Played or Bossed. Rewards efficient play over raw hours. WOM tracked.', tags: ['skill','boss','wom'] },
+  { id: 4, col: 'ideas', title: 'Clue Scroll Marathon', desc: 'Most clues completed over the weekend. Easy, Medium, Hard, Elite, Master all count. Tracked via hiscores.', tags: ['clue','wom'] },
+  { id: 5, col: 'ideas', title: 'Pet Bounty', desc: 'Target one specific pet. First person to get the drop and submit proof with timestamp wins the GP prize pool.', tags: ['hunt','boss'] },
+  { id: 6, col: 'ideas', title: 'Scavenger Hunt', desc: 'List of specific items or screenshots to collect across Gielinor. First team to complete the checklist wins.', tags: ['team','hunt'] },
+  { id: 7, col: 'ideas', title: 'Drop Bingo', desc: 'Specific unique drops on a 5x5 board. Get the drop, screenshot it, cross it off. Points scaled by rarity.', tags: ['boss','team','hunt'] },
+  { id: 8, col: 'ideas', title: 'Fashion Show', desc: 'Worst or best outfit contest. Screenshot submissions to Discord, members vote. Zero grind, pure fun.', tags: ['social','discord'] },
+  { id: 9, col: 'ideas', title: 'Trivia Night + Raffle', desc: 'Discord-based OSRS trivia with GP prizes. Great filler event between bigger competitions.', tags: ['social','discord'] },
+  { id: 10, col: 'ideas', title: 'Territory War', desc: 'Risk-style map conquest across Gielinor. Teams claim regions by completing tasks tied to those areas.', tags: ['team','hunt'] },
+  { id: 11, col: 'ideas', title: 'Tile Race', desc: 'Dice-rolling board game. Complete OSRS tasks to advance on the board. Hit traps or boosts.', tags: ['team','hunt'] },
+  { id: 12, col: 'ideas', title: 'Boss Tycoon', desc: 'Monopoly-style. Bosses are properties. Kill bosses to buy them, collect points when others land there.', tags: ['team','boss'] },
+  { id: 13, col: 'ideas', title: 'Battleship Bingo', desc: 'Hide ships on a bingo board. Hunt drops to reveal tiles and sink the enemy fleet.', tags: ['team','hunt','boss'] },
+  { id: 14, col: 'ideas', title: 'Blind Draft', desc: 'Captains draft players without knowing stats. Teams compete in bingo or KC race. Levels the playing field.', tags: ['team'] },
+  { id: 15, col: 'ideas', title: 'Collection Log Race', desc: 'Most new collection log slots filled over the weekend wins. Broad and accessible.', tags: ['hunt','wom'] },
+  { id: 16, col: 'ideas', title: 'Gielinor Rush', desc: 'Treasure hunt across the OSRS map. Clues lead to locations, screenshots prove you were there.', tags: ['hunt','team'] },
+  { id: 17, col: 'ideas', title: 'Clan vs Clan', desc: 'Challenge another clan. Bingo, KC race, or XP race format. Supported by event platforms.', tags: ['team','boss','skill'] },
+];
+
+var cards = [];
+var nextId = 100;
+var activeFilter = 'all';
+var selectedTags = [];
+var draggedId = null;
+
+function loadCards() {
+  var saved = null;
+  try { saved = localStorage.getItem('mm-ideaboard'); } catch(e) {}
+  if (saved) {
+    try { cards = JSON.parse(saved); } catch(e) { cards = DEFAULT_CARDS.slice(); }
+  } else {
+    cards = DEFAULT_CARDS.slice();
+  }
+  nextId = Math.max.apply(null, cards.map(function(c) { return c.id; }).concat([99])) + 1;
+}
+
+function saveCards() {
+  try { localStorage.setItem('mm-ideaboard', JSON.stringify(cards)); } catch(e) {}
+}
+
+function render() {
+  ['ideas','planned','active','done'].forEach(function(col) {
+    var el = document.getElementById('col-' + col);
+    var colCards = cards.filter(function(c) { return c.col === col && matchesFilter(c); });
+    var allColCards = cards.filter(function(c) { return c.col === col; });
+    document.getElementById('count-' + col).textContent = allColCards.length;
+    el.innerHTML = '';
+    colCards.forEach(function(card) {
+      var div = document.createElement('div');
+      div.className = 'card';
+      div.draggable = true;
+      div.dataset.id = card.id;
+      div.addEventListener('dragstart', onDragStart);
+      div.addEventListener('dragend', onDragEnd);
+      var tagsHtml = (card.tags || []).map(function(t) {
+        var info = TAG_TYPES.find(function(tt) { return tt.id === t; });
+        return info ? '<span class="tag ' + info.cls + '">' + info.label + '</span>' : '';
+      }).join('');
+      div.innerHTML =
+        '<div class="card-top">' +
+          '<span class="card-title">' + esc(card.title) + '</span>' +
+          '<button class="card-delete" onclick="deleteCard(' + card.id + ')" title="Remove">&times;</button>' +
+        '</div>' +
+        (card.desc ? '<div class="card-desc">' + esc(card.desc) + '</div>' : '') +
+        '<div class="card-tags">' + tagsHtml + '</div>';
+      el.appendChild(div);
+    });
+  });
+}
+
+function matchesFilter(card) {
+  if (activeFilter === 'all') return true;
+  return (card.tags || []).indexOf(activeFilter) !== -1;
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.filter === f);
+  });
+  render();
+}
+
+function deleteCard(id) {
+  cards = cards.filter(function(c) { return c.id !== id; });
+  saveCards();
+  render();
+}
+
+function openModal() {
+  selectedTags = [];
+  document.getElementById('input-name').value = '';
+  document.getElementById('input-desc').value = '';
+  document.getElementById('input-col').value = 'ideas';
+  renderTagSelect();
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('input-name').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function renderTagSelect() {
+  var el = document.getElementById('tag-select');
+  el.innerHTML = TAG_TYPES.map(function(t) {
+    return '<span class="tag-option tag ' + t.cls + (selectedTags.indexOf(t.id) !== -1 ? ' selected' : '') +
+      '" data-tag="' + t.id + '" onclick="toggleTag(\'' + t.id + '\')">' + t.label + '</span>';
+  }).join('');
+}
+
+function toggleTag(id) {
+  var idx = selectedTags.indexOf(id);
+  if (idx !== -1) selectedTags.splice(idx, 1);
+  else selectedTags.push(id);
+  renderTagSelect();
+}
+
+function addCard() {
+  var name = document.getElementById('input-name').value.trim();
+  var desc = document.getElementById('input-desc').value.trim();
+  var col = document.getElementById('input-col').value;
+  if (!name) { document.getElementById('input-name').focus(); return; }
+  cards.push({ id: nextId++, col: col, title: name, desc: desc, tags: selectedTags.slice() });
+  saveCards();
+  render();
+  closeModal();
+}
+
+function esc(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+/* DRAG AND DROP */
+function onDragStart(e) {
+  draggedId = parseInt(e.target.dataset.id || e.target.closest('.card').dataset.id);
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.column-body').forEach(function(c) { c.classList.remove('drag-over'); });
+  draggedId = null;
+}
+
+document.querySelectorAll('.column-body').forEach(function(colBody) {
+  colBody.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    colBody.classList.add('drag-over');
+  });
+  colBody.addEventListener('dragleave', function() {
+    colBody.classList.remove('drag-over');
+  });
+  colBody.addEventListener('drop', function(e) {
+    e.preventDefault();
+    colBody.classList.remove('drag-over');
+    var newCol = colBody.parentElement.dataset.col;
+    var card = cards.find(function(c) { return c.id === draggedId; });
+    if (card) {
+      card.col = newCol;
+      saveCards();
+      render();
+    }
+  });
+});
+
+function exportData() {
+  var text = JSON.stringify(cards, null, 2);
+  var blob = new Blob([text], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'mm-ideaboard-export.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* KEYBOARD */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+/* INIT */
+loadCards();
+render();
+</script>
+</body>
+</html>

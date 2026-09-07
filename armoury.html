@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Armoury | Multi-Misfits</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Jersey+15&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #0d0b08;
+  --earth: #1a1305;
+  --gold: #ffcb2f;
+  --gold-dim: #c9a227;
+  --gold-bright: #f0d860;
+  --parchment: #e6d9b8;
+  --muted: #a99b78;
+  --bronze: #6b5836;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #241d12 0%, transparent 60%),
+    linear-gradient(180deg, var(--void) 0%, #131009 100%);
+  background-attachment: fixed;
+  color: var(--parchment);
+  font-family: 'Jersey 15', cursive;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.crest {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 20px rgba(255,203,47,0.15));
+}
+
+.title {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: clamp(28px, 5vw, 42px);
+  color: var(--gold);
+  letter-spacing: 6px;
+  text-align: center;
+  margin-bottom: 4px;
+  text-wrap: balance;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.tools {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 560px;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .tools { grid-template-columns: 1fr; max-width: 300px; }
+}
+
+.tool {
+  background: var(--earth);
+  border: 1px solid var(--bronze);
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  text-decoration: none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  cursor: pointer;
+  position: relative;
+}
+
+.tool:hover {
+  border-color: var(--gold-dim);
+  box-shadow: 0 0 24px rgba(255,203,47,0.08);
+}
+
+.tool:hover .tool-icon svg {
+  filter: drop-shadow(0 0 6px rgba(255,203,47,0.3));
+}
+
+.tool:hover .tool-name {
+  color: var(--gold-bright);
+}
+
+.tool-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-icon svg {
+  width: 48px;
+  height: 48px;
+  transition: filter 0.25s;
+}
+
+.tool-name {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  transition: color 0.25s;
+}
+
+.tool-desc {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.ext-badge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.5;
+  letter-spacing: 1px;
+}
+
+.foot {
+  margin-top: 48px;
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-align: center;
+  opacity: 0.5;
+}
+
+.foot a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.foot a:hover { color: var(--gold-dim); }
+
+.disclaimer {
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  opacity: 0.3;
+  line-height: 1.6;
+  max-width: 480px;
+}
+</style>
+</head>
+<body>
+
+<img class="crest" src="/assets/crest.png" alt="Multi-Misfits crest">
+<div class="title">THE ARMOURY</div>
+<div class="subtitle">Leader Tools</div>
+
+<div class="tools">
+
+  <a class="tool" href="/wheel.html">
+    <div class="tool-icon">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="21" stroke="#c9a227" stroke-width="1.5"/>
+        <circle cx="24" cy="24" r="4" fill="#ffcb2f"/>
+        <line x1="24" y1="3" x2="24" y2="20" stroke="#c9a227" stroke-width="1.2"/>
+        <line x1="24" y1="28" x2="24" y2="45" stroke="#c9a227" stroke-width="1.2"/>
+        <line x1="3" y1="24" x2="20" y2="24" stroke="#c9a227" stroke-width="1.2"/>
+        <line x1="28" y1="24" x2="45" y2="24" stroke="#c9a227" stroke-width="1.2"/>
+        <line x1="9.1" y1="9.1" x2="20.2" y2="20.2" stroke="#c9a227" stroke-width="1.2"/>
+        <line x1="27.8" y1="27.8" x2="38.9" y2="38.9" stroke="#c9a227" stroke-width="1.2"/>
+        <line x1="38.9" y1="9.1" x2="27.8" y2="20.2" stroke="#c9a227" stroke-width="1.2"/>
+        <line x1="20.2" y1="27.8" x2="9.1" y2="38.9" stroke="#c9a227" stroke-width="1.2"/>
+        <circle cx="24" cy="24" r="14" stroke="#a99b78" stroke-width="0.5" stroke-dasharray="2 3"/>
+      </svg>
+    </div>
+    <div class="tool-name">LOOT WHEEL</div>
+    <div class="tool-desc">Spin for a winner from event participants</div>
+  </a>
+
+  <a class="tool" href="/bracket.html">
+    <div class="tool-icon">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="10" x2="24" y2="24" stroke="#c9a227" stroke-width="1.5"/>
+        <line x1="38" y1="10" x2="24" y2="24" stroke="#c9a227" stroke-width="1.5"/>
+        <line x1="24" y1="24" x2="24" y2="40" stroke="#c9a227" stroke-width="1.5"/>
+        <rect x="6" y="6" width="8" height="8" stroke="#c9a227" stroke-width="1.2" fill="#1a1305"/>
+        <rect x="34" y="6" width="8" height="8" stroke="#c9a227" stroke-width="1.2" fill="#1a1305"/>
+        <polygon points="24,32 20,40 28,40" fill="#ffcb2f"/>
+        <circle cx="10" cy="10" r="2" fill="#ffcb2f"/>
+        <circle cx="38" cy="10" r="2" fill="#ffcb2f"/>
+      </svg>
+    </div>
+    <div class="tool-name">BRACKET</div>
+    <div class="tool-desc">Elimination knockout with dice combat</div>
+  </a>
+
+  <a class="tool" href="/ideaboard.html">
+    <div class="tool-icon">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="36" height="36" rx="1" stroke="#c9a227" stroke-width="1.5" fill="none"/>
+        <line x1="18" y1="6" x2="18" y2="42" stroke="#a99b78" stroke-width="0.8"/>
+        <line x1="30" y1="6" x2="30" y2="42" stroke="#a99b78" stroke-width="0.8"/>
+        <rect x="8" y="10" width="8" height="5" rx="0.5" fill="#c9a227" opacity="0.6"/>
+        <rect x="8" y="18" width="8" height="4" rx="0.5" fill="#c9a227" opacity="0.4"/>
+        <rect x="20" y="10" width="8" height="6" rx="0.5" fill="#ffcb2f" opacity="0.5"/>
+        <rect x="20" y="19" width="8" height="4" rx="0.5" fill="#ffcb2f" opacity="0.3"/>
+        <rect x="32" y="10" width="8" height="4" rx="0.5" fill="#a99b78" opacity="0.5"/>
+        <rect x="8" y="25" width="8" height="4" rx="0.5" fill="#c9a227" opacity="0.3"/>
+        <rect x="32" y="17" width="8" height="5" rx="0.5" fill="#a99b78" opacity="0.4"/>
+      </svg>
+    </div>
+    <div class="tool-name">IDEA BOARD</div>
+    <div class="tool-desc">Plan and track event ideas</div>
+  </a>
+
+  <a class="tool" href="https://1box.online/tools/eventforge/" target="_blank" rel="noopener">
+    <span class="ext-badge">&#8599;</span>
+    <div class="tool-icon">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="10" width="32" height="30" rx="2" stroke="#c9a227" stroke-width="1.5" fill="none"/>
+        <rect x="8" y="10" width="32" height="8" rx="2" fill="#c9a227" opacity="0.4"/>
+        <rect x="14" y="6" width="3" height="8" rx="1" fill="#ffcb2f"/>
+        <rect x="31" y="6" width="3" height="8" rx="1" fill="#ffcb2f"/>
+        <rect x="13" y="22" width="5" height="4" rx="0.5" fill="#a99b78" opacity="0.6"/>
+        <rect x="21.5" y="22" width="5" height="4" rx="0.5" fill="#ffcb2f" opacity="0.5"/>
+        <rect x="30" y="22" width="5" height="4" rx="0.5" fill="#a99b78" opacity="0.6"/>
+        <rect x="13" y="29" width="5" height="4" rx="0.5" fill="#a99b78" opacity="0.4"/>
+        <rect x="21.5" y="29" width="5" height="4" rx="0.5" fill="#a99b78" opacity="0.4"/>
+        <rect x="30" y="29" width="5" height="4" rx="0.5" fill="#ffcb2f" opacity="0.3"/>
+        <rect x="13" y="36" width="5" height="2" rx="0.5" fill="#a99b78" opacity="0.3"/>
+      </svg>
+    </div>
+    <div class="tool-name">EVENT FORGE</div>
+    <div class="tool-desc">Create and format event posts</div>
+  </a>
+
+</div>
+
+<div class="foot"><a href="/">Multi-Misfits</a></div>
+<div class="disclaimer">
+  Multi-Misfits is a player-run fan community and is not affiliated with, endorsed by, or sponsored by Jagex Ltd.<br>
+  RuneScape and Old School RuneScape are trademarks of Jagex Ltd.
+</div>
+
+</body>
+</html>
