@@ -251,7 +251,7 @@ body {
 .board {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  /* 5 cols: review, approved, shared, rejected, used */
+  /* 5 cols: review, approved, shared, onhold, used */
   gap: 12px;
   padding: 12px 24px 40px;
   min-height: 60vh;
@@ -502,8 +502,73 @@ body {
 .card-discord { background: rgba(88,100,240,0.15); border-left: 3px solid #8090ff; }
 .card-website { background: rgba(200,140,30,0.12); border-left: 3px solid #f0b050; }
 
-/* Rejected column overrides card color */
-.column[data-col="rejected"] .card { background: rgba(180,40,40,0.15); border-left: 3px solid #e05050; }
+/* On Hold column overrides card color */
+.column[data-col="onhold"] .card { background: rgba(180,40,40,0.15); border-left: 3px solid #e05050; }
+
+/* Day counter badge */
+.card-age {
+  font-size: 9px;
+  color: var(--text-dim);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.card-age.stale {
+  color: #e8a020;
+  animation: pulse-stale 2s ease-in-out infinite;
+}
+@keyframes pulse-stale {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* On Hold comment prompt */
+.ib-onhold-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 310;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.ib-onhold-panel {
+  width: min(420px, 100%);
+  background: #1e1809;
+  border: 1px solid #3a2e1a;
+  padding: 24px;
+}
+.ib-onhold-panel h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  color: var(--gold);
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+}
+.ib-onhold-panel p {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.ib-onhold-panel textarea {
+  width: 100%;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 10px;
+  font-family: inherit;
+  min-height: 70px;
+  resize: vertical;
+  margin-bottom: 12px;
+}
+.ib-onhold-panel textarea:focus { border-color: var(--gold-dim); outline: none; }
+.ib-onhold-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
 
 /* Used column green glow */
 .column[data-col="used"] { border-color: rgba(42,180,60,0.4); box-shadow: 0 0 18px rgba(42,180,60,0.12), inset 0 0 12px rgba(42,180,60,0.04); }
@@ -817,12 +882,12 @@ body {
     </div>
     <div class="column-body" id="col-shared"></div>
   </div>
-  <div class="column" data-col="rejected">
+  <div class="column" data-col="onhold">
     <div class="column-header">
-      <span class="column-title">Rejected</span>
-      <span class="column-count" id="count-rejected">0</span>
+      <span class="column-title">On Hold</span>
+      <span class="column-count" id="count-onhold">0</span>
     </div>
-    <div class="column-body" id="col-rejected"></div>
+    <div class="column-body" id="col-onhold"></div>
   </div>
   <div class="column" data-col="used">
     <div class="column-header">
@@ -856,7 +921,9 @@ body {
 <script>
 var KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams','misc'];
 var MAIN_TAGS = ['weekend','1day','discord','website'];
-var COLUMNS = ['review','approved','shared','rejected','used'];
+var COLUMNS = ['review','approved','shared','onhold','used'];
+var STALE_DAYS = 7;
+var STALE_COLUMNS = ['review','onhold'];
 
 var ideas = [];
 var activeFilter = 'all';
@@ -1192,12 +1259,20 @@ function buildCard(idea, col) {
     ? '<button class="card-copy" onclick="copyIdea(event,\'' + idea.id + '\',this)" title="Copy for AI Assist">&#128203;</button>'
     : '';
 
+  var ageHtml = '';
+  if (STALE_COLUMNS.indexOf(col) !== -1 && idea.createdAt) {
+    var days = daysSince(idea.createdAt);
+    var stale = days >= STALE_DAYS;
+    var label = days === 0 ? 'today' : days === 1 ? '1 day' : days + ' days';
+    ageHtml = '<span class="card-age' + (stale ? ' stale' : '') + '">' + label + '</span>';
+  }
+
   div.innerHTML =
     '<div class="card-top">' +
       '<span class="card-title">' + esc(idea.title) + '</span>' +
       copyBtn + dismissBtn +
     '</div>' +
-    '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + '</div>' +
+    '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + '</div>' +
     notesHtml +
     commentsHtml +
     '<div class="card-tags">' + tagsHtml + '</div>';
@@ -1434,6 +1509,70 @@ function moveCard(id, newCol) {
   var idea = ideas.find(function(c) { return c.id === id; });
   if (!idea || idea.column === newCol) return;
 
+  if (newCol === 'onhold') {
+    promptOnHoldComment(id);
+    return;
+  }
+
+  doMove(id, newCol);
+}
+
+function promptOnHoldComment(id) {
+  var idea = ideas.find(function(c) { return c.id === id; });
+  if (!idea) return;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'ib-onhold-overlay';
+  overlay.innerHTML =
+    '<div class="ib-onhold-panel">' +
+      '<h3>On Hold</h3>' +
+      '<p>Moving "' + esc(idea.title) + '" to On Hold. Explain why or what needs to change:</p>' +
+      '<textarea id="onholdComment" placeholder="Why is this on hold?"></textarea>' +
+      '<div class="ib-onhold-btns">' +
+        '<button class="ib-btn ib-btn-sm" id="onholdCancel">Cancel</button>' +
+        '<button class="ib-btn ib-btn-primary ib-btn-sm" id="onholdConfirm">Move to On Hold</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  setTimeout(function() { document.getElementById('onholdComment').focus(); }, 50);
+
+  document.getElementById('onholdCancel').onclick = function() { overlay.remove(); };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  document.getElementById('onholdConfirm').onclick = function() {
+    var text = document.getElementById('onholdComment').value.trim();
+    if (!text) {
+      document.getElementById('onholdComment').style.borderColor = '#e05050';
+      showToast('Comment is required for On Hold');
+      return;
+    }
+    overlay.remove();
+
+    var user = ensureUser();
+    if (!user) return;
+
+    idea.comments = idea.comments || [];
+    idea.comments.push({ author: user, text: text, createdAt: new Date().toISOString() });
+
+    fetch('/api/ideaboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', message_id: id, user: user, text: text, access_code: getAccessCode() }),
+    }).then(function(res) {
+      if (!res.ok) throw new Error();
+      doMove(id, 'onhold');
+    }).catch(function() {
+      idea.comments.pop();
+      render();
+      showToast('Failed to add comment');
+    });
+  };
+}
+
+function doMove(id, newCol) {
+  var idea = ideas.find(function(c) { return c.id === id; });
+  if (!idea || idea.column === newCol) return;
+
   var oldCol = idea.column;
   var user = ensureUser();
   if (!user) return;
@@ -1472,6 +1611,13 @@ function formatDate(iso) {
   var str = months[d.getMonth()] + ' ' + d.getDate();
   if (d.getFullYear() !== now.getFullYear()) str += ', ' + d.getFullYear();
   return str;
+}
+
+function daysSince(iso) {
+  if (!iso) return 0;
+  var then = new Date(iso);
+  var now = new Date();
+  return Math.floor((now - then) / 86400000);
 }
 
 /* ---- INIT ---- */
