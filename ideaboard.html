@@ -645,6 +645,9 @@ body {
 <div class="filters" id="filters">
   <span class="filter-label">Filter:</span>
   <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+  <button class="filter-btn" data-filter="events" onclick="setFilter('events')">Events</button>
+  <button class="filter-btn" data-filter="1day" onclick="setFilter('1day')">1 Day</button>
+  <button class="filter-btn" data-filter="weekend" onclick="setFilter('weekend')">Weekend</button>
   <button class="filter-btn" data-filter="website" onclick="setFilter('website')">Website</button>
   <button class="filter-btn" data-filter="discord" onclick="setFilter('discord')">Discord</button>
   <button class="filter-btn" data-filter="pvm" onclick="setFilter('pvm')">PVM</button>
@@ -652,8 +655,6 @@ body {
   <button class="filter-btn" data-filter="wild" onclick="setFilter('wild')">Wild</button>
   <button class="filter-btn" data-filter="social" onclick="setFilter('social')">Social</button>
   <button class="filter-btn" data-filter="skilling" onclick="setFilter('skilling')">Skilling</button>
-  <button class="filter-btn" data-filter="weekend" onclick="setFilter('weekend')">Weekend</button>
-  <button class="filter-btn" data-filter="1day" onclick="setFilter('1day')">1 Day</button>
   <button class="filter-btn" data-filter="teams" onclick="setFilter('teams')">Teams</button>
   <button class="filter-btn" data-filter="misc" onclick="setFilter('misc')">Misc</button>
 </div>
@@ -884,7 +885,12 @@ function render() {
   var nonDismissed = ideas.filter(function(c) { return !c.dismissed; });
   document.querySelectorAll('.filter-btn').forEach(function(btn) {
     var f = btn.dataset.filter;
-    var count = f === 'all' ? nonDismissed.length : nonDismissed.filter(function(c) {
+    var count;
+    if (f === 'all') count = nonDismissed.length;
+    else if (f === 'events') count = nonDismissed.filter(function(c) {
+      var t = c.tags || []; return t.indexOf('1day') !== -1 || t.indexOf('weekend') !== -1;
+    }).length;
+    else count = nonDismissed.filter(function(c) {
       return (c.tags || []).indexOf(f) !== -1;
     }).length;
     var label = btn.textContent.replace(/\s*\(\d+\)$/, '');
@@ -1052,7 +1058,9 @@ function toggleGuide(btn) {
 
 function matchesFilter(card) {
   if (activeFilter === 'all') return true;
-  return (card.tags || []).indexOf(activeFilter) !== -1;
+  var tags = card.tags || [];
+  if (activeFilter === 'events') return tags.indexOf('1day') !== -1 || tags.indexOf('weekend') !== -1;
+  return tags.indexOf(activeFilter) !== -1;
 }
 
 function setFilter(f) {
