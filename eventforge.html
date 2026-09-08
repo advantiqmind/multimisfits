@@ -165,7 +165,7 @@ textarea.listItem{min-height:0;height:auto;resize:none;white-space:pre-wrap;over
 <input type="file" id="backupInput" hidden>
 <input type="file" id="templateInput" hidden>
 <script>
-const EF_VERSION='2.1';
+const EF_VERSION='2.2';
 const STORE_KEY='mm-eventforge-v3';
 const EMOJIS=['🎉','⚔️','📅','🕘','⏳','🌎','📍','👑','🎒','📋','🏆','📸','🔥','💰','☠️','🛡️','🧠','🎯','💬','✅','❗','⚠️','🔴','🟢','🟡','🔵','🗡️','🏹','🍖','🧪','💀','👥','📢','🏃','⭐','🎁','🥇','🥈','🥉','📝','🧩','🔒','🔓','🔔','🕹️','🎲','🪙','💎','🛠️','🧙','🏰','🌲','🐉','🦀','🪦','🧭','📌','➡️','✨','🚨','❤️','💥','🪄','⛏️','🎣','🌟'];
 const uid=()=>crypto.randomUUID();
@@ -568,7 +568,7 @@ Common block fields (all blocks have these):
 REMEMBER: Return ONLY the JSON object. No text, no explanation, no code fences.`
 }
 function extractJson(raw){
-let t=raw.trim();
+let t=raw.trim().replace(/[“”„‟″‶]/g,'"').replace(/[‘’‚‛′‵]/g,"'");
 const fence=t.match(/```(?:json)?\s*([\s\S]*?)```/);
 if(fence)t=fence[1].trim();
 try{return{ok:true,data:JSON.parse(t)}}catch{}
