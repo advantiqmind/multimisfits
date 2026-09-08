@@ -193,6 +193,57 @@ body {
   margin: 0 4px;
 }
 
+/* TAG GUIDE */
+.tag-guide {
+  margin: 0 24px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-column);
+  overflow: hidden;
+}
+.tag-guide-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+  text-align: left;
+}
+.tag-guide-toggle:hover { color: var(--gold-bright); }
+.tag-guide-toggle .chevron {
+  font-size: 9px;
+  transition: transform 0.15s;
+  color: var(--text-dim);
+}
+.tag-guide-toggle.open .chevron { transform: rotate(90deg); }
+.tag-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border-top: 1px solid var(--border);
+}
+.tag-guide-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--bg-column);
+}
+.tag-guide-row .tag { flex-shrink: 0; min-width: 70px; text-align: center; }
+.tag-guide-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.3;
+}
+
 /* BOARD */
 .board {
   display: grid;
@@ -553,6 +604,23 @@ body {
   <div class="color-key-item key-website"><span class="color-key-bar key-website"></span><span class="color-key-label">Website</span></div>
 </div>
 
+<div class="tag-guide">
+  <button class="tag-guide-toggle" onclick="toggleGuide(this)"><span class="chevron">&#9654;</span> Hashtag Guide</button>
+  <div class="tag-guide-grid" hidden id="tagGuideGrid">
+    <div class="tag-guide-row"><span class="tag tag-weekend">#weekend</span><span class="tag-guide-desc">Friday to Sunday events</span></div>
+    <div class="tag-guide-row"><span class="tag tag-1day">#1day</span><span class="tag-guide-desc">Single day/night events</span></div>
+    <div class="tag-guide-row"><span class="tag tag-discord">#discord</span><span class="tag-guide-desc">Server/bot ideas</span></div>
+    <div class="tag-guide-row"><span class="tag tag-website">#website</span><span class="tag-guide-desc">Site changes, features</span></div>
+    <div class="tag-guide-row"><span class="tag tag-pvm">#pvm</span><span class="tag-guide-desc">Boss events, masses</span></div>
+    <div class="tag-guide-row"><span class="tag tag-pvp">#pvp</span><span class="tag-guide-desc">Player vs player</span></div>
+    <div class="tag-guide-row"><span class="tag tag-wild">#wild</span><span class="tag-guide-desc">Wilderness content</span></div>
+    <div class="tag-guide-row"><span class="tag tag-social">#social</span><span class="tag-guide-desc">Hangouts, community</span></div>
+    <div class="tag-guide-row"><span class="tag tag-skilling">#skilling</span><span class="tag-guide-desc">Skilling events</span></div>
+    <div class="tag-guide-row"><span class="tag tag-teams">#teams</span><span class="tag-guide-desc">Team-based events</span></div>
+    <div class="tag-guide-row"><span class="tag tag-misc">#misc</span><span class="tag-guide-desc">Everything else</span></div>
+  </div>
+</div>
+
 <div id="boardMsg" class="board-msg"><span class="spinner"></span> Loading ideas...</div>
 
 <div class="board" id="board" hidden>
@@ -819,6 +887,15 @@ function toggleNotes(e, el) {
   var open = !notes.hidden;
   notes.hidden = open;
   el.classList.toggle('open', !open);
+}
+
+/* ---- TAG GUIDE ---- */
+
+function toggleGuide(btn) {
+  var grid = document.getElementById('tagGuideGrid');
+  var open = grid.hidden;
+  grid.hidden = !open;
+  btn.classList.toggle('open', open);
 }
 
 /* ---- FILTER ---- */
