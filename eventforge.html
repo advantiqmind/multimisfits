@@ -407,7 +407,7 @@ panel.innerHTML=
 '<li>Optionally type your event idea above</li>'+
 '<li>Click <strong>Copy Prompt</strong> to copy the full AI prompt</li>'+
 '<li>Paste into Claude, ChatGPT, or any AI</li>'+
-'<li>Copy the JSON the AI gives back</li>'+
+'<li>Copy the AI\'s full response (no need to clean it up)</li>'+
 '<li>Paste it below and click <strong>Import</strong></li>'+
 '</ol>'+
 '<div class="ai-btnrow">'+
@@ -415,7 +415,7 @@ panel.innerHTML=
 '</div>'+
 '<div class="ai-divider"></div>'+
 '<label>Paste AI result here</label>'+
-'<textarea class="ai-result" id="aiResult" placeholder="Paste the JSON from the AI here..."></textarea>'+
+'<textarea class="ai-result" id="aiResult" placeholder="Paste the full AI response here (JSON, code fences, extra text -- all fine, we will find the event data)"></textarea>'+
 '<div class="ai-btnrow">'+
 '<button class="ai-btn" id="aiImport">Import into EventForge</button>'+
 '</div>'+
@@ -566,12 +566,21 @@ Common block fields (all blocks have these):
 
 REMEMBER: Return ONLY the JSON object. No text, no explanation, no code fences.`
 }
+function extractJson(raw){
+let t=raw.trim();
+const fence=t.match(/```(?:json)?\s*([\s\S]*?)```/);
+if(fence)t=fence[1].trim();
+try{return JSON.parse(t)}catch{}
+const first=t.indexOf('{');
+const last=t.lastIndexOf('}');
+if(first!==-1&&last>first){
+try{return JSON.parse(t.slice(first,last+1))}catch{}}
+return null;
+}
 function importAiResult(raw){
 try{
-let json=raw;
-const fenceMatch=raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-if(fenceMatch)json=fenceMatch[1].trim();
-const parsed=JSON.parse(json);
+const parsed=extractJson(raw);
+if(!parsed){toast('Could not find valid JSON. Make sure you copied the full AI response.');return}
 let event=null;
 if(parsed.app==='eventforge-template'&&parsed.template&&parsed.template.event){
 event=parsed.template.event;
@@ -591,7 +600,7 @@ markDirty(true);
 closeAiAssist();
 render();
 toast('Event imported from AI')
-}catch(e){toast('Invalid JSON. Make sure you copied the full AI response.')}
+}catch(e){toast('Could not parse the AI response. Make sure you copied everything.')}
 }
 function renderSaveStatus(){const el=document.getElementById('saveStatus');if(el)el.textContent=state.autosaveAt?'✓ Draft autosaved':'Autosave on'}
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.classList.remove('show'),1800)}
