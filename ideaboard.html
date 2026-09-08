@@ -148,6 +148,50 @@ body {
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+.filter-count {
+  font-size: 9px;
+  opacity: 0.7;
+  margin-left: 2px;
+}
+
+/* COLOR KEY */
+.color-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 24px 8px;
+  flex-wrap: wrap;
+}
+.color-key-item {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.color-key-bar {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-left: 3px solid;
+  margin-right: 6px;
+}
+.color-key-bar.key-weekend { border-color: #60f080; background: rgba(40,160,70,0.25); }
+.color-key-bar.key-1day { border-color: #60a0ff; background: rgba(50,120,220,0.25); }
+.color-key-bar.key-discord { border-color: #7289da; background: rgba(88,101,242,0.2); }
+.color-key-bar.key-website { border-color: #5ee0e0; background: rgba(26,140,140,0.2); }
+.color-key-item.key-weekend .color-key-label { color: #60f080; }
+.color-key-item.key-1day .color-key-label { color: #60a0ff; }
+.color-key-item.key-discord .color-key-label { color: #7289da; }
+.color-key-item.key-website .color-key-label { color: #5ee0e0; }
+.color-key-sep {
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+  margin: 0 4px;
+}
 
 /* BOARD */
 .board {
@@ -496,6 +540,16 @@ body {
   <button class="filter-btn" data-filter="misc" onclick="setFilter('misc')">Misc</button>
 </div>
 
+<div class="color-key">
+  <div class="color-key-item key-weekend"><span class="color-key-bar key-weekend"></span><span class="color-key-label">Weekend</span></div>
+  <span class="color-key-sep"></span>
+  <div class="color-key-item key-1day"><span class="color-key-bar key-1day"></span><span class="color-key-label">1 Day</span></div>
+  <span class="color-key-sep"></span>
+  <div class="color-key-item key-discord"><span class="color-key-bar key-discord"></span><span class="color-key-label">Discord</span></div>
+  <span class="color-key-sep"></span>
+  <div class="color-key-item key-website"><span class="color-key-bar key-website"></span><span class="color-key-label">Website</span></div>
+</div>
+
 <div id="boardMsg" class="board-msg"><span class="spinner"></span> Loading ideas...</div>
 
 <div class="board" id="board" hidden>
@@ -666,6 +720,16 @@ function render() {
   document.getElementById('dismissToggle').textContent =
     (showingDismissed ? 'Hide' : 'Show') + ' Dismissed (' + dismissed.length + ')';
 
+  var nonDismissed = ideas.filter(function(c) { return !c.dismissed; });
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    var f = btn.dataset.filter;
+    var count = f === 'all' ? nonDismissed.length : nonDismissed.filter(function(c) {
+      return (c.tags || []).indexOf(f) !== -1;
+    }).length;
+    var label = btn.textContent.replace(/\s*\(\d+\)$/, '');
+    btn.textContent = label + ' (' + count + ')';
+  });
+
   var section = document.getElementById('dismissedSection');
   var list = document.getElementById('dismissedList');
   if (showingDismissed && dismissed.length) {
@@ -734,7 +798,9 @@ function buildDismissedCard(idea) {
 }
 
 function buildTagsHtml(tags) {
-  return (tags || []).map(function(t) {
+  return (tags || []).filter(function(t) {
+    return MAIN_TAGS.indexOf(t) === -1;
+  }).map(function(t) {
     var cls = KNOWN_TAGS.indexOf(t) !== -1 ? 'tag-' + t : '';
     var label = t.charAt(0).toUpperCase() + t.slice(1);
     return '<span class="tag ' + cls + '">' + esc(label) + '</span>';
