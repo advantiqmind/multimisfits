@@ -522,6 +522,52 @@ body {
   50% { opacity: 0.4; }
 }
 
+/* Author identity block (In Review only) */
+.card-author-id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 4px;
+  padding: 6px 8px;
+  background: rgba(169,155,120,0.08);
+  border: 1px solid rgba(169,155,120,0.15);
+}
+.card-author-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-dim);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(30,24,9,0.8);
+}
+.card-author-initial {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-dim);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(169,155,120,0.15);
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.card-author-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* On Hold comment prompt */
 .ib-onhold-overlay {
   position: fixed;
@@ -1267,12 +1313,28 @@ function buildCard(idea, col) {
     ageHtml = '<span class="card-age' + (stale ? ' stale' : '') + '">' + label + '</span>';
   }
 
+  var authorIdHtml = '';
+  if (col === 'review') {
+    var avatarEl = '';
+    if (idea.authorId && idea.authorAvatar) {
+      avatarEl = '<img class="card-author-avatar" src="https://cdn.discordapp.com/avatars/' +
+        idea.authorId + '/' + idea.authorAvatar + '.png?size=80" alt="" ' +
+        'onerror="this.outerHTML=\'<span class=card-author-initial>' + esc(idea.author).charAt(0).toUpperCase() + '</span>\'">';
+    } else {
+      avatarEl = '<span class="card-author-initial">' + esc(idea.author).charAt(0).toUpperCase() + '</span>';
+    }
+    authorIdHtml = '<div class="card-author-id">' + avatarEl +
+      '<span class="card-author-name">' + esc(idea.author) + '</span></div>';
+  }
+
   div.innerHTML =
     '<div class="card-top">' +
       '<span class="card-title">' + esc(idea.title) + '</span>' +
       copyBtn + dismissBtn +
     '</div>' +
-    '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + '</div>' +
+    (col === 'review'
+      ? authorIdHtml + '<div class="card-meta">' + dateStr + ' ' + ageHtml + '</div>'
+      : '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + '</div>') +
     notesHtml +
     commentsHtml +
     '<div class="card-tags">' + tagsHtml + '</div>';

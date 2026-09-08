@@ -116,12 +116,17 @@ function parseIdea(msg, nickMap, channelMap) {
     noteLines.pop();
   const notes = noteLines.join("\n") || null;
 
+  const authorId = msg.author?.id || null;
+  const authorAvatar = msg.author?.avatar || null;
+
   return {
     id: msg.id,
     title,
     notes,
     tags,
     author: resolveName(msg.author, nickMap),
+    authorId,
+    authorAvatar,
     createdAt: msg.timestamp,
   };
 }
