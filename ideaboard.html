@@ -157,6 +157,22 @@ body {
   opacity: 0.7;
   margin-left: 2px;
 }
+.filter-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+.filter-btn.filter-author {
+  border-color: rgba(106,160,180,0.4);
+  color: #7ab8c8;
+}
+.filter-btn.filter-author:hover, .filter-btn.filter-author.active {
+  border-color: #7ab8c8;
+  color: #a0dce8;
+  background: rgba(106,160,180,0.1);
+}
 
 /* COLOR KEY */
 .color-key {
@@ -1321,6 +1337,14 @@ body {
   .ib-modal-body { padding: 16px 16px 20px; }
   .ib-modal-title { font-size: 16px; }
 }
+
+/* Modal color accents */
+.ib-modal.modal-accent-onhold { border-left: 4px solid #e05050; }
+.ib-modal.modal-accent-used { border-left: 4px solid #50e870; }
+.ib-modal.modal-accent-weekend { border-left: 4px solid #60f080; }
+.ib-modal.modal-accent-1day { border-left: 4px solid #60a0ff; }
+.ib-modal.modal-accent-discord { border-left: 4px solid #8090ff; }
+.ib-modal.modal-accent-website { border-left: 4px solid #f0b050; }
 </style>
 </head>
 <body>
@@ -1369,6 +1393,9 @@ body {
   <button class="filter-btn" data-filter="skilling" onclick="setFilter('skilling')">Skilling</button>
   <button class="filter-btn" data-filter="teams" onclick="setFilter('teams')">Teams</button>
   <button class="filter-btn" data-filter="misc" onclick="setFilter('misc')">Misc</button>
+  <span class="filter-sep"></span>
+  <button class="filter-btn filter-author" data-filter="author:Mr. FISH" onclick="setFilter('author:Mr. FISH')">Mr. Fish</button>
+  <button class="filter-btn filter-author" data-filter="author:Koi Ox" onclick="setFilter('author:Koi Ox')">Koi Ox</button>
 </div>
 
 <div class="color-key">
@@ -1741,6 +1768,12 @@ function render() {
     else if (f === 'events') count = nonDismissed.filter(function(c) {
       var t = c.tags || []; return t.indexOf('1day') !== -1 || t.indexOf('weekend') !== -1;
     }).length;
+    else if (f.indexOf('author:') === 0) {
+      var authorName = f.substring(7);
+      count = nonDismissed.filter(function(c) {
+        return c.author && c.author.toLowerCase() === authorName.toLowerCase();
+      }).length;
+    }
     else count = nonDismissed.filter(function(c) {
       return (c.tags || []).indexOf(f) !== -1;
     }).length;
@@ -2141,6 +2174,10 @@ function toggleGuide(btn) {
 function matchesFilter(card) {
   if (!matchesSearch(card)) return false;
   if (activeFilter === 'all') return true;
+  if (activeFilter.indexOf('author:') === 0) {
+    var authorName = activeFilter.substring(7);
+    return card.author && card.author.toLowerCase() === authorName.toLowerCase();
+  }
   var tags = card.tags || [];
   if (activeFilter === 'events') return tags.indexOf('1day') !== -1 || tags.indexOf('weekend') !== -1;
   return tags.indexOf(activeFilter) !== -1;
@@ -2477,7 +2514,17 @@ function openCardModal(ideaId) {
 
   html += '</div>';
 
+  /* Determine color accent for modal */
+  var accentClass = '';
+  if (col === 'onhold') accentClass = 'modal-accent-onhold';
+  else if (col === 'used') accentClass = 'modal-accent-used';
+  else if (mainTag === 'weekend') accentClass = 'modal-accent-weekend';
+  else if (mainTag === '1day') accentClass = 'modal-accent-1day';
+  else if (mainTag === 'discord') accentClass = 'modal-accent-discord';
+  else if (mainTag === 'website') accentClass = 'modal-accent-website';
+
   var modal = document.getElementById('ibModal');
+  modal.className = 'ib-modal' + (accentClass ? ' ' + accentClass : '');
   modal.innerHTML = html;
   document.getElementById('ibModalBack').hidden = false;
   document.body.style.overflow = 'hidden';
