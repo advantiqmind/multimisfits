@@ -31,6 +31,9 @@ async function ensureTable(db) {
     )`
     )
     .run();
+  try {
+    await db.prepare("ALTER TABLE idea_positions ADD COLUMN template_json TEXT").run();
+  } catch (_) {}
   _tableReady = true;
 }
 
@@ -192,7 +195,7 @@ async function handleGet(context) {
     await ensureTable(db);
     const result = await db
       .prepare(
-        "SELECT message_id, column_name, dismissed, dismissed_by, moved_by, updated_at FROM idea_positions"
+        "SELECT message_id, column_name, dismissed, dismissed_by, moved_by, updated_at, template_json FROM idea_positions"
       )
       .all();
     for (const row of result.results) {
@@ -224,6 +227,7 @@ async function handleGet(context) {
       dismissed: pos ? !!pos.dismissed : false,
       dismissedBy: pos?.dismissed_by || null,
       movedBy: pos?.moved_by || null,
+      templateJson: pos?.template_json || null,
       comments: notesMap.get(idea.id) || [],
     };
   });
@@ -258,7 +262,7 @@ async function handlePost(context) {
   } catch (_) {
     return json({ error: "invalid JSON" }, 400);
   }
-  const { action, message_id, column, user, text, access_code } = body;
+  const { action, message_id, column, user, text, access_code, template_json } = body;
 
   if (action === "validate") {
     const level = checkAccess(context.env, access_code);
@@ -274,7 +278,7 @@ async function handlePost(context) {
 
   const level = checkAccess(context.env, access_code);
 
-  if (action === "move" || action === "dismiss" || action === "restore") {
+  if (action === "move" || action === "dismiss" || action === "restore" || action === "set_template") {
     if (level !== "leader") return json({ error: "leader access required" }, 403);
   } else if (action === "add_note") {
     if (!level) return json({ error: "access code required" }, 403);
@@ -328,6 +332,14 @@ async function handlePost(context) {
          WHERE message_id = ?`
       )
       .bind(now, message_id)
+      .run();
+  } else if (action === "set_template") {
+    const val = template_json && typeof template_json === "string" ? template_json.trim() : null;
+    await db
+      .prepare(
+        `UPDATE idea_positions SET template_json = ?, updated_at = ? WHERE message_id = ?`
+      )
+      .bind(val || null, now, message_id)
       .run();
   } else {
     return json({ error: "invalid action" }, 400);

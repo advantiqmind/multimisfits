@@ -674,6 +674,59 @@ body {
 }
 .card-copy:hover { background: rgba(169,155,120,0.2); color: var(--gold); border-color: var(--gold); }
 .card-copy.copied { border-color: #50e870; color: #50e870; background: rgba(42,180,60,0.1); }
+.card-template { display: inline-flex; align-items: center; gap: 3px; border: 1px solid var(--blue); background: rgba(42,90,138,0.15); color: var(--blue); cursor: pointer; font-size: 9px; font-family: 'Cinzel', serif; letter-spacing: 0.5px; padding: 1px 7px; margin-left: 4px; vertical-align: middle; transition: all 0.15s; }
+.card-template:hover { background: rgba(42,90,138,0.3); color: #5aaaf0; border-color: #5aaaf0; }
+.card-template.copied { border-color: #50e870; color: #50e870; background: rgba(42,180,60,0.1); }
+.card-template-add { display: inline-flex; align-items: center; gap: 3px; border: 1px dashed var(--text-dim); background: none; color: var(--text-dim); cursor: pointer; font-size: 9px; font-family: 'Cinzel', serif; letter-spacing: 0.5px; padding: 1px 7px; margin-left: 4px; vertical-align: middle; transition: all 0.15s; }
+.card-template-add:hover { border-color: var(--gold-dim); color: var(--gold-dim); }
+
+/* Template overlay */
+.ib-template-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 310;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.ib-template-panel {
+  width: min(480px, 100%);
+  background: #1e1809;
+  border: 1px solid #3a2e1a;
+  padding: 24px;
+}
+.ib-template-panel h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  color: var(--gold);
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+}
+.ib-template-panel p {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.ib-template-panel textarea {
+  width: 100%;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  padding: 8px 10px;
+  font-family: monospace;
+  min-height: 100px;
+  resize: vertical;
+  margin-bottom: 12px;
+}
+.ib-template-panel textarea:focus { border-color: var(--gold-dim); outline: none; }
+.ib-template-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
 
 /* Access code overlay */
 .ib-code-overlay {
@@ -1348,6 +1401,15 @@ function buildCard(idea, col) {
     ? '<button class="card-copy" onclick="copyIdea(event,\'' + idea.id + '\',this)">&#128203; COPY</button>'
     : '';
 
+  var templateBtn = '';
+  if (col === 'shared') {
+    if (idea.templateJson) {
+      templateBtn = '<button class="card-template" onclick="copyTemplate(event,\'' + idea.id + '\',this)">&#128230; TEMPLATE</button>';
+    } else if (isLeader) {
+      templateBtn = '<button class="card-template-add" onclick="promptTemplate(event,\'' + idea.id + '\')">+ TEMPLATE</button>';
+    }
+  }
+
   var ageHtml = '';
   if (STALE_COLUMNS.indexOf(col) !== -1 && idea.createdAt) {
     var days = daysSince(idea.createdAt);
@@ -1377,7 +1439,7 @@ function buildCard(idea, col) {
     '</div>' +
     (col === 'review'
       ? authorIdHtml + '<div class="card-meta">' + dateStr + ' ' + ageHtml + '</div>'
-      : '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + ' ' + copyBtn + '</div>') +
+      : '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + ' ' + copyBtn + templateBtn + '</div>') +
     notesHtml +
     mediaHtml +
     commentsHtml +
@@ -1463,6 +1525,85 @@ function copyIdea(e, ideaId, btn) {
     setTimeout(function() { btn.classList.remove('copied'); btn.innerHTML = '&#128203;'; }, 1500);
     showToast('Copied idea to clipboard');
   });
+}
+
+function copyTemplate(e, ideaId, btn) {
+  e.stopPropagation();
+  var idea = ideas.find(function(c) { return c.id === ideaId; });
+  if (!idea || !idea.templateJson) return;
+  navigator.clipboard.writeText(idea.templateJson).then(function() {
+    btn.classList.add('copied');
+    btn.innerHTML = '&#10003;';
+    setTimeout(function() { btn.classList.remove('copied'); btn.innerHTML = '&#128230; TEMPLATE'; }, 1500);
+    showToast('Template copied. Paste into EventForge Import.');
+  });
+}
+
+function promptTemplate(e, ideaId) {
+  e.stopPropagation();
+  var idea = ideas.find(function(c) { return c.id === ideaId; });
+  if (!idea) return;
+  showTemplateOverlay(ideaId, idea.title, false);
+}
+
+function showTemplateOverlay(ideaId, title, isMove) {
+  var overlay = document.createElement('div');
+  overlay.className = 'ib-template-overlay';
+  overlay.innerHTML =
+    '<div class="ib-template-panel">' +
+      '<h3>EventForge Template</h3>' +
+      '<p>' + (isMove ? 'Moving "' + esc(title) + '" to Created and Shared. ' : '"' + esc(title) + '": ') +
+        'Paste the EventForge JSON template so others can import it.</p>' +
+      '<textarea id="templateJson" placeholder="Paste EventForge JSON here..."></textarea>' +
+      '<div class="ib-template-btns">' +
+        (isMove
+          ? '<button class="ib-btn ib-btn-sm" id="templateSkip">Skip</button>'
+          : '<button class="ib-btn ib-btn-sm" id="templateCancel">Cancel</button>') +
+        '<button class="ib-btn ib-btn-primary ib-btn-sm" id="templateSave">Save Template</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  setTimeout(function() { document.getElementById('templateJson').focus(); }, 50);
+
+  var cancel = document.getElementById('templateCancel') || document.getElementById('templateSkip');
+  cancel.onclick = function() {
+    overlay.remove();
+    if (isMove) doMove(ideaId, 'shared');
+  };
+  overlay.onclick = function(e) {
+    if (e.target === overlay) {
+      overlay.remove();
+      if (isMove) doMove(ideaId, 'shared');
+    }
+  };
+
+  document.getElementById('templateSave').onclick = function() {
+    var json = document.getElementById('templateJson').value.trim();
+    if (!json) {
+      document.getElementById('templateJson').style.borderColor = '#e05050';
+      showToast('Paste a template or skip');
+      return;
+    }
+    overlay.remove();
+
+    var idea = ideas.find(function(c) { return c.id === ideaId; });
+    if (idea) idea.templateJson = json;
+    if (isMove) doMove(ideaId, 'shared');
+    else render();
+
+    fetch('/api/ideaboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'set_template', message_id: ideaId, template_json: json, access_code: getAccessCode() }),
+    }).then(function(res) {
+      if (!res.ok) throw new Error();
+      showToast('Template saved');
+    }).catch(function() {
+      if (idea) idea.templateJson = null;
+      render();
+      showToast('Failed to save template');
+    });
+  };
 }
 
 async function addComment(ideaId, input) {
@@ -1626,6 +1767,11 @@ function moveCard(id, newCol) {
 
   if (newCol === 'onhold') {
     promptOnHoldComment(id);
+    return;
+  }
+
+  if (newCol === 'shared') {
+    showTemplateOverlay(id, idea.title, true);
     return;
   }
 
