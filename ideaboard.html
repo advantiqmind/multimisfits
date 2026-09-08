@@ -396,11 +396,17 @@ body {
   white-space: pre-line;
 }
 /* COMMENTS */
+.card-comments-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  gap: 8px;
+}
 .card-comments-toggle {
   font-size: 11px;
   color: var(--gold-dim);
   cursor: pointer;
-  margin-bottom: 4px;
   user-select: none;
   display: flex;
   align-items: center;
@@ -408,6 +414,12 @@ body {
 }
 .card-comments-toggle:hover { color: var(--gold); }
 .card-comments-toggle .count { color: var(--text-dim); font-size: 10px; }
+.card-moved-by {
+  font-size: 9px;
+  color: var(--text-dim);
+  font-style: italic;
+  white-space: nowrap;
+}
 .card-comments {
   margin-bottom: 8px;
   padding: 6px 8px;
@@ -932,9 +944,13 @@ function buildCard(idea) {
   }
 
   var comments = idea.comments || [];
+  var movedByHtml = idea.movedBy ? '<span class="card-moved-by">Moved by ' + esc(idea.movedBy) + '</span>' : '';
   var commentsHtml =
-    '<div class="card-comments-toggle" onclick="toggleComments(event, this)">' +
-      '<span class="chevron">&#9654;</span> Comments <span class="count">(' + comments.length + ')</span>' +
+    '<div class="card-comments-row">' +
+      '<div class="card-comments-toggle" onclick="toggleComments(event, this)">' +
+        '<span class="chevron">&#9654;</span> Comments <span class="count">(' + comments.length + ')</span>' +
+      '</div>' +
+      movedByHtml +
     '</div>' +
     '<div class="card-comments" hidden>' +
       comments.map(function(c) {
@@ -1006,7 +1022,8 @@ function toggleNotes(e, el) {
 
 function toggleComments(e, el) {
   e.stopPropagation();
-  var panel = el.nextElementSibling;
+  var row = el.parentElement;
+  var panel = row && row.nextElementSibling;
   if (!panel) return;
   var open = !panel.hidden;
   panel.hidden = open;
