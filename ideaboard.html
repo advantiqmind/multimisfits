@@ -914,6 +914,49 @@ body {
   pointer-events: none;
 }
 .ib-toast.show { opacity: 1; }
+
+/* Mobile move button (hidden on desktop, shown on mobile for leaders) */
+.card-move-btn {
+  display: none;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold-dim);
+  background: rgba(169,155,120,0.08);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.card-move-btn:hover { color: var(--gold); border-color: var(--gold-dim); }
+.card-move-dropdown {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+.card-move-dropdown.open { display: flex; }
+.card-move-option {
+  padding: 7px 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold-dim);
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+.card-move-option:hover { color: var(--gold); border-color: var(--gold-dim); background: rgba(212,160,23,0.06); }
+@media (max-width: 900px) {
+  .card-move-btn { display: block; }
+}
 </style>
 </head>
 <body>
@@ -1410,6 +1453,12 @@ function buildCard(idea, col) {
     }
   }
 
+  var moveBtn = '';
+  if (isLeader) {
+    moveBtn = '<button class="card-move-btn" onclick="toggleMoveDropdown(event,this)">Move to...</button>' +
+      '<div class="card-move-dropdown" data-id="' + idea.id + '" data-col="' + col + '"></div>';
+  }
+
   var ageHtml = '';
   if (STALE_COLUMNS.indexOf(col) !== -1 && idea.createdAt) {
     var days = daysSince(idea.createdAt);
@@ -1443,7 +1492,8 @@ function buildCard(idea, col) {
     notesHtml +
     mediaHtml +
     commentsHtml +
-    '<div class="card-tags">' + tagsHtml + '</div>';
+    '<div class="card-tags">' + tagsHtml + '</div>' +
+    moveBtn;
 
   return div;
 }
@@ -1544,6 +1594,30 @@ function promptTemplate(e, ideaId) {
   var idea = ideas.find(function(c) { return c.id === ideaId; });
   if (!idea) return;
   showTemplateOverlay(ideaId, idea.title, false);
+}
+
+var COL_LABELS = { review: 'In Review', approved: 'Approved', shared: 'Created and Shared', onhold: 'On Hold', used: 'Completed' };
+
+function toggleMoveDropdown(e, btn) {
+  e.stopPropagation();
+  var dd = btn.nextElementSibling;
+  if (dd.classList.contains('open')) {
+    dd.classList.remove('open');
+    return;
+  }
+  document.querySelectorAll('.card-move-dropdown.open').forEach(function(el) { el.classList.remove('open'); });
+  var curCol = dd.dataset.col;
+  var cardId = dd.dataset.id;
+  dd.innerHTML = COLUMNS.filter(function(c) { return c !== curCol; }).map(function(c) {
+    return '<button class="card-move-option" onclick="mobileMoveCard(event,\'' + cardId + '\',\'' + c + '\')">' + COL_LABELS[c] + '</button>';
+  }).join('');
+  dd.classList.add('open');
+}
+
+function mobileMoveCard(e, id, col) {
+  e.stopPropagation();
+  document.querySelectorAll('.card-move-dropdown.open').forEach(function(el) { el.classList.remove('open'); });
+  moveCard(id, col);
 }
 
 function showTemplateOverlay(ideaId, title, isMove) {
