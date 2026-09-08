@@ -653,25 +653,22 @@ body {
 
 /* Copy button */
 .card-copy {
-  width: 22px;
-  height: 22px;
-  border: none;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  font-size: 12px;
-  line-height: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  opacity: 0;
+  gap: 5px;
+  border: 1px solid var(--gold-dim);
+  background: rgba(169,155,120,0.1);
+  color: var(--gold-dim);
+  cursor: pointer;
+  font-size: 10px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  margin-top: 6px;
   transition: all 0.15s;
-  padding: 0;
 }
-.card:hover .card-copy { opacity: 1; }
-.card-copy:hover { color: var(--gold); }
-.card-copy.copied { color: #50e870; opacity: 1; }
+.card-copy:hover { background: rgba(169,155,120,0.2); color: var(--gold); border-color: var(--gold); }
+.card-copy.copied { border-color: #50e870; color: #50e870; background: rgba(42,180,60,0.1); }
 
 /* Access code overlay */
 .ib-code-overlay {
@@ -1343,7 +1340,7 @@ function buildCard(idea, col) {
     : '';
 
   var copyBtn = col === 'approved'
-    ? '<button class="card-copy" onclick="copyIdea(event,\'' + idea.id + '\',this)" title="Copy for AI Assist">&#128203;</button>'
+    ? '<button class="card-copy" onclick="copyIdea(event,\'' + idea.id + '\',this)">&#128203; COPY</button>'
     : '';
 
   var ageHtml = '';
@@ -1371,7 +1368,7 @@ function buildCard(idea, col) {
   div.innerHTML =
     '<div class="card-top">' +
       '<span class="card-title">' + esc(idea.title) + '</span>' +
-      copyBtn + dismissBtn +
+      dismissBtn +
     '</div>' +
     (col === 'review'
       ? authorIdHtml + '<div class="card-meta">' + dateStr + ' ' + ageHtml + '</div>'
@@ -1379,7 +1376,8 @@ function buildCard(idea, col) {
     notesHtml +
     mediaHtml +
     commentsHtml +
-    '<div class="card-tags">' + tagsHtml + '</div>';
+    '<div class="card-tags">' + tagsHtml + '</div>' +
+    copyBtn;
 
   return div;
 }
