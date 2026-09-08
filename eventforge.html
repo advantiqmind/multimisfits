@@ -357,8 +357,8 @@ function sharedView(){
       <button class="btn" id="refreshShared">🔄 Refresh</button>
     </div>
     ${localShareSection()}
-    ${events.length?`<h3 style="margin:16px 0 8px">☁️ Cloud Events (${events.length})</h3><div class="shared-list">${events.map(sharedItemHtml).join('')}</div>`:''}
-    ${templates.length?`<h3 style="margin:16px 0 8px">☁️ Cloud Templates (${templates.length})</h3><div class="shared-list">${templates.map(sharedItemHtml).join('')}</div>`:''}
+    ${events.length?`<h2 style="margin:16px 0 8px;font-family:Cinzel,serif;font-size:16px;letter-spacing:.06em;text-transform:uppercase">☁️ Cloud Events (${events.length})</h2><div class="shared-list">${events.map(sharedItemHtml).join('')}</div>`:''}
+    ${templates.length?`<h2 style="margin:16px 0 8px;font-family:Cinzel,serif;font-size:16px;letter-spacing:.06em;text-transform:uppercase">☁️ Cloud Templates (${templates.length})</h2><div class="shared-list">${templates.map(sharedItemHtml).join('')}</div>`:''}
     ${!events.length&&!templates.length?`<div class="shared-empty">${_sharedLoading?'Loading...':'No shared saves yet. Share an event or template from your local saves below, or share the current draft above.'}</div>`:''}
   </div></div>`;
 }
@@ -435,12 +435,12 @@ function localShareSection(){
   if(!le.length&&!lt.length)return '<div class="hint" style="margin-bottom:12px">No local saves yet. Create and save an event or template first, then share it here.</div>';
   let html='<div style="margin-bottom:16px">';
   if(le.length){
-    html+='<h3 style="margin:12px 0 8px">Your Local Events</h3><div class="shared-list">';
+    html+='<h2 style="margin:12px 0 8px;font-family:Cinzel,serif;font-size:16px;letter-spacing:.06em;text-transform:uppercase">Your Local Events</h2><div class="shared-list">';
     le.forEach(e=>{html+=`<div class="shared-item"><div class="si-icon">📅</div><div class="si-info"><div class="si-name">${esc(e.name||'Untitled Event')}</div><div class="si-meta">${esc(e.preset||'Custom')} · ${e.date||'No date'}</div></div><div class="si-actions"><button class="mini gold localShareBtn" data-type="event" data-id="${e.id}">☁️ Share</button></div></div>`});
     html+='</div>';
   }
   if(lt.length){
-    html+='<h3 style="margin:12px 0 8px">Your Local Templates</h3><div class="shared-list">';
+    html+='<h2 style="margin:12px 0 8px;font-family:Cinzel,serif;font-size:16px;letter-spacing:.06em;text-transform:uppercase">Your Local Templates</h2><div class="shared-list">';
     lt.forEach(t=>{html+=`<div class="shared-item"><div class="si-icon">🧩</div><div class="si-info"><div class="si-name">${esc(t.templateName||'Untitled')}</div><div class="si-meta">${esc(t.category||'Other')} · ${t.event?.blocks?.length||0} blocks</div></div><div class="si-actions"><button class="mini gold localShareBtn" data-type="template" data-id="${t.id}">☁️ Share</button></div></div>`});
     html+='</div>';
   }
