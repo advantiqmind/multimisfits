@@ -54,7 +54,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/spotlight.js   GET /api/spotlight -> reads mod-only spotlight channel, returns latest image only (message text never shown; just image + posted-by)
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
 - functions/api/eventforge.js  GET/POST/PUT/DELETE /api/eventforge -> shared EventForge saves CRUD, D1 storage, optimistic locking, cached 30s; writes require EVENTFORGE_ACCESS_CODE
-- functions/api/ideaboard.js   GET/POST /api/ideaboard -> reads Discord thread ideas, D1 column positions + dismiss tracking, cached 1min
+- functions/api/ideaboard.js   GET/POST /api/ideaboard -> reads Discord thread ideas, D1 column positions + dismiss tracking, two-tier access codes, cached 30s
 - functions/api/dink-auth.js   POST /api/dink-auth -> validates access code against DINK_ACCESS_CODE env var
 - functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
@@ -81,6 +81,8 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     LOOT_DISCORD_WEBHOOK     (secret, optional) <- Discord webhook URL for chest channel (forwarding proxy)
     LOOT_DISCORD_MIN_VALUE   (plain, optional)  <- min total value to forward to Discord (default 150000)
     EVENTFORGE_ACCESS_CODE   (secret) <- passphrase for EventForge shared saves (write operations)
+    IDEABOARD_LEADER_CODE    (secret) <- full access to Idea Board (move, dismiss, comment)
+    IDEABOARD_MEMBER_CODE    (secret) <- comment-only access to Idea Board
     DINK_ACCESS_CODE         (secret) <- passphrase to unlock /clandink settings page
 
 ## Bindings (Cloudflare Pages > Settings > Functions)
@@ -179,14 +181,17 @@ Replaces the current Loot Value system with something far more flexible.
 - Leaders post ideas as messages in the thread. First line = title, remaining lines = notes.
 - Hashtags in messages become colored tag chips. Eleven known tags:
   #website (amber), #discord (indigo), #pvm (purple), #pvp (orange-red),
-  #wild (red), #social (green), #skilling (blue), #weekend (green),
+  #wild (red), #social (orange), #skilling (blue), #weekend (green),
   #1day (blue), #teams (purple), #misc (grey). Unknown tags get default grey.
 - Main tags (#weekend, #1day, #discord, #website) color the entire card with
   a tinted background and left accent border for quick visual identification.
   Other tags are sub-category chips that appear on the card but don't color it.
   Cards in the Rejected column always show red regardless of tag.
+  Cards in the Used column show green with green glow.
 - Color key bar at top shows "Color Coded:" with visual swatches for each main tag.
   Collapsible hashtag guide shows sub-category tags with descriptions.
+- "Events" meta-filter shows cards tagged with either #1day or #weekend.
+  Filter order: All | Events | 1 Day | Weekend | Website | Discord | PvM | PvP | Wild | Social | Skilling | Teams | Misc.
 - Discord channel mentions: when a hashtag like #pvm matches a Discord channel
   name, Discord auto-links it to `<#CHANNEL_ID>`. Backend fetches guild channels
   (fetchChannelMap), resolves channel IDs to names, and adds matching known tags.
@@ -196,15 +201,23 @@ Replaces the current Loot Value system with something far more flexible.
 - Backend: GET /api/ideaboard fetches all thread messages, parses ideas, joins with D1
   `idea_positions` table for column placement and dismiss state, and `idea_notes` for
   comments. Cached 30s.
-- POST /api/ideaboard: actions "move" (column, requires user), "dismiss" (with user
-  attribution), "restore", "add_note" (requires user and text).
+- POST /api/ideaboard: actions "move" (column, requires leader code), "dismiss" (leader),
+  "restore" (leader), "add_note" (leader or member code), "validate" (check code validity).
+  All write actions require access_code in request body.
+- Two-tier access control: IDEABOARD_LEADER_CODE = full access (move, dismiss, restore, comment).
+  IDEABOARD_MEMBER_CODE = comment only. No code = read-only view. If neither env var set,
+  everyone gets leader access (backwards compatible). Frontend stores code in localStorage
+  (mm-ideaboard-code), auto-validates on page load, shows access badge (Leader/Member/View Only).
 - D1 table `idea_positions`: message_id (PK), column_name, dismissed, dismissed_by, moved_by, updated_at.
 - D1 table `idea_notes`: id (autoincrement), message_id, author, text, created_at.
-- Frontend: kanban board with 5 columns (Ideas, In Review, Approved, Created and Shared, Rejected).
-  Drag-and-drop moves cards between columns (optimistic UI, reverts on API error).
-- Old column names (planned, active, done) auto-migrate to new keys (review, approved, shared) on read.
-- Cards show title, author, date, tags. Click to expand hidden notes.
-  Collapsible comments section per card with add-comment form.
+- Frontend: kanban board with 5 columns (In Review, Approved, Created and Shared, Rejected, Used).
+  Drag-and-drop moves cards between columns (leader only, optimistic UI, reverts on API error).
+- Valid columns: review, approved, shared, rejected, used.
+- Old column names (planned, active, done, ideas) auto-migrate to new keys on read.
+- Copy button appears ONLY on cards in the Approved column. Copies title + notes for
+  pasting into EventForge AI Assist.
+- Cards show title, author, date, tags, "Moved by" attribution. Click to expand notes.
+  Collapsible comments section per card with add-comment form (leader/member only).
 - Name required for all actions (move, dismiss, add comment). Prompted on first use,
   stored in localStorage (mm-ideaboard-user). Change name via header link.
 - Auto-refresh: board polls every 30s, shows "Board updated" toast on changes.
@@ -316,6 +329,15 @@ Replaces the current Loot Value system with something far more flexible.
 - D1 table: eventforge_saves (id, type, name, category, data, created_by, updated_by, version,
   created_at, updated_at). Auto-created on first use.
 - Post types: announcement, reminder, results, compact. Output styles: standard, minimal.
+- RSVP line enabled by default on all new events (rsvp: true in freshEvent).
+- AI Assist: "AI Assist" button in nav opens overlay. User optionally describes event idea,
+  clicks "Copy Prompt" to copy full AI prompt to clipboard (works with or without an idea),
+  pastes into any AI, copies the JSON result, pastes back and clicks Import.
+  Prompt rules: no em dashes allowed, only crossed swords and green checkmark emoji in text,
+  medal emoji only in prize lines, every event ends with "React with checkmark if you plan
+  to make it!" as a custom block. Emphasizes JSON-only output (no code fences, no explanation).
+  Import handles wrapped template format, bare events, strips markdown code fences, assigns
+  fresh UIDs.
 
 ### Loot Wheel
 - wheel.html: client-side prize wheel ported from the 1BOX wheel (1box.online copy untouched).
