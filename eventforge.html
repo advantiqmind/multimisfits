@@ -265,6 +265,7 @@ window.addEventListener('beforeunload',persist);
 
 /* --- Shared Saves (D1 cloud storage) --- */
 const SHARED_USER_KEY='mm-eventforge-user';
+const SHARED_ACCESS_KEY='mm-eventforge-access';
 const SHARED_CATS=['PvM','Skilling','Minigame','Social','Competition','Other'];
 let _sharedCache=null;
 let _sharedLoading=false;
@@ -277,6 +278,16 @@ function ensureSharedUser(){
   u=prompt('Enter your name (RSN or Discord name):');
   if(!u||!u.trim())return null;
   u=u.trim();setSharedUser(u);return u;
+}
+function getAccessCode(){try{return localStorage.getItem(SHARED_ACCESS_KEY)}catch(e){return null}}
+function setAccessCode(code){try{localStorage.setItem(SHARED_ACCESS_KEY,code)}catch(e){}}
+function clearAccessCode(){try{localStorage.removeItem(SHARED_ACCESS_KEY)}catch(e){}}
+function ensureAccessCode(){
+  let c=getAccessCode();
+  if(c)return c;
+  c=prompt('Enter the EventForge access code:');
+  if(!c||!c.trim())return null;
+  c=c.trim();setAccessCode(c);return c;
 }
 
 async function fetchSharedList(force){
@@ -298,21 +309,26 @@ async function fetchSharedItem(id){
 }
 async function saveToCloud(type,name,category,data){
   const user=ensureSharedUser();if(!user)return null;
-  const r=await fetch('/api/eventforge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({type,name,category,data,user})});
+  const access_code=ensureAccessCode();if(!access_code)return null;
+  const r=await fetch('/api/eventforge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({type,name,category,data,user,access_code})});
+  if(r.status===401){clearAccessCode();toast('Wrong access code');return null}
   if(!r.ok){const e=await r.json().catch(()=>({}));toast(e.error||'Save failed');return null}
   _sharedCache=null;
   return r.json();
 }
 async function updateInCloud(id,version,updates){
   const user=ensureSharedUser();if(!user)return null;
-  const body={id,version,user,...updates};
+  const access_code=ensureAccessCode();if(!access_code)return null;
+  const body={id,version,user,access_code,...updates};
   const r=await fetch('/api/eventforge',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  if(r.status===401){clearAccessCode();toast('Wrong access code');return null}
   if(r.status===409){
     const conflict=await r.json();
     const overwrite=confirm(`This save was updated by ${conflict.updatedBy} at ${new Date(conflict.updatedAt).toLocaleString()}.\n\nDo you want to overwrite their changes?`);
     if(overwrite){
       body.version=conflict.currentVersion;
       const r2=await fetch('/api/eventforge',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+      if(r2.status===401){clearAccessCode();toast('Wrong access code');return null}
       if(!r2.ok){toast('Overwrite failed');return null}
       _sharedCache=null;return r2.json();
     }
@@ -322,7 +338,9 @@ async function updateInCloud(id,version,updates){
   _sharedCache=null;return r.json();
 }
 async function deleteFromCloud(id){
-  const r=await fetch('/api/eventforge',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({id})});
+  const access_code=ensureAccessCode();if(!access_code)return false;
+  const r=await fetch('/api/eventforge',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({id,access_code})});
+  if(r.status===401){clearAccessCode();toast('Wrong access code');return false}
   if(!r.ok){toast('Delete failed');return false}
   _sharedCache=null;return true;
 }

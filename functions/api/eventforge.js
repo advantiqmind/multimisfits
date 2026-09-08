@@ -13,6 +13,12 @@ const LIST_CACHE_TTL = 30;
 const VALID_TYPES = ["event", "template"];
 const VALID_CATEGORIES = ["PvM", "Skilling", "Minigame", "Social", "Competition", "Other"];
 
+function checkAccess(body, env) {
+  const code = env.EVENTFORGE_ACCESS_CODE;
+  if (!code) return true;
+  return body && body.access_code === code;
+}
+
 let _tableReady = false;
 
 async function ensureTable(db) {
@@ -133,6 +139,10 @@ async function handlePost(context) {
     return json({ error: "invalid JSON" }, 400);
   }
 
+  if (!checkAccess(body, context.env)) {
+    return json({ error: "invalid access code" }, 401);
+  }
+
   const { type, name, category, data, user } = body;
 
   if (!type || !VALID_TYPES.includes(type)) {
@@ -194,6 +204,10 @@ async function handlePut(context) {
     body = await context.request.json();
   } catch (_) {
     return json({ error: "invalid JSON" }, 400);
+  }
+
+  if (!checkAccess(body, context.env)) {
+    return json({ error: "invalid access code" }, 401);
   }
 
   const { id, name, category, data, user, version } = body;
@@ -281,6 +295,10 @@ async function handleDelete(context) {
     body = await context.request.json();
   } catch (_) {
     return json({ error: "invalid JSON" }, 400);
+  }
+
+  if (!checkAccess(body, context.env)) {
+    return json({ error: "invalid access code" }, 401);
   }
 
   const { id } = body;
