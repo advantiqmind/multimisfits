@@ -84,7 +84,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     DINK_ACCESS_CODE         (secret) <- passphrase to unlock /clandink settings page
 
 ## Bindings (Cloudflare Pages > Settings > Functions)
-    DB  ->  D1 database "multimisfits-auth"  (loot_entries, idea_positions tables)
+    DB  ->  D1 database "multimisfits-auth"  (loot_entries, idea_positions, idea_notes, eventforge_saves tables)
 
 ## Status
 LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster,
@@ -178,12 +178,15 @@ Replaces the current Loot Value system with something far more flexible.
 - Discord thread (IDEABOARD_THREAD_ID) is the single source of truth for ideas.
 - Leaders post ideas as messages in the thread. First line = title, remaining lines = notes.
 - Hashtags in messages become colored tag chips. Eleven known tags:
-  #website (teal), #discord (blurple), #pvm (purple), #pvp (orange-red),
-  #wild (red), #social (green), #skilling (blue), #weekend (amber),
-  #1day (gold), #teams (purple), #misc (grey). Unknown tags get default grey.
+  #website (amber), #discord (indigo), #pvm (purple), #pvp (orange-red),
+  #wild (red), #social (green), #skilling (blue), #weekend (green),
+  #1day (blue), #teams (purple), #misc (grey). Unknown tags get default grey.
 - Main tags (#weekend, #1day, #discord, #website) color the entire card with
   a tinted background and left accent border for quick visual identification.
   Other tags are sub-category chips that appear on the card but don't color it.
+  Cards in the Rejected column always show red regardless of tag.
+- Color key bar at top shows "Color Coded:" with visual swatches for each main tag.
+  Collapsible hashtag guide shows sub-category tags with descriptions.
 - Discord channel mentions: when a hashtag like #pvm matches a Discord channel
   name, Discord auto-links it to `<#CHANNEL_ID>`. Backend fetches guild channels
   (fetchChannelMap), resolves channel IDs to names, and adds matching known tags.
@@ -191,16 +194,23 @@ Replaces the current Loot Value system with something far more flexible.
   while excluding pure-numeric Discord IDs.
 - Author resolved via nick map (same fetchNickMap/resolveName pattern as events/giveaways).
 - Backend: GET /api/ideaboard fetches all thread messages, parses ideas, joins with D1
-  `idea_positions` table for column placement and dismiss state. Cached 1min.
-- POST /api/ideaboard: actions "move" (column), "dismiss" (with user attribution), "restore".
+  `idea_positions` table for column placement and dismiss state, and `idea_notes` for
+  comments. Cached 30s.
+- POST /api/ideaboard: actions "move" (column, requires user), "dismiss" (with user
+  attribution), "restore", "add_note" (requires user and text).
 - D1 table `idea_positions`: message_id (PK), column_name, dismissed, dismissed_by, moved_by, updated_at.
+- D1 table `idea_notes`: id (autoincrement), message_id, author, text, created_at.
 - Frontend: kanban board with 5 columns (Ideas, In Review, Approved, Created and Shared, Rejected).
   Drag-and-drop moves cards between columns (optimistic UI, reverts on API error).
 - Old column names (planned, active, done) auto-migrate to new keys (review, approved, shared) on read.
 - Cards show title, author, date, tags. Click to expand hidden notes.
+  Collapsible comments section per card with add-comment form.
+- Name required for all actions (move, dismiss, add comment). Prompted on first use,
+  stored in localStorage (mm-ideaboard-user). Change name via header link.
+- Auto-refresh: board polls every 30s, shows "Board updated" toast on changes.
+  Pauses when tab is hidden or during drag. Fingerprint-based diff detection.
 - Dismiss records who dismissed it. Dismissed cards viewable via toggle, restorable.
 - "Post in Discord" button links to the Discord thread for new ideas.
-- User identity stored in localStorage (mm-ideaboard-user), prompted on first dismiss.
 - Self-contained page (no style.css/app.js imports). Part of The Armoury leader tools.
 - Channel link: https://discord.com/channels/1454526817141784759/1464731160968953898
 
@@ -290,6 +300,11 @@ Replaces the current Loot Value system with something far more flexible.
 - Features: block-based event builder, Discord markdown generation, live preview with inline
   editing, timezone-smart timestamps, recurrence system, template system, export/import,
   text formatting toolbar, event results/winners, keyboard shortcuts, mobile-responsive.
+- Timestamp tool: "Timestamp" button in nav opens a Discord timestamp generator overlay.
+  Pick date, time, and timezone; see all 7 Discord format codes with live previews and
+  copy buttons. Reuses existing zonedUnix() and timezone options. Click outside to close.
+- Time presets: single day defaults to 20:00-23:30, multi-day defaults to Friday 16:00
+  to Sunday 22:00. Quick date buttons also fill end time if empty.
 - Shared saves: events and templates stored in D1 (eventforge_saves table) via /api/eventforge.
   Visible to all clan leaders. Required category (PvM/Skilling/Minigame/Social/Competition/Other)
   and name when saving to shared. Optimistic locking with version numbers for conflict resolution.
