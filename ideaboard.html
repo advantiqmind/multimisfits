@@ -322,6 +322,13 @@ body {
 .tag-1day { background: rgba(190,170,50,0.3); color: #e8d860; border: 1px solid rgba(190,170,50,0.5); }
 .tag-teams { background: rgba(106,58,138,0.3); color: #c080f0; border: 1px solid rgba(106,58,138,0.5); }
 .tag-pvp { background: rgba(200,60,20,0.3); color: #f08040; border: 1px solid rgba(200,60,20,0.5); }
+.tag-misc { background: rgba(120,120,120,0.3); color: #b0b0b0; border: 1px solid rgba(120,120,120,0.5); }
+
+/* Main tag card colors */
+.card-weekend { background: rgba(180,110,30,0.12); border-left: 3px solid #f0b050; }
+.card-1day { background: rgba(190,170,50,0.12); border-left: 3px solid #e8d860; }
+.card-discord { background: rgba(88,101,242,0.12); border-left: 3px solid #7289da; }
+.card-website { background: rgba(26,140,140,0.12); border-left: 3px solid #5ee0e0; }
 
 /* DISMISSED SECTION */
 .dismissed-section {
@@ -486,6 +493,7 @@ body {
   <button class="filter-btn" data-filter="weekend" onclick="setFilter('weekend')">Weekend</button>
   <button class="filter-btn" data-filter="1day" onclick="setFilter('1day')">1 Day</button>
   <button class="filter-btn" data-filter="teams" onclick="setFilter('teams')">Teams</button>
+  <button class="filter-btn" data-filter="misc" onclick="setFilter('misc')">Misc</button>
 </div>
 
 <div id="boardMsg" class="board-msg"><span class="spinner"></span> Loading ideas...</div>
@@ -549,7 +557,8 @@ body {
 <div class="ib-toast" id="ibToast"></div>
 
 <script>
-var KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams'];
+var KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams','misc'];
+var MAIN_TAGS = ['weekend','1day','discord','website'];
 
 var ideas = [];
 var activeFilter = 'all';
@@ -672,7 +681,8 @@ function render() {
 
 function buildCard(idea) {
   var div = document.createElement('div');
-  div.className = 'card';
+  var mainTag = (idea.tags || []).find(function(t) { return MAIN_TAGS.indexOf(t) !== -1; });
+  div.className = 'card' + (mainTag ? ' card-' + mainTag : '');
   div.draggable = true;
   div.dataset.id = idea.id;
   div.addEventListener('dragstart', onDragStart);

@@ -177,10 +177,13 @@ Replaces the current Loot Value system with something far more flexible.
 ### Idea Board
 - Discord thread (IDEABOARD_THREAD_ID) is the single source of truth for ideas.
 - Leaders post ideas as messages in the thread. First line = title, remaining lines = notes.
-- Hashtags in messages become colored tag chips. Ten known tags:
+- Hashtags in messages become colored tag chips. Eleven known tags:
   #website (teal), #discord (blurple), #pvm (purple), #pvp (orange-red),
   #wild (red), #social (green), #skilling (blue), #weekend (amber),
-  #1day (gold), #teams (purple). Unknown tags get default grey.
+  #1day (gold), #teams (purple), #misc (grey). Unknown tags get default grey.
+- Main tags (#weekend, #1day, #discord, #website) color the entire card with
+  a tinted background and left accent border for quick visual identification.
+  Other tags are sub-category chips that appear on the card but don't color it.
 - Discord channel mentions: when a hashtag like #pvm matches a Discord channel
   name, Discord auto-links it to `<#CHANNEL_ID>`. Backend fetches guild channels
   (fetchChannelMap), resolves channel IDs to names, and adds matching known tags.

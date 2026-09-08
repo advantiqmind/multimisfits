@@ -1,7 +1,7 @@
 const CACHE_TTL = 60;
 const VALID_COLUMNS = ["ideas", "review", "approved", "shared", "rejected"];
 const COLUMN_MIGRATION = { planned: "review", active: "approved", done: "shared" };
-const KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams'];
+const KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams','misc'];
 const BASE = "https://discord.com/api/v10";
 
 let _tableReady = false;
