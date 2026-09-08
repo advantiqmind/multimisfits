@@ -119,6 +119,10 @@ function parseIdea(msg, nickMap, channelMap) {
   const authorId = msg.author?.id || null;
   const authorAvatar = msg.author?.avatar || null;
 
+  const images = (msg.attachments || [])
+    .filter(a => a.content_type && a.content_type.startsWith("image/"))
+    .map(a => a.url);
+
   return {
     id: msg.id,
     title,
@@ -127,6 +131,7 @@ function parseIdea(msg, nickMap, channelMap) {
     author: resolveName(msg.author, nickMap),
     authorId,
     authorAvatar,
+    images: images.length ? images : null,
     createdAt: msg.timestamp,
   };
 }

@@ -616,6 +616,36 @@ body {
   justify-content: flex-end;
 }
 
+/* Media toggle */
+.card-media-toggle {
+  font-size: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.card-media-toggle:hover { color: var(--gold); }
+.card-media-toggle .chevron {
+  font-size: 7px;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.card-media-toggle.open .chevron { transform: rotate(90deg); }
+.card-media-images {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.card-media-images img {
+  width: 100%;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
 /* Used column green glow */
 .column[data-col="used"] { border-color: rgba(42,180,60,0.4); box-shadow: 0 0 18px rgba(42,180,60,0.12), inset 0 0 12px rgba(42,180,60,0.04); }
 .column[data-col="used"] .column-header { border-bottom-color: rgba(42,180,60,0.3); }
@@ -1269,6 +1299,18 @@ function buildCard(idea, col) {
       '<div class="card-notes" hidden>' + esc(idea.notes) + '</div>';
   }
 
+  var mediaHtml = '';
+  if (idea.images && idea.images.length) {
+    var imgs = idea.images.map(function(url) {
+      return '<img src="' + esc(url) + '" alt="Attached media" loading="lazy">';
+    }).join('');
+    mediaHtml =
+      '<div class="card-media-toggle" onclick="toggleMedia(event, this)">' +
+        '<span class="chevron">&#9654;</span> Media (' + idea.images.length + ')' +
+      '</div>' +
+      '<div class="card-media-images" hidden>' + imgs + '</div>';
+  }
+
   var comments = idea.comments || [];
   var movedByHtml = idea.movedBy ? '<span class="card-moved-by">Moved by ' + esc(idea.movedBy) + '</span>' : '';
 
@@ -1336,6 +1378,7 @@ function buildCard(idea, col) {
       ? authorIdHtml + '<div class="card-meta">' + dateStr + ' ' + ageHtml + '</div>'
       : '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + '</div>') +
     notesHtml +
+    mediaHtml +
     commentsHtml +
     '<div class="card-tags">' + tagsHtml + '</div>';
 
@@ -1381,6 +1424,15 @@ function toggleNotes(e, el) {
   if (!notes) return;
   var open = !notes.hidden;
   notes.hidden = open;
+  el.classList.toggle('open', !open);
+}
+
+function toggleMedia(e, el) {
+  e.stopPropagation();
+  var images = el.nextElementSibling;
+  if (!images) return;
+  var open = !images.hidden;
+  images.hidden = open;
   el.classList.toggle('open', !open);
 }
 

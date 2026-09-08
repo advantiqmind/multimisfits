@@ -202,6 +202,8 @@ Replaces the current Loot Value system with something far more flexible.
 - In Review cards show a prominent author identity block: circular Discord avatar
   (from CDN via authorId/authorAvatar) with large Cinzel name. Falls back to styled
   initial letter if avatar unavailable. Other columns show normal "by Name" line.
+- Media attachments: image attachments from Discord messages are passed as an `images` array.
+  Cards with images show a collapsible "Media (N)" toggle that expands to show the images inline.
 - Backend: GET /api/ideaboard fetches all thread messages, parses ideas, joins with D1
   `idea_positions` table for column placement and dismiss state, and `idea_notes` for
   comments. Cached 30s.
