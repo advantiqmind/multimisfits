@@ -155,7 +155,7 @@ textarea.listItem{min-height:0;height:auto;resize:none;white-space:pre-wrap;over
   <a class="arm-site" href="/">Main Site</a>
 </nav>
 
-<div class="app" id="app"><header class="topbar"><div class="brandrow"><div class="logo">EF</div><div class="brand"><h1>EventForge</h1><small>Discord Event Designer</small></div><div class="nav" id="nav"></div></div><div class="mobileMode"><div class="seg"><button id="mEdit" class="active">✏️ EDIT</button><button id="mPreview">👁 PREVIEW</button></div></div></header><main id="view"></main></div>
+<div class="app" id="app"><header class="topbar"><div class="brandrow"><div class="logo">EF</div><div class="brand"><h1>EventForge</h1><small>Discord Event Designer <span id="efVer" style="opacity:.4"></span></small></div><div class="nav" id="nav"></div></div><div class="mobileMode"><div class="seg"><button id="mEdit" class="active">✏️ EDIT</button><button id="mPreview">👁 PREVIEW</button></div></div></header><main id="view"></main></div>
 <div class="emojiPicker" id="emojiPicker"><div class="emojiGrid" id="emojiGrid"></div></div>
 <div class="modalBack" id="modalBack"><div class="modal" id="modal"></div></div>
 <div class="ts-overlay" id="tsOverlay"><div class="ts-panel" id="tsPanel"></div></div>
@@ -165,6 +165,7 @@ textarea.listItem{min-height:0;height:auto;resize:none;white-space:pre-wrap;over
 <input type="file" id="backupInput" hidden>
 <input type="file" id="templateInput" hidden>
 <script>
+const EF_VERSION='2.1';
 const STORE_KEY='mm-eventforge-v3';
 const EMOJIS=['🎉','⚔️','📅','🕘','⏳','🌎','📍','👑','🎒','📋','🏆','📸','🔥','💰','☠️','🛡️','🧠','🎯','💬','✅','❗','⚠️','🔴','🟢','🟡','🔵','🗡️','🏹','🍖','🧪','💀','👥','📢','🏃','⭐','🎁','🥇','🥈','🥉','📝','🧩','🔒','🔓','🔔','🕹️','🎲','🪙','💎','🛠️','🧙','🏰','🌲','🐉','🦀','🪦','🧭','📌','➡️','✨','🚨','❤️','💥','🪄','⛏️','🎣','🌟'];
 const uid=()=>crypto.randomUUID();
@@ -570,17 +571,18 @@ function extractJson(raw){
 let t=raw.trim();
 const fence=t.match(/```(?:json)?\s*([\s\S]*?)```/);
 if(fence)t=fence[1].trim();
-try{return JSON.parse(t)}catch{}
+try{return{ok:true,data:JSON.parse(t)}}catch{}
 const first=t.indexOf('{');
 const last=t.lastIndexOf('}');
 if(first!==-1&&last>first){
-try{return JSON.parse(t.slice(first,last+1))}catch{}}
-return null;
+try{return{ok:true,data:JSON.parse(t.slice(first,last+1))}}catch(e){return{ok:false,err:e.message}}}
+return{ok:false,err:'No JSON object found in text'};
 }
 function importAiResult(raw){
 try{
-const parsed=extractJson(raw);
-if(!parsed){toast('Could not find valid JSON. Make sure you copied the full AI response.');return}
+const result=extractJson(raw);
+if(!result.ok){toast(result.err.length>60?result.err.slice(0,60)+'...':result.err);return}
+const parsed=result.data;
 let event=null;
 if(parsed.app==='eventforge-template'&&parsed.template&&parsed.template.event){
 event=parsed.template.event;
@@ -600,7 +602,7 @@ markDirty(true);
 closeAiAssist();
 render();
 toast('Event imported from AI')
-}catch(e){toast('Could not parse the AI response. Make sure you copied everything.')}
+}catch(e){toast('Import error: '+(e.message||'unknown'))}
 }
 function renderSaveStatus(){const el=document.getElementById('saveStatus');if(el)el.textContent=state.autosaveAt?'✓ Draft autosaved':'Autosave on'}
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.classList.remove('show'),1800)}
@@ -845,6 +847,7 @@ function shareCurrentToCloud(type){
 fetchSharedList(false);
 render();
 checkTemplateImport();
+document.getElementById('efVer').textContent='v'+EF_VERSION;
 </script>
 <script>
 /* ============================================================
