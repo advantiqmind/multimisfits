@@ -1402,10 +1402,10 @@ function buildCard(idea, col) {
     : '';
 
   var templateBtn = '';
-  if (col === 'shared') {
+  if (col === 'shared' && isLeader) {
     if (idea.templateJson) {
       templateBtn = '<button class="card-template" onclick="copyTemplate(event,\'' + idea.id + '\',this)">&#128230; TEMPLATE</button>';
-    } else if (isLeader) {
+    } else {
       templateBtn = '<button class="card-template-add" onclick="promptTemplate(event,\'' + idea.id + '\')">+ TEMPLATE</button>';
     }
   }
@@ -1553,35 +1553,24 @@ function showTemplateOverlay(ideaId, title, isMove) {
     '<div class="ib-template-panel">' +
       '<h3>EventForge Template</h3>' +
       '<p>' + (isMove ? 'Moving "' + esc(title) + '" to Created and Shared. ' : '"' + esc(title) + '": ') +
-        'Paste the EventForge JSON template so others can import it.</p>' +
+        'Paste the EventForge JSON template so others can download it.</p>' +
       '<textarea id="templateJson" placeholder="Paste EventForge JSON here..."></textarea>' +
       '<div class="ib-template-btns">' +
-        (isMove
-          ? '<button class="ib-btn ib-btn-sm" id="templateSkip">Skip</button>'
-          : '<button class="ib-btn ib-btn-sm" id="templateCancel">Cancel</button>') +
-        '<button class="ib-btn ib-btn-primary ib-btn-sm" id="templateSave">Save Template</button>' +
+        '<button class="ib-btn ib-btn-sm" id="templateCancel">Cancel</button>' +
+        '<button class="ib-btn ib-btn-primary ib-btn-sm" id="templateSave">' + (isMove ? 'Save & Move' : 'Save Template') + '</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
   setTimeout(function() { document.getElementById('templateJson').focus(); }, 50);
 
-  var cancel = document.getElementById('templateCancel') || document.getElementById('templateSkip');
-  cancel.onclick = function() {
-    overlay.remove();
-    if (isMove) doMove(ideaId, 'shared');
-  };
-  overlay.onclick = function(e) {
-    if (e.target === overlay) {
-      overlay.remove();
-      if (isMove) doMove(ideaId, 'shared');
-    }
-  };
+  document.getElementById('templateCancel').onclick = function() { overlay.remove(); };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
   document.getElementById('templateSave').onclick = function() {
     var json = document.getElementById('templateJson').value.trim();
     if (!json) {
       document.getElementById('templateJson').style.borderColor = '#e05050';
-      showToast('Paste a template or skip');
+      showToast('Template is required');
       return;
     }
     overlay.remove();
