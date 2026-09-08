@@ -2114,7 +2114,11 @@ function showTemplateOverlay(ideaId, title, isMove) {
     '<div class="ib-template-panel">' +
       '<h3>EventForge Template</h3>' +
       '<p>' + (isMove ? 'Moving "' + esc(title) + '" to Created and Shared. ' : '"' + esc(title) + '": ') +
-        'Paste the EventForge JSON template so others can download it.</p>' +
+        'Paste EventForge JSON or browse for a file.</p>' +
+      '<div class="ib-template-btns" style="margin-bottom:10px">' +
+        '<button class="ib-btn ib-btn-sm" id="templateBrowse">Browse File</button>' +
+        '<input type="file" id="templateFileInput" accept=".json,.txt,application/json,text/plain" hidden>' +
+      '</div>' +
       '<textarea id="templateJson" placeholder="Paste EventForge JSON here..."></textarea>' +
       '<div class="ib-template-btns">' +
         '<button class="ib-btn ib-btn-sm" id="templateCancel">Cancel</button>' +
@@ -2126,6 +2130,15 @@ function showTemplateOverlay(ideaId, title, isMove) {
 
   document.getElementById('templateCancel').onclick = function() { overlay.remove(); };
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  document.getElementById('templateBrowse').onclick = function() { document.getElementById('templateFileInput').click(); };
+  document.getElementById('templateFileInput').onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function() { document.getElementById('templateJson').value = reader.result; };
+    reader.readAsText(file);
+  };
 
   document.getElementById('templateSave').onclick = function() {
     var json = document.getElementById('templateJson').value.trim();
