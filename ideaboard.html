@@ -224,11 +224,14 @@ body {
 }
 .tag-guide-toggle.open .chevron { transform: rotate(90deg); }
 .tag-guide-grid {
-  display: grid;
+  display: none;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1px;
   background: var(--border);
   border-top: 1px solid var(--border);
+}
+.tag-guide-grid.open {
+  display: grid;
 }
 .tag-guide-row {
   display: flex;
@@ -607,7 +610,7 @@ body {
 
 <div class="tag-guide">
   <button class="tag-guide-toggle" onclick="toggleGuide(this)"><span class="chevron">&#9654;</span> Hashtag Guide</button>
-  <div class="tag-guide-grid" hidden id="tagGuideGrid">
+  <div class="tag-guide-grid" id="tagGuideGrid">
     <div class="tag-guide-row"><span class="tag tag-pvm">#pvm</span><span class="tag-guide-desc">Boss events, masses</span></div>
     <div class="tag-guide-row"><span class="tag tag-pvp">#pvp</span><span class="tag-guide-desc">Player vs player</span></div>
     <div class="tag-guide-row"><span class="tag tag-wild">#wild</span><span class="tag-guide-desc">Wilderness content</span></div>
@@ -919,8 +922,7 @@ function toggleNotes(e, el) {
 
 function toggleGuide(btn) {
   var grid = document.getElementById('tagGuideGrid');
-  var open = grid.hidden;
-  grid.hidden = !open;
+  var open = grid.classList.toggle('open');
   btn.classList.toggle('open', open);
 }
 
