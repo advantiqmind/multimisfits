@@ -690,6 +690,8 @@ var activeFilter = 'all';
 var showingDismissed = false;
 var draggedId = null;
 var discordUrl = null;
+var pollTimer = null;
+var POLL_INTERVAL = 30000;
 
 /* ---- USER IDENTITY ---- */
 
@@ -743,15 +745,31 @@ function showToast(msg) {
 
 /* ---- LOAD DATA ---- */
 
-async function loadBoard() {
+function ideasFingerprint(list) {
+  return list.map(function(i) {
+    return i.id + ':' + i.column + ':' + (i.dismissed ? 1 : 0);
+  }).join('|');
+}
+
+async function loadBoard(silent) {
   try {
     var res = await fetch('/api/ideaboard');
     var data = await res.json();
     if (!data.configured) {
-      showBoardMsg('Idea Board is not configured yet. Set IDEABOARD_THREAD_ID in Cloudflare.');
+      if (!silent) showBoardMsg('Idea Board is not configured yet. Set IDEABOARD_THREAD_ID in Cloudflare.');
       return;
     }
-    ideas = data.ideas || [];
+    var incoming = data.ideas || [];
+    if (silent && ideas.length) {
+      var oldFp = ideasFingerprint(ideas);
+      var newFp = ideasFingerprint(incoming);
+      if (oldFp === newFp) return;
+      ideas = incoming;
+      render();
+      showToast('Board updated');
+      return;
+    }
+    ideas = incoming;
     discordUrl = data.discordUrl;
     if (discordUrl) {
       document.getElementById('discordLink').href = discordUrl;
@@ -760,8 +778,19 @@ async function loadBoard() {
     document.getElementById('board').hidden = false;
     render();
   } catch (e) {
-    showBoardMsg('Could not load ideas. Try refreshing.');
+    if (!silent) showBoardMsg('Could not load ideas. Try refreshing.');
   }
+}
+
+function startPolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(function() {
+    if (!draggedId) loadBoard(true);
+  }, POLL_INTERVAL);
+}
+
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 }
 
 function showBoardMsg(msg) {
@@ -1053,7 +1082,11 @@ function formatDate(iso) {
 
 /* ---- INIT ---- */
 updateUserDisplay();
-loadBoard();
+loadBoard().then(startPolling);
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) { stopPolling(); }
+  else { loadBoard(true); startPolling(); }
+});
 </script>
 </body>
 </html>

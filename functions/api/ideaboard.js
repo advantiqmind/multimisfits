@@ -1,4 +1,4 @@
-const CACHE_TTL = 60;
+const CACHE_TTL = 30;
 const VALID_COLUMNS = ["ideas", "review", "approved", "shared", "rejected"];
 const COLUMN_MIGRATION = { planned: "review", active: "approved", done: "shared" };
 const KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams','misc'];
