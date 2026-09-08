@@ -6,6 +6,10 @@
 <title>Idea Board | Multi-Misfits</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest-armoury.json">
+<meta name="theme-color" content="#0d0b08">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/assets/armoury-icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600&family=Jersey+15&display=swap" rel="stylesheet">
@@ -1210,5 +1214,6 @@ document.addEventListener('visibilitychange', function() {
   else { loadBoard(true); startPolling(); }
 });
 </script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw-armoury.js');</script>
 </body>
 </html>
