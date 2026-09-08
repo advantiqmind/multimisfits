@@ -1369,7 +1369,7 @@ body {
 </nav>
 
 <div class="page-header">
-  <h2>Event Ideas</h2>
+  <h2>Event Ideas <span style="opacity:.4;font-size:12px;font-weight:400">v1.1</span></h2>
   <p>Post ideas in Discord. Drag cards to organize. Click a card's notes to expand.</p>
   <div class="ib-actions">
     <a class="ib-btn ib-btn-primary" id="discordLink" href="#" target="_blank" rel="noopener">+ Post in Discord</a>
@@ -1891,7 +1891,7 @@ function buildCard(idea, col) {
     '<div class="card-comments" hidden>' +
       comments.map(function(c) {
         return '<div class="card-comment">' +
-          '<div class="card-comment-meta"><strong>' + esc(c.author) + '</strong> &middot; ' + formatDate(c.createdAt) + '</div>' +
+          '<div class="card-comment-meta"><strong>' + esc(c.author) + '</strong> &middot; ' + formatDateTime(c.createdAt) + '</div>' +
           esc(c.text) +
         '</div>';
       }).join('') +
@@ -2559,7 +2559,7 @@ function openCardModal(ideaId) {
   if (comments.length) {
     comments.forEach(function(c) {
       html += '<div class="ib-modal-comment">' +
-        '<div class="ib-modal-comment-meta"><strong>' + esc(c.author) + '</strong> &middot; ' + formatDate(c.createdAt) + '</div>' +
+        '<div class="ib-modal-comment-meta"><strong>' + esc(c.author) + '</strong> &middot; ' + formatDateTime(c.createdAt) + '</div>' +
         esc(c.text) +
       '</div>';
     });
@@ -2711,6 +2711,16 @@ function formatDate(iso) {
   var str = months[d.getMonth()] + ' ' + d.getDate();
   if (d.getFullYear() !== now.getFullYear()) str += ', ' + d.getFullYear();
   return str;
+}
+
+function formatDateTime(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  var h = d.getHours(), m = d.getMinutes();
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  var time = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+  return formatDate(iso) + ', ' + time;
 }
 
 function daysSince(iso) {
