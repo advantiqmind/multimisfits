@@ -251,6 +251,7 @@ body {
 .board {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
+  /* 5 cols: review, approved, shared, rejected, used */
   gap: 12px;
   padding: 12px 24px 40px;
   min-height: 60vh;
@@ -504,6 +505,102 @@ body {
 /* Rejected column overrides card color */
 .column[data-col="rejected"] .card { background: rgba(180,40,40,0.15); border-left: 3px solid #e05050; }
 
+/* Used column green glow */
+.column[data-col="used"] { border-color: rgba(42,180,60,0.4); box-shadow: 0 0 18px rgba(42,180,60,0.12), inset 0 0 12px rgba(42,180,60,0.04); }
+.column[data-col="used"] .column-header { border-bottom-color: rgba(42,180,60,0.3); }
+.column[data-col="used"] .column-title { color: #50e870; }
+.column[data-col="used"] .card { background: rgba(42,180,60,0.12); border-left: 3px solid #50e870; }
+
+/* Copy button */
+.card-copy {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all 0.15s;
+  padding: 0;
+}
+.card:hover .card-copy { opacity: 1; }
+.card-copy:hover { color: var(--gold); }
+.card-copy.copied { color: #50e870; opacity: 1; }
+
+/* Access code overlay */
+.ib-code-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.ib-code-panel {
+  width: min(380px, 100%);
+  background: #1e1809;
+  border: 1px solid #3a2e1a;
+  padding: 24px;
+  text-align: center;
+}
+.ib-code-panel h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  color: var(--gold);
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+}
+.ib-code-panel p {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.ib-code-panel input {
+  width: 100%;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  padding: 8px 12px;
+  font-family: inherit;
+  margin-bottom: 12px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+.ib-code-panel input:focus { border-color: var(--gold-dim); outline: none; }
+.ib-code-error {
+  font-size: 11px;
+  color: var(--red-hover);
+  margin-bottom: 8px;
+  min-height: 16px;
+}
+.ib-code-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.ib-access-badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.ib-access-badge.leader { background: rgba(212,160,23,0.2); color: var(--gold); border: 1px solid rgba(212,160,23,0.4); }
+.ib-access-badge.member { background: rgba(42,90,168,0.2); color: #6ab0f0; border: 1px solid rgba(42,90,168,0.4); }
+.ib-access-badge.viewer { background: rgba(120,120,120,0.2); color: #b0b0b0; border: 1px solid rgba(120,120,120,0.4); }
+
 /* DISMISSED SECTION */
 .dismissed-section {
   padding: 0 24px 40px;
@@ -651,6 +748,7 @@ body {
     <span id="userDisplay">
       <button class="ib-user-set" onclick="changeUser()">Set your name</button>
     </span>
+    <span id="accessBar" style="margin-left:10px"></span>
   </div>
 </div>
 
@@ -698,13 +796,6 @@ body {
 <div id="boardMsg" class="board-msg"><span class="spinner"></span> Loading ideas...</div>
 
 <div class="board" id="board" hidden>
-  <div class="column" data-col="ideas">
-    <div class="column-header">
-      <span class="column-title">Ideas</span>
-      <span class="column-count" id="count-ideas">0</span>
-    </div>
-    <div class="column-body" id="col-ideas"></div>
-  </div>
   <div class="column" data-col="review">
     <div class="column-header">
       <span class="column-title">In Review</span>
@@ -733,6 +824,13 @@ body {
     </div>
     <div class="column-body" id="col-rejected"></div>
   </div>
+  <div class="column" data-col="used">
+    <div class="column-header">
+      <span class="column-title">Used</span>
+      <span class="column-count" id="count-used">0</span>
+    </div>
+    <div class="column-body" id="col-used"></div>
+  </div>
 </div>
 
 <div class="dismissed-section" id="dismissedSection" hidden>
@@ -758,6 +856,7 @@ body {
 <script>
 var KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams','misc'];
 var MAIN_TAGS = ['weekend','1day','discord','website'];
+var COLUMNS = ['review','approved','shared','rejected','used'];
 
 var ideas = [];
 var activeFilter = 'all';
@@ -766,6 +865,7 @@ var draggedId = null;
 var discordUrl = null;
 var pollTimer = null;
 var POLL_INTERVAL = 30000;
+var accessLevel = null; // null = not validated, 'leader', 'member', 'viewer'
 
 /* ---- USER IDENTITY ---- */
 
@@ -803,6 +903,115 @@ function updateUserDisplay() {
     el.innerHTML = 'Your name: <strong>' + esc(u) + '</strong> <button onclick="changeUser()">change</button>';
   } else {
     el.innerHTML = '<button class="ib-user-set" onclick="changeUser()">Set your name</button>';
+  }
+}
+
+/* ---- ACCESS CODE ---- */
+
+function getAccessCode() {
+  try { return localStorage.getItem('mm-ideaboard-code') || ''; } catch(e) { return ''; }
+}
+
+function setAccessCode(code) {
+  try { localStorage.setItem('mm-ideaboard-code', code); } catch(e) {}
+}
+
+function clearAccessCode() {
+  try { localStorage.removeItem('mm-ideaboard-code'); } catch(e) {}
+  accessLevel = null;
+  updateAccessDisplay();
+  render();
+}
+
+async function validateAccessCode(code) {
+  try {
+    var res = await fetch('/api/ideaboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'validate', access_code: code }),
+    });
+    if (!res.ok) return null;
+    var data = await res.json();
+    return data.level || null;
+  } catch(e) { return null; }
+}
+
+function showCodePrompt(cb) {
+  var overlay = document.createElement('div');
+  overlay.className = 'ib-code-overlay';
+  overlay.innerHTML =
+    '<div class="ib-code-panel">' +
+      '<h3>Access Code</h3>' +
+      '<p>Enter the Idea Board access code to unlock actions.</p>' +
+      '<input type="password" id="ibCodeInput" placeholder="Enter code" autocomplete="off">' +
+      '<div class="ib-code-error" id="ibCodeError"></div>' +
+      '<div class="ib-code-btns">' +
+        '<button class="ib-btn ib-btn-sm" id="ibCodeCancel">Cancel</button>' +
+        '<button class="ib-btn ib-btn-primary ib-btn-sm" id="ibCodeSubmit">Unlock</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  var input = document.getElementById('ibCodeInput');
+  setTimeout(function() { input.focus(); }, 50);
+
+  async function submit() {
+    var code = input.value.trim();
+    if (!code) { document.getElementById('ibCodeError').textContent = 'Enter a code'; return; }
+    document.getElementById('ibCodeSubmit').textContent = 'Checking...';
+    var level = await validateAccessCode(code);
+    if (level) {
+      accessLevel = level;
+      setAccessCode(code);
+      updateAccessDisplay();
+      render();
+      overlay.remove();
+      if (cb) cb(level);
+    } else {
+      document.getElementById('ibCodeError').textContent = 'Invalid code. Try again.';
+      document.getElementById('ibCodeSubmit').textContent = 'Unlock';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  document.getElementById('ibCodeSubmit').onclick = submit;
+  input.onkeydown = function(e) { if (e.key === 'Enter') submit(); };
+  document.getElementById('ibCodeCancel').onclick = function() { overlay.remove(); };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+}
+
+function ensureAccess(requiredLevel, cb) {
+  if (requiredLevel === 'leader' && accessLevel === 'leader') { cb('leader'); return; }
+  if (requiredLevel === 'member' && (accessLevel === 'leader' || accessLevel === 'member')) { cb(accessLevel); return; }
+  showCodePrompt(function(level) {
+    if (requiredLevel === 'leader' && level !== 'leader') {
+      showToast('Leader access required for this action');
+      return;
+    }
+    cb(level);
+  });
+}
+
+function updateAccessDisplay() {
+  var bar = document.getElementById('accessBar');
+  if (!bar) return;
+  if (accessLevel === 'leader') {
+    bar.innerHTML = '<span class="ib-access-badge leader">Leader</span> <button onclick="clearAccessCode()">lock</button>';
+  } else if (accessLevel === 'member') {
+    bar.innerHTML = '<span class="ib-access-badge member">Member</span> <button onclick="clearAccessCode()">lock</button>';
+  } else {
+    bar.innerHTML = '<span class="ib-access-badge viewer">View Only</span> <button class="ib-user-set" onclick="showCodePrompt()">Unlock</button>';
+  }
+}
+
+async function tryAutoValidate() {
+  var code = getAccessCode();
+  if (!code) { accessLevel = null; return; }
+  var level = await validateAccessCode(code);
+  if (level) {
+    accessLevel = level;
+  } else {
+    clearAccessCode();
   }
 }
 
@@ -875,8 +1084,9 @@ function showBoardMsg(msg) {
 /* ---- RENDER ---- */
 
 function render() {
-  ['ideas','review','approved','shared','rejected'].forEach(function(col) {
+  COLUMNS.forEach(function(col) {
     var el = document.getElementById('col-' + col);
+    if (!el) return;
     var visible = ideas.filter(function(c) {
       return c.column === col && !c.dismissed && matchesFilter(c);
     });
@@ -886,7 +1096,7 @@ function render() {
     document.getElementById('count-' + col).textContent = total.length;
     el.innerHTML = '';
     visible.forEach(function(idea) {
-      el.appendChild(buildCard(idea));
+      el.appendChild(buildCard(idea, col));
     });
   });
 
@@ -922,14 +1132,17 @@ function render() {
   }
 }
 
-function buildCard(idea) {
+function buildCard(idea, col) {
   var div = document.createElement('div');
   var mainTag = (idea.tags || []).find(function(t) { return MAIN_TAGS.indexOf(t) !== -1; });
   div.className = 'card' + (mainTag ? ' card-' + mainTag : '');
-  div.draggable = true;
+  var isLeader = accessLevel === 'leader';
+  div.draggable = isLeader;
   div.dataset.id = idea.id;
-  div.addEventListener('dragstart', onDragStart);
-  div.addEventListener('dragend', onDragEnd);
+  if (isLeader) {
+    div.addEventListener('dragstart', onDragStart);
+    div.addEventListener('dragend', onDragEnd);
+  }
 
   var tagsHtml = buildTagsHtml(idea.tags);
   var dateStr = formatDate(idea.createdAt);
@@ -945,6 +1158,15 @@ function buildCard(idea) {
 
   var comments = idea.comments || [];
   var movedByHtml = idea.movedBy ? '<span class="card-moved-by">Moved by ' + esc(idea.movedBy) + '</span>' : '';
+
+  var canComment = accessLevel === 'leader' || accessLevel === 'member';
+  var commentAddHtml = canComment
+    ? '<div class="card-comment-add">' +
+        '<input class="card-comment-input" placeholder="Add a comment..." maxlength="500" onkeydown="if(event.key===\'Enter\')addComment(\'' + idea.id + '\',this)">' +
+        '<button class="card-comment-submit" onclick="addComment(\'' + idea.id + '\',this.previousElementSibling)">Post</button>' +
+      '</div>'
+    : '';
+
   var commentsHtml =
     '<div class="card-comments-row">' +
       '<div class="card-comments-toggle" onclick="toggleComments(event, this)">' +
@@ -959,16 +1181,21 @@ function buildCard(idea) {
           esc(c.text) +
         '</div>';
       }).join('') +
-      '<div class="card-comment-add">' +
-        '<input class="card-comment-input" placeholder="Add a comment..." maxlength="500" onkeydown="if(event.key===\'Enter\')addComment(\'' + idea.id + '\',this)">' +
-        '<button class="card-comment-submit" onclick="addComment(\'' + idea.id + '\',this.previousElementSibling)">Post</button>' +
-      '</div>' +
+      commentAddHtml +
     '</div>';
+
+  var dismissBtn = isLeader
+    ? '<button class="card-delete" onclick="dismissCard(\'' + idea.id + '\')" title="Dismiss">&times;</button>'
+    : '';
+
+  var copyBtn = col === 'approved'
+    ? '<button class="card-copy" onclick="copyIdea(event,\'' + idea.id + '\',this)" title="Copy for AI Assist">&#128203;</button>'
+    : '';
 
   div.innerHTML =
     '<div class="card-top">' +
       '<span class="card-title">' + esc(idea.title) + '</span>' +
-      '<button class="card-delete" onclick="dismissCard(\'' + idea.id + '\')" title="Dismiss">&times;</button>' +
+      copyBtn + dismissBtn +
     '</div>' +
     '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + '</div>' +
     notesHtml +
@@ -1034,33 +1261,48 @@ function toggleComments(e, el) {
   }
 }
 
+function copyIdea(e, ideaId, btn) {
+  e.stopPropagation();
+  var idea = ideas.find(function(c) { return c.id === ideaId; });
+  if (!idea) return;
+  var text = idea.title;
+  if (idea.notes) text += '\n' + idea.notes;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.classList.add('copied');
+    btn.innerHTML = '&#10003;';
+    setTimeout(function() { btn.classList.remove('copied'); btn.innerHTML = '&#128203;'; }, 1500);
+    showToast('Copied idea to clipboard');
+  });
+}
+
 async function addComment(ideaId, input) {
   var text = input.value.trim();
   if (!text) return;
-  var user = ensureUser();
-  if (!user) return;
+  ensureAccess('member', function() {
+    var user = ensureUser();
+    if (!user) return;
 
-  var idea = ideas.find(function(c) { return c.id === ideaId; });
-  if (!idea) return;
+    var idea = ideas.find(function(c) { return c.id === ideaId; });
+    if (!idea) return;
 
-  input.value = '';
-  idea.comments = idea.comments || [];
-  idea.comments.push({ author: user, text: text, createdAt: new Date().toISOString() });
-  render();
+    input.value = '';
+    idea.comments = idea.comments || [];
+    idea.comments.push({ author: user, text: text, createdAt: new Date().toISOString() });
+    render();
 
-  try {
-    var res = await fetch('/api/ideaboard', {
+    fetch('/api/ideaboard', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_note', message_id: ideaId, user: user, text: text }),
+      body: JSON.stringify({ action: 'add_note', message_id: ideaId, user: user, text: text, access_code: getAccessCode() }),
+    }).then(function(res) {
+      if (!res.ok) throw new Error();
+      showToast('Comment added');
+    }).catch(function() {
+      idea.comments.pop();
+      render();
+      showToast('Failed to add comment');
     });
-    if (!res.ok) throw new Error();
-    showToast('Comment added');
-  } catch(e) {
-    idea.comments.pop();
-    render();
-    showToast('Failed to add comment');
-  }
+  });
 }
 
 /* ---- TAG GUIDE ---- */
@@ -1090,55 +1332,57 @@ function setFilter(f) {
 
 /* ---- DISMISS / RESTORE ---- */
 
-async function dismissCard(id) {
-  var user = ensureUser();
-  if (!user) return;
+function dismissCard(id) {
+  ensureAccess('leader', function() {
+    var user = ensureUser();
+    if (!user) return;
 
-  var idea = ideas.find(function(c) { return c.id === id; });
-  if (!idea) return;
-  if (!confirm('Dismiss "' + idea.title + '"?')) return;
+    var idea = ideas.find(function(c) { return c.id === id; });
+    if (!idea) return;
+    if (!confirm('Dismiss "' + idea.title + '"?')) return;
 
-  idea.dismissed = true;
-  idea.dismissedBy = user;
-  render();
+    idea.dismissed = true;
+    idea.dismissedBy = user;
+    render();
 
-  try {
-    var res = await fetch('/api/ideaboard', {
+    fetch('/api/ideaboard', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'dismiss', message_id: id, user: user }),
+      body: JSON.stringify({ action: 'dismiss', message_id: id, user: user, access_code: getAccessCode() }),
+    }).then(function(res) {
+      if (!res.ok) throw new Error();
+      showToast('Idea dismissed');
+    }).catch(function() {
+      idea.dismissed = false;
+      idea.dismissedBy = null;
+      render();
+      showToast('Failed to dismiss');
     });
-    if (!res.ok) throw new Error();
-    showToast('Idea dismissed');
-  } catch(e) {
+  });
+}
+
+function restoreCard(id) {
+  ensureAccess('leader', function() {
+    var idea = ideas.find(function(c) { return c.id === id; });
+    if (!idea) return;
+
     idea.dismissed = false;
     idea.dismissedBy = null;
     render();
-    showToast('Failed to dismiss');
-  }
-}
 
-async function restoreCard(id) {
-  var idea = ideas.find(function(c) { return c.id === id; });
-  if (!idea) return;
-
-  idea.dismissed = false;
-  idea.dismissedBy = null;
-  render();
-
-  try {
-    var res = await fetch('/api/ideaboard', {
+    fetch('/api/ideaboard', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'restore', message_id: id }),
+      body: JSON.stringify({ action: 'restore', message_id: id, access_code: getAccessCode() }),
+    }).then(function(res) {
+      if (!res.ok) throw new Error();
+      showToast('Idea restored');
+    }).catch(function() {
+      idea.dismissed = true;
+      render();
+      showToast('Failed to restore');
     });
-    if (!res.ok) throw new Error();
-    showToast('Idea restored');
-  } catch(e) {
-    idea.dismissed = true;
-    render();
-    showToast('Failed to restore');
-  }
+  });
 }
 
 function toggleDismissed() {
@@ -1182,7 +1426,11 @@ document.querySelectorAll('.column-body').forEach(function(colBody) {
   });
 });
 
-async function moveCard(id, newCol) {
+function moveCard(id, newCol) {
+  if (accessLevel !== 'leader') {
+    showToast('Leader access required to move cards');
+    return;
+  }
   var idea = ideas.find(function(c) { return c.id === id; });
   if (!idea || idea.column === newCol) return;
 
@@ -1194,18 +1442,17 @@ async function moveCard(id, newCol) {
   idea.movedBy = user;
   render();
 
-  try {
-    var res = await fetch('/api/ideaboard', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'move', message_id: id, column: newCol, user: user }),
-    });
+  fetch('/api/ideaboard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'move', message_id: id, column: newCol, user: user, access_code: getAccessCode() }),
+  }).then(function(res) {
     if (!res.ok) throw new Error();
-  } catch(e) {
+  }).catch(function() {
     idea.column = oldCol;
     render();
     showToast('Failed to move card');
-  }
+  });
 }
 
 /* ---- HELPERS ---- */
@@ -1229,7 +1476,10 @@ function formatDate(iso) {
 
 /* ---- INIT ---- */
 updateUserDisplay();
-loadBoard().then(startPolling);
+tryAutoValidate().then(function() {
+  updateAccessDisplay();
+  loadBoard().then(startPolling);
+});
 document.addEventListener('visibilitychange', function() {
   if (document.hidden) { stopPolling(); }
   else { loadBoard(true); startPolling(); }

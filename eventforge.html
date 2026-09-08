@@ -175,7 +175,7 @@ const addDaysISO=(s,n)=>{const d=fromISO(s);d.setDate(d.getDate()+n);return toIS
 const daysBetweenISO=(a,b)=>Math.round((fromISO(b)-fromISO(a))/864e5);
 function nextDowISO(dow,extraWeeks=0){const d=new Date();d.setDate(d.getDate()+(dow-d.getDay()+7)%7+extraWeeks*7);return toISO(d)}
 function defaultRecurrence(){return{freq:'none',interval:2,days:[]}}
-function eventDefaults(e){e.recurrence=e.recurrence||defaultRecurrence();if(!Array.isArray(e.recurrence.days))e.recurrence.days=[];if(!(e.recurrence.interval>=1))e.recurrence.interval=2;if(e.repeatNote===undefined)e.repeatNote=false;if(e.rsvp===undefined)e.rsvp=false;e.rsvpEmoji=e.rsvpEmoji||'✅';if(e.dinkNote===undefined)e.dinkNote=false;if(e.multiDay===undefined)e.multiDay=!!(e.endDate&&e.endDate!==e.date);return e}
+function eventDefaults(e){e.recurrence=e.recurrence||defaultRecurrence();if(!Array.isArray(e.recurrence.days))e.recurrence.days=[];if(!(e.recurrence.interval>=1))e.recurrence.interval=2;if(e.repeatNote===undefined)e.repeatNote=false;if(e.rsvp===undefined)e.rsvp=true;e.rsvpEmoji=e.rsvpEmoji||'✅';if(e.dinkNote===undefined)e.dinkNote=false;if(e.multiDay===undefined)e.multiDay=!!(e.endDate&&e.endDate!==e.date);return e}
 function nextOccurrenceISO(dateISO,rec){if(!dateISO)return dateISO;const f=rec?.freq;if(f==='daily')return addDaysISO(dateISO,1);if(f==='weekly')return addDaysISO(dateISO,7);if(f==='biweekly')return addDaysISO(dateISO,14);if(f==='monthly'){const d=fromISO(dateISO),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+1);const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();d.setDate(Math.min(day,last));return toISO(d)}if(f==='custom'){const iv=Math.max(1,rec.interval||1),days=[...(rec.days||[])].sort((a,b)=>a-b);if(!days.length)return addDaysISO(dateISO,7*iv);const cur=fromISO(dateISO).getDay();for(const day of days)if(day>cur)return addDaysISO(dateISO,day-cur);return addDaysISO(dateISO,7*iv-cur+days[0])}return dateISO}
 function recurrenceSummary(rec,dateISO){const f=rec?.freq;if(!f||f==='none')return'';const wd=dateISO?DOW[fromISO(dateISO).getDay()]:'';if(f==='daily')return'Every day';if(f==='weekly')return wd?`Every ${wd}`:'Every week';if(f==='biweekly')return wd?`Every 2 weeks on ${wd}`:'Every 2 weeks';if(f==='monthly')return dateISO?`Monthly on the ${ordinal(fromISO(dateISO).getDate())}`:'Every month';const iv=Math.max(1,rec.interval||1),names=(rec.days||[]).slice().sort((a,b)=>a-b).map(d=>DOW[d].slice(0,3)).join(', ');return`Every ${iv===1?'week':iv+' weeks'}${names?` on ${names}`:''}`}
 function durationText(e){if(!e.date)return'';if(e.endDate&&e.endDate!==e.date){const days=daysBetweenISO(e.date,e.endDate)+1;if(days<=0)return'⚠ Ends before it starts';if(days%7===0)return`${days/7} week${days>7?'s':''}`;return`${days} days`}if(e.endTime&&e.time){const s=zonedUnix(e.date,e.time,e.timezone),x=zonedUnix(e.endDate||e.date,e.endTime,e.timezone);if(s&&x){const h=(x-s)/3600;if(h<=0)return'⚠ Ends before it starts';return h<1?`${Math.round(h*60)} minutes`:`${+h.toFixed(1)} hour${h>=2?'s':''}`}}return''}
@@ -184,7 +184,7 @@ const blockFactory={
  details:()=>({id:uid(),kind:'details',label:'Event Details',emoji:'📍',importance:'small',visible:true,showLabel:false,open:false,world:'329',location:'Clan Hall',host:'',condition:'always'}),
  requirements:()=>({id:uid(),kind:'requirements',label:'Requirements',emoji:'📋',importance:'featured',visible:true,showLabel:true,open:false,items:[''],condition:'always'}),
  rules:()=>({id:uid(),kind:'rules',label:'Rules',emoji:'⚔️',importance:'normal',visible:true,showLabel:true,open:false,items:[''],condition:'always'}),
- prizes:()=>({id:uid(),kind:'prizes',label:'Prizes',emoji:'🏆',importance:'featured',visible:true,showLabel:true,open:false,items:['🥇 1st Place — '],condition:'always'}),
+ prizes:()=>({id:uid(),kind:'prizes',label:'Prizes',emoji:'🏆',importance:'featured',visible:true,showLabel:true,open:false,items:['🥇 1st Place - '],condition:'always'}),
  gear:()=>({id:uid(),kind:'gear',label:'Gear / Supplies',emoji:'🎒',importance:'normal',visible:true,showLabel:true,open:false,value:'',provided:'',condition:'always'}),
  submissions:()=>({id:uid(),kind:'submissions',label:'Submissions',emoji:'📸',importance:'normal',visible:true,showLabel:true,open:false,value:'',condition:'always'}),
  training:()=>({id:uid(),kind:'training',label:'Training Session',emoji:'🧠',importance:'featured',visible:true,showLabel:true,open:false,name:'Training Session',date:'',time:'20:00',timezone:'America/New_York',world:'329',location:'Clan Hall',details:'',condition:'always'}),
@@ -398,10 +398,10 @@ const panel=document.getElementById('aiPanel');
 panel.innerHTML=
 '<div class="ai-header"><h3>🤖 AI Event Assistant</h3><div class="spacer"></div><button class="ai-close" id="aiClose">&times;</button></div>'+
 '<div class="ai-body">'+
-'<label>Describe your event idea</label>'+
-'<textarea class="ai-idea" id="aiIdea" placeholder="Weekend PvM bingo with teams of 4, boss KC tracking, prizes for top 3..."></textarea>'+
+'<label>Describe your event idea (optional)</label>'+
+'<textarea class="ai-idea" id="aiIdea" placeholder="Weekend PvM bingo with teams of 4, boss KC tracking, prizes for top 3... (or leave blank for a general prompt)"></textarea>'+
 '<ol class="ai-steps">'+
-'<li>Type your event idea above</li>'+
+'<li>Optionally type your event idea above</li>'+
 '<li>Click <strong>Copy Prompt</strong> to copy the full AI prompt</li>'+
 '<li>Paste into Claude, ChatGPT, or any AI</li>'+
 '<li>Copy the JSON the AI gives back</li>'+
@@ -423,7 +423,6 @@ document.getElementById('aiClose').onclick=closeAiAssist;
 overlay.onclick=e=>{if(e.target===overlay)closeAiAssist()};
 document.getElementById('aiCopyPrompt').onclick=()=>{
 const idea=document.getElementById('aiIdea').value.trim();
-if(!idea){toast('Type an event idea first');return}
 const prompt=buildAiPrompt(idea);
 navigator.clipboard.writeText(prompt).then(()=>{
 const btn=document.getElementById('aiCopyPrompt');
@@ -442,12 +441,20 @@ function buildAiPrompt(idea){
 const tz=state.settings.timezone||'America/New_York';
 const w=state.settings.defaultWorld||'329';
 const loc=state.settings.defaultLocation||'Clan Hall';
-return `You are an event planner for an OSRS (Old School RuneScape) clan called Multi-Misfits. I need you to create an EventForge event JSON based on my idea.
+const ideaLine=idea ? `\nEVENT IDEA: ${idea}\n` : '\nNo specific idea provided. Create a fun, general-purpose clan event.\n';
+return `You are an event planner for an OSRS (Old School RuneScape) clan called Multi-Misfits. I need you to create an EventForge event JSON.
+${ideaLine}
+CRITICAL RULES:
+- Return ONLY valid JSON. No explanation, no markdown code fences, no text before or after.
+- NEVER use em dashes anywhere in the output. Use hyphens (-) instead.
+- The ONLY emoji allowed in text content are: ⚔️ (crossed swords) and ✅ (green checkmark).
+- Do NOT use any other emoji in text fields (titles, rules, requirements, custom blocks, etc.).
+- Medal emoji (🥇🥈🥉) are the ONLY exception, allowed exclusively in prize item lines.
+- EVERY event MUST end with this RSVP line as the very last thing a reader sees. Add a custom block at the end of the blocks array with this exact text:
+  "✅ React with ✅ if you plan to make it!"
+- Always set "rsvp": true and "rsvpEmoji": "✅" in the event.
 
-EVENT IDEA: ${idea}
-
-INSTRUCTIONS:
-- Return ONLY valid JSON, no explanation, no markdown code fences.
+FORMATTING RULES:
 - The JSON must match the EventForge template format exactly.
 - Use the wrapped format: { "app": "eventforge-template", "v": 1, "template": { ... } }
 - Pick the best preset for the event type.
@@ -459,9 +466,8 @@ INSTRUCTIONS:
 - Default meeting location: ${loc}
 - Weekend events typically run Friday 16:00 to Sunday 22:00.
 - Single day events typically run 20:00 to 23:30.
-- For prizes, use medal emoji: 🥇 1st Place, 🥈 2nd Place, 🥉 3rd Place.
-- Tags should be lowercase, comma-relevant (e.g. pvm, wilderness, weekend, teams).
-- Every block needs a unique "id" field. Use any random string (e.g. "b1", "b2", etc.).
+- Tags should be lowercase (e.g. pvm, wilderness, weekend, teams).
+- Every block needs a unique "id" field (e.g. "b1", "b2", etc.).
 - Keep the tone fun and engaging but clear.
 
 TEMPLATE FORMAT:
@@ -496,7 +502,7 @@ TEMPLATE FORMAT:
           "id": "b1",
           "kind": "details",
           "label": "Event Details",
-          "emoji": "📍",
+          "emoji": "⚔️",
           "importance": "small",
           "visible": true,
           "showLabel": false,
@@ -520,11 +526,9 @@ AVAILABLE BLOCK TYPES (include only the ones relevant to the event):
 
 2. requirements - List of requirements to participate
    Fields: items (string array, each item is one requirement line)
-   Example items: ["📊 Base 70+ combat stats", "🛡️ Bring your own gear"]
 
 3. rules - List of rules
    Fields: items (string array)
-   Example items: ["No ragging", "Listen to the host", "Have fun!"]
 
 4. prizes - Prize list
    Fields: items (string array)
@@ -550,14 +554,14 @@ Common block fields (all blocks have these):
 - id: unique string
 - kind: block type name from above
 - label: display name (e.g. "Rules", "Prizes")
-- emoji: single emoji for the section header
+- emoji: single emoji for the section header (use ⚔️ or ✅ only)
 - importance: "small" | "normal" | "medium" | "featured"
 - visible: true (set false to hide a block)
 - showLabel: true (set false to hide the section heading)
 - open: false
 - condition: "always"
 
-Now generate the event JSON for my idea. Remember: ONLY the JSON, nothing else.`
+REMEMBER: Return ONLY the JSON object. No text, no explanation, no code fences.`
 }
 function importAiResult(raw){
 try{

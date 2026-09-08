@@ -1,6 +1,6 @@
 const CACHE_TTL = 30;
-const VALID_COLUMNS = ["ideas", "review", "approved", "shared", "rejected"];
-const COLUMN_MIGRATION = { planned: "review", active: "approved", done: "shared" };
+const VALID_COLUMNS = ["review", "approved", "shared", "rejected", "used"];
+const COLUMN_MIGRATION = { planned: "review", active: "approved", done: "shared", ideas: "review" };
 const KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams','misc'];
 const BASE = "https://discord.com/api/v10";
 
@@ -12,7 +12,7 @@ async function ensureTable(db) {
     .prepare(
       `CREATE TABLE IF NOT EXISTS idea_positions (
       message_id TEXT PRIMARY KEY,
-      column_name TEXT NOT NULL DEFAULT 'ideas',
+      column_name TEXT NOT NULL DEFAULT 'review',
       dismissed INTEGER NOT NULL DEFAULT 0,
       dismissed_by TEXT,
       moved_by TEXT,
@@ -86,7 +86,6 @@ function parseIdea(msg, nickMap, channelMap) {
 
   const tags = [];
 
-  // Resolve Discord channel mentions <#ID> to tags when channel name matches a known tag
   const mentionRx = /<#(\d+)>/g;
   let cm;
   while ((cm = mentionRx.exec(content)) !== null) {
@@ -96,12 +95,10 @@ function parseIdea(msg, nickMap, channelMap) {
     }
   }
 
-  // Strip Discord channel mentions before parsing hashtags
   content = content.replace(/<#\d+>/g, "");
 
   const lines = content.split("\n");
 
-  // Match hashtags that contain at least one letter (excludes pure-numeric Discord IDs)
   const tagRx = /#((?=\w*[a-zA-Z])\w+)/g;
   let m;
   while ((m = tagRx.exec(content)) !== null) {
@@ -213,7 +210,7 @@ async function handleGet(context) {
     const pos = positions.get(idea.id);
     return {
       ...idea,
-      column: pos ? (COLUMN_MIGRATION[pos.column_name] || pos.column_name) : "ideas",
+      column: pos ? (COLUMN_MIGRATION[pos.column_name] || pos.column_name) : "review",
       dismissed: pos ? !!pos.dismissed : false,
       dismissedBy: pos?.dismissed_by || null,
       movedBy: pos?.moved_by || null,
@@ -235,6 +232,15 @@ async function handleGet(context) {
   return res;
 }
 
+function checkAccess(env, code) {
+  const leaderCode = env.IDEABOARD_LEADER_CODE;
+  const memberCode = env.IDEABOARD_MEMBER_CODE;
+  if (!leaderCode && !memberCode) return "leader";
+  if (leaderCode && code === leaderCode) return "leader";
+  if (memberCode && code === memberCode) return "member";
+  return null;
+}
+
 async function handlePost(context) {
   let body;
   try {
@@ -242,13 +248,27 @@ async function handlePost(context) {
   } catch (_) {
     return json({ error: "invalid JSON" }, 400);
   }
-  const { action, message_id, column, user, text } = body;
+  const { action, message_id, column, user, text, access_code } = body;
+
+  if (action === "validate") {
+    const level = checkAccess(context.env, access_code);
+    if (!level) return json({ error: "invalid code" }, 403);
+    return json({ ok: true, level });
+  }
 
   if (!message_id) return json({ error: "message_id required" }, 400);
 
   const db = context.env.DB;
   if (!db) return json({ error: "database not configured" }, 500);
   await ensureTable(db);
+
+  const level = checkAccess(context.env, access_code);
+
+  if (action === "move" || action === "dismiss" || action === "restore") {
+    if (level !== "leader") return json({ error: "leader access required" }, 403);
+  } else if (action === "add_note") {
+    if (!level) return json({ error: "access code required" }, 403);
+  }
 
   const now = new Date().toISOString();
 
@@ -283,7 +303,7 @@ async function handlePost(context) {
     await db
       .prepare(
         `INSERT INTO idea_positions (message_id, column_name, dismissed, dismissed_by, updated_at)
-         VALUES (?, 'ideas', 1, ?, ?)
+         VALUES (?, 'review', 1, ?, ?)
          ON CONFLICT(message_id) DO UPDATE SET
            dismissed = 1,
            dismissed_by = excluded.dismissed_by,
