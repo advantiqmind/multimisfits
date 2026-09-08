@@ -697,6 +697,8 @@ body {
 .card-template.copied { border-color: #50e870; color: #50e870; background: rgba(42,180,60,0.1); }
 .card-template-add { display: inline-flex; align-items: center; gap: 3px; border: 1px dashed var(--text-dim); background: none; color: var(--text-dim); cursor: pointer; font-size: 9px; font-family: 'Cinzel', serif; letter-spacing: 0.5px; padding: 1px 7px; margin-left: 4px; vertical-align: middle; transition: all 0.15s; }
 .card-template-add:hover { border-color: var(--gold-dim); color: var(--gold-dim); }
+.card-template-remove { display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(224,80,80,0.4); background: rgba(224,80,80,0.1); color: #c06060; cursor: pointer; font-size: 11px; font-weight: bold; line-height: 1; padding: 1px 4px; margin-left: 2px; vertical-align: middle; transition: all 0.15s; }
+.card-template-remove:hover { background: rgba(224,80,80,0.25); color: #e05050; border-color: #e05050; }
 
 /* Template overlay */
 .ib-template-overlay {
@@ -1826,7 +1828,7 @@ function buildCard(idea, col) {
       if (dragMoved) return;
       var t = e.target;
       var skip = 'button, input, textarea, a, .card-notes-toggle, .card-comments-toggle, ' +
-        '.card-media-toggle, .card-move-btn, .card-copy, .card-template, .card-template-add, ' +
+        '.card-media-toggle, .card-move-btn, .card-copy, .card-template, .card-template-add, .card-template-remove, ' +
         '.card-comment-submit, .card-move-dropdown, .card-move-option, .card-delete';
       if (t.closest(skip)) return;
       openCardModal(ideaId);
@@ -1904,7 +1906,8 @@ function buildCard(idea, col) {
   var templateBtn = '';
   if (col === 'shared' && isLeader) {
     if (idea.templateJson) {
-      templateBtn = '<button class="card-template" onclick="copyTemplate(event,\'' + idea.id + '\',this)">&#128230; TEMPLATE</button>';
+      templateBtn = '<button class="card-template" onclick="copyTemplate(event,\'' + idea.id + '\',this)">&#128230; TEMPLATE</button>' +
+        '<button class="card-template-remove" onclick="removeTemplate(event,\'' + idea.id + '\')" title="Remove template">&times;</button>';
     } else {
       templateBtn = '<button class="card-template-add" onclick="promptTemplate(event,\'' + idea.id + '\')">+ TEMPLATE</button>';
     }
@@ -2047,6 +2050,28 @@ function copyTemplate(e, ideaId, btn) {
     btn.innerHTML = '&#10003;';
     setTimeout(function() { btn.classList.remove('copied'); btn.innerHTML = '&#128230; TEMPLATE'; }, 1500);
     showToast('Template copied. Paste into EventForge Import.');
+  });
+}
+
+function removeTemplate(e, ideaId) {
+  e.stopPropagation();
+  if (!confirm('Remove the template from this card?')) return;
+  var idea = ideas.find(function(c) { return c.id === ideaId; });
+  if (!idea) return;
+  var prev = idea.templateJson;
+  idea.templateJson = null;
+  render();
+  fetch('/api/ideaboard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'set_template', message_id: ideaId, template_json: null, access_code: getAccessCode() }),
+  }).then(function(res) {
+    if (!res.ok) throw new Error();
+    showToast('Template removed');
+  }).catch(function() {
+    idea.templateJson = prev;
+    render();
+    showToast('Failed to remove template');
   });
 }
 
@@ -2499,7 +2524,8 @@ function openCardModal(ideaId) {
   }
   if (col === 'shared' && isLeader) {
     if (idea.templateJson) {
-      actions.push('<button class="card-template" onclick="modalCopyTemplate(\'' + ideaId + '\',this)">&#128230; TEMPLATE</button>');
+      actions.push('<button class="card-template" onclick="modalCopyTemplate(\'' + ideaId + '\',this)">&#128230; TEMPLATE</button>' +
+        '<button class="card-template-remove" onclick="modalRemoveTemplate(\'' + ideaId + '\')" title="Remove template">&times;</button>');
     } else {
       actions.push('<button class="card-template-add" onclick="closeCardModal();promptTemplate(event,\'' + ideaId + '\')">+ TEMPLATE</button>');
     }
@@ -2563,6 +2589,28 @@ function modalCopyTemplate(ideaId, btn) {
     btn.innerHTML = '&#10003;';
     setTimeout(function() { btn.classList.remove('copied'); btn.innerHTML = '&#128230; TEMPLATE'; }, 1500);
     showToast('Template copied. Paste into EventForge Import.');
+  });
+}
+
+function modalRemoveTemplate(ideaId) {
+  if (!confirm('Remove the template from this card?')) return;
+  var idea = ideas.find(function(c) { return c.id === ideaId; });
+  if (!idea) return;
+  var prev = idea.templateJson;
+  idea.templateJson = null;
+  closeCardModal();
+  render();
+  fetch('/api/ideaboard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'set_template', message_id: ideaId, template_json: null, access_code: getAccessCode() }),
+  }).then(function(res) {
+    if (!res.ok) throw new Error();
+    showToast('Template removed');
+  }).catch(function() {
+    idea.templateJson = prev;
+    render();
+    showToast('Failed to remove template');
   });
 }
 
