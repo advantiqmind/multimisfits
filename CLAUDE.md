@@ -191,8 +191,9 @@ Replaces the current Loot Value system with something far more flexible.
   `idea_positions` table for column placement and dismiss state. Cached 1min.
 - POST /api/ideaboard: actions "move" (column), "dismiss" (with user attribution), "restore".
 - D1 table `idea_positions`: message_id (PK), column_name, dismissed, dismissed_by, moved_by, updated_at.
-- Frontend: kanban board with 4 columns (Ideas, Planned, In Progress, Completed).
+- Frontend: kanban board with 5 columns (Ideas, In Review, Approved, Created and Shared, Rejected).
   Drag-and-drop moves cards between columns (optimistic UI, reverts on API error).
+- Old column names (planned, active, done) auto-migrate to new keys (review, approved, shared) on read.
 - Cards show title, author, date, tags. Click to expand hidden notes.
 - Dismiss records who dismissed it. Dismissed cards viewable via toggle, restorable.
 - "Post in Discord" button links to the Discord thread for new ideas.

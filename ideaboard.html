@@ -152,7 +152,7 @@ body {
 /* BOARD */
 .board {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   padding: 12px 24px 40px;
   min-height: 60vh;
@@ -498,26 +498,33 @@ body {
     </div>
     <div class="column-body" id="col-ideas"></div>
   </div>
-  <div class="column" data-col="planned">
+  <div class="column" data-col="review">
     <div class="column-header">
-      <span class="column-title">Planned</span>
-      <span class="column-count" id="count-planned">0</span>
+      <span class="column-title">In Review</span>
+      <span class="column-count" id="count-review">0</span>
     </div>
-    <div class="column-body" id="col-planned"></div>
+    <div class="column-body" id="col-review"></div>
   </div>
-  <div class="column" data-col="active">
+  <div class="column" data-col="approved">
     <div class="column-header">
-      <span class="column-title">In Progress</span>
-      <span class="column-count" id="count-active">0</span>
+      <span class="column-title">Approved</span>
+      <span class="column-count" id="count-approved">0</span>
     </div>
-    <div class="column-body" id="col-active"></div>
+    <div class="column-body" id="col-approved"></div>
   </div>
-  <div class="column" data-col="done">
+  <div class="column" data-col="shared">
     <div class="column-header">
-      <span class="column-title">Completed</span>
-      <span class="column-count" id="count-done">0</span>
+      <span class="column-title">Created and Shared</span>
+      <span class="column-count" id="count-shared">0</span>
     </div>
-    <div class="column-body" id="col-done"></div>
+    <div class="column-body" id="col-shared"></div>
+  </div>
+  <div class="column" data-col="rejected">
+    <div class="column-header">
+      <span class="column-title">Rejected</span>
+      <span class="column-count" id="count-rejected">0</span>
+    </div>
+    <div class="column-body" id="col-rejected"></div>
   </div>
 </div>
 
@@ -631,7 +638,7 @@ function showBoardMsg(msg) {
 /* ---- RENDER ---- */
 
 function render() {
-  ['ideas','planned','active','done'].forEach(function(col) {
+  ['ideas','review','approved','shared','rejected'].forEach(function(col) {
     var el = document.getElementById('col-' + col);
     var visible = ideas.filter(function(c) {
       return c.column === col && !c.dismissed && matchesFilter(c);

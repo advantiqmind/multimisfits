@@ -1,5 +1,6 @@
 const CACHE_TTL = 60;
-const VALID_COLUMNS = ["ideas", "planned", "active", "done"];
+const VALID_COLUMNS = ["ideas", "review", "approved", "shared", "rejected"];
+const COLUMN_MIGRATION = { planned: "review", active: "approved", done: "shared" };
 const KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams'];
 const BASE = "https://discord.com/api/v10";
 
@@ -185,7 +186,7 @@ async function handleGet(context) {
     const pos = positions.get(idea.id);
     return {
       ...idea,
-      column: pos ? pos.column_name : "ideas",
+      column: pos ? (COLUMN_MIGRATION[pos.column_name] || pos.column_name) : "ideas",
       dismissed: pos ? !!pos.dismissed : false,
       dismissedBy: pos?.dismissed_by || null,
       movedBy: pos?.moved_by || null,
