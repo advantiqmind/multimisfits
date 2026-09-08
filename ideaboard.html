@@ -636,15 +636,14 @@ body {
 .card-media-toggle.open .chevron { transform: rotate(90deg); }
 .card-media-images {
   margin-top: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 .card-media-images img {
+  display: block;
   width: 100%;
   border: 1px solid var(--border);
-  cursor: pointer;
+  margin-bottom: 6px;
 }
+.card-media-images img:last-child { margin-bottom: 0; }
 
 /* Used column green glow */
 .column[data-col="used"] { border-color: rgba(42,180,60,0.4); box-shadow: 0 0 18px rgba(42,180,60,0.12), inset 0 0 12px rgba(42,180,60,0.04); }
