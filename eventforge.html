@@ -8,6 +8,9 @@
 <meta name="description" content="Design clean, timezone-smart Discord event posts for the Multi-Misfits clan. Recurring events, templates, styles -- copy straight to Discord." />
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest-armoury.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/assets/armoury-icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Jersey+15&display=swap" rel="stylesheet">
@@ -948,5 +951,6 @@ checkTemplateImport();
   </div>
 </footer>
 
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw-armoury.js');</script>
 </body>
 </html>
