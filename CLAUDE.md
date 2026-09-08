@@ -198,6 +198,10 @@ Replaces the current Loot Value system with something far more flexible.
 - Tag regex `/#((?=\w*[a-zA-Z])\w+)/g` allows digit-starting tags like #1day
   while excluding pure-numeric Discord IDs.
 - Author resolved via nick map (same fetchNickMap/resolveName pattern as events/giveaways).
+  Backend also passes authorId and authorAvatar from Discord message data.
+- In Review cards show a prominent author identity block: circular Discord avatar
+  (from CDN via authorId/authorAvatar) with large Cinzel name. Falls back to styled
+  initial letter if avatar unavailable. Other columns show normal "by Name" line.
 - Backend: GET /api/ideaboard fetches all thread messages, parses ideas, joins with D1
   `idea_positions` table for column placement and dismiss state, and `idea_notes` for
   comments. Cached 30s.
