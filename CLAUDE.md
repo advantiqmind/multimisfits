@@ -113,6 +113,27 @@ leaders can override for bonus donations). Bot embed stores GP amount per entry.
 sums GP per player. Frontend shows "Top Donors" ranking on giveaway cards. Similar pattern
 to the Loot Value leaderboard but for GP contributions.
 
+### WOM Event Scoring System
+General-purpose scoring tool that pulls Wise Old Man API data (skills, bosses, clues,
+activities) for event date ranges and applies custom scoring weights to build leaderboards.
+Replaces the current Loot Value system with something far more flexible.
+
+**How it works:**
+- WOM tracks per-metric gains (XP, KC, scores) over any date range via their delta endpoint.
+- EventForge gets a "Scoring" config section where leaders pick which metrics to score
+  and assign point weights per tier (e.g. 1 KC at Chambers of Xeric = 5 pts, 1M Slayer XP = 3 pts).
+- Preset templates for common event types: bingo, skilling comp, boss KC race, total level race.
+- Backend pulls WOM deltas for event participants between event start/end dates,
+  applies the scoring weights, returns a ranked leaderboard.
+- Two display locations:
+  1. Event cards/modals: "View Standings" button shows live leaderboard during the event.
+  2. Leaderboard page (currently "coming soon"): becomes a hall of fame with past event
+     winners, historical standings, and a trophy case.
+- Supports team events (team score = sum of member scores) using existing team assignment system.
+- No new data entry needed from members. Everything derived from WOM tracking + RuneLite sync.
+- Key WOM endpoints: group deltas (gains per member over date range), player gains.
+- Scoring configs stored alongside event data in EventForge (D1).
+
 ## How things work
 
 ### Discord name resolution
