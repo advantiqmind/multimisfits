@@ -1125,6 +1125,201 @@ body {
   .ib-search { max-width: none; }
   .sort-bar { justify-content: center; flex-wrap: wrap; }
 }
+
+/* Card full-view modal */
+.ib-modal-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.ib-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #1a1209;
+  border: 1px solid var(--gold-dim);
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6);
+}
+.ib-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  transition: color 0.15s;
+}
+.ib-modal-close:hover { color: var(--gold); }
+.ib-modal-body { padding: 20px 24px 24px; }
+.ib-modal-title {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold-bright);
+  line-height: 1.3;
+  margin-bottom: 4px;
+  padding-right: 32px;
+}
+.ib-modal-desc {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+.ib-modal-author-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: rgba(169,155,120,0.08);
+  border: 1px solid rgba(169,155,120,0.15);
+}
+.ib-modal-author-id .card-author-avatar {
+  width: 48px;
+  height: 48px;
+}
+.ib-modal-author-id .card-author-name {
+  font-size: 16px;
+}
+.ib-modal-author-id .card-author-initial {
+  width: 48px;
+  height: 48px;
+  font-size: 20px;
+}
+.ib-modal-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.ib-modal-age {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+}
+.ib-modal-age.stale {
+  color: #e8a020;
+  animation: pulse-stale 2s ease-in-out infinite;
+}
+.ib-modal-tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.ib-modal-tags .tag {
+  font-size: 11px;
+  padding: 3px 10px;
+}
+.ib-modal-notes {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 14px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.2);
+  border-left: 2px solid var(--gold-dim);
+  white-space: pre-line;
+}
+.ib-modal-notes-label,
+.ib-modal-media-label,
+.ib-modal-comments-label {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold-dim);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.ib-modal-media img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.ib-modal-media img:last-child { margin-bottom: 0; }
+.ib-modal-media { margin-bottom: 14px; }
+.ib-modal-comments {
+  margin-bottom: 14px;
+}
+.ib-modal-comment {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.ib-modal-comment-meta {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+.ib-modal-comment-meta strong { color: var(--gold-dim); }
+.ib-modal-comment-add {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.ib-modal-comment-add input {
+  flex: 1;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 8px;
+  font-family: inherit;
+  min-width: 0;
+}
+.ib-modal-comment-add input:focus { border-color: var(--gold-dim); outline: none; }
+.ib-modal-comment-add button {
+  background: var(--gold-dim);
+  border: none;
+  color: var(--bg-dark);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.ib-modal-comment-add button:hover { background: var(--gold); }
+.ib-modal-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.ib-modal .card-move-btn {
+  display: inline-block;
+  width: auto;
+  margin-top: 0;
+}
+.ib-modal .card-move-dropdown {
+  margin-top: 4px;
+}
+@media (max-width: 900px) {
+  .ib-modal { max-width: calc(100% - 24px); max-height: 90vh; }
+  .ib-modal-body { padding: 16px 16px 20px; }
+  .ib-modal-title { font-size: 16px; }
+}
 </style>
 </head>
 <body>
@@ -1262,6 +1457,10 @@ body {
     <span class="column-title">Dismissed Ideas</span>
   </div>
   <div class="dismissed-list" id="dismissedList"></div>
+</div>
+
+<div class="ib-modal-back" id="ibModalBack" hidden>
+  <div class="ib-modal" id="ibModal"></div>
 </div>
 
 <div class="ib-footer">
@@ -1575,6 +1774,31 @@ function buildCard(idea, col) {
     div.addEventListener('dragend', onDragEnd);
   }
 
+  /* Click-vs-drag detection for card modal */
+  (function(cardDiv, ideaId) {
+    var startX, startY, dragMoved;
+    cardDiv.addEventListener('pointerdown', function(e) {
+      startX = e.clientX;
+      startY = e.clientY;
+      dragMoved = false;
+    });
+    cardDiv.addEventListener('pointermove', function(e) {
+      if (startX == null) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      if (Math.sqrt(dx * dx + dy * dy) > 5) dragMoved = true;
+    });
+    cardDiv.addEventListener('click', function(e) {
+      if (dragMoved) return;
+      var t = e.target;
+      var skip = 'button, input, textarea, a, .card-notes-toggle, .card-comments-toggle, ' +
+        '.card-media-toggle, .card-move-btn, .card-copy, .card-template, .card-template-add, ' +
+        '.card-comment-submit, .card-move-dropdown, .card-move-option, .card-delete';
+      if (t.closest(skip)) return;
+      openCardModal(ideaId);
+    });
+  })(div, idea.id);
+
   var tagsHtml = buildTagsHtml(idea.tags);
   var dateStr = formatDate(idea.createdAt);
   var comments = idea.comments || [];
@@ -1820,6 +2044,7 @@ function toggleMoveDropdown(e, btn) {
 function mobileMoveCard(e, id, col) {
   e.stopPropagation();
   document.querySelectorAll('.card-move-dropdown.open').forEach(function(el) { el.classList.remove('open'); });
+  if (!document.getElementById('ibModalBack').hidden) closeCardModal();
   moveCard(id, col);
 }
 
@@ -2121,6 +2346,187 @@ function doMove(id, newCol) {
     showToast('Failed to move card');
   });
 }
+
+/* ---- CARD MODAL ---- */
+
+function openCardModal(ideaId) {
+  var idea = ideas.find(function(c) { return c.id === ideaId; });
+  if (!idea) return;
+
+  var col = idea.column || 'review';
+  var isLeader = accessLevel === 'leader';
+  var canComment = accessLevel === 'leader' || accessLevel === 'member';
+
+  var titleParts = splitTitle(idea.title);
+  var comments = idea.comments || [];
+  var tagsHtml = (idea.tags || []).filter(function(t) {
+    return MAIN_TAGS.indexOf(t) === -1;
+  }).map(function(t) {
+    var cls = KNOWN_TAGS.indexOf(t) !== -1 ? 'tag-' + t : '';
+    var label = t.charAt(0).toUpperCase() + t.slice(1);
+    return '<span class="tag ' + cls + '">' + esc(label) + '</span>';
+  }).join('');
+
+  var mainTag = (idea.tags || []).find(function(t) { return MAIN_TAGS.indexOf(t) !== -1; });
+  var mainTagHtml = mainTag
+    ? '<span class="tag tag-' + mainTag + '">' + mainTag.charAt(0).toUpperCase() + mainTag.slice(1) + '</span>'
+    : '';
+
+  /* Title */
+  var html = '<button class="ib-modal-close" onclick="closeCardModal()">&times;</button>';
+  html += '<div class="ib-modal-body">';
+  html += '<div class="ib-modal-title">' + esc(titleParts.name) + '</div>';
+  if (titleParts.desc) {
+    html += '<div class="ib-modal-desc">' + esc(titleParts.desc) + '</div>';
+  }
+
+  /* Author block */
+  if (col === 'review') {
+    var avatarEl = '';
+    if (idea.authorId && idea.authorAvatar) {
+      avatarEl = '<img class="card-author-avatar" src="https://cdn.discordapp.com/avatars/' +
+        idea.authorId + '/' + idea.authorAvatar + '.png?size=80" alt="" ' +
+        'onerror="this.outerHTML=\'<span class=card-author-initial>' + esc(idea.author).charAt(0).toUpperCase() + '</span>\'">';
+    } else {
+      avatarEl = '<span class="card-author-initial">' + esc(idea.author).charAt(0).toUpperCase() + '</span>';
+    }
+    html += '<div class="ib-modal-author-id">' + avatarEl +
+      '<span class="card-author-name">' + esc(idea.author) + '</span></div>';
+  }
+
+  /* Meta line */
+  var dateStr = formatDate(idea.createdAt);
+  var ageHtml = '';
+  if (STALE_COLUMNS.indexOf(col) !== -1 && idea.createdAt) {
+    var days = daysSince(idea.createdAt);
+    var stale = days >= STALE_DAYS;
+    var label = days === 0 ? 'today' : days === 1 ? '1 day' : days + ' days';
+    ageHtml = '<span class="ib-modal-age' + (stale ? ' stale' : '') + '">' + label + '</span>';
+  }
+  if (col !== 'review') {
+    html += '<div class="ib-modal-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ageHtml + '</div>';
+  } else {
+    html += '<div class="ib-modal-meta">' + dateStr + ageHtml + '</div>';
+  }
+  if (idea.movedBy) {
+    html += '<div class="ib-modal-meta" style="font-style:italic;">Moved by ' + esc(idea.movedBy) + '</div>';
+  }
+
+  /* Tags */
+  if (mainTagHtml || tagsHtml) {
+    html += '<div class="ib-modal-tags">' + mainTagHtml + tagsHtml + '</div>';
+  }
+
+  /* Notes */
+  if (idea.notes) {
+    html += '<div class="ib-modal-notes-label">Notes</div>';
+    html += '<div class="ib-modal-notes">' + esc(idea.notes) + '</div>';
+  }
+
+  /* Images */
+  if (idea.images && idea.images.length) {
+    html += '<div class="ib-modal-media-label">Media (' + idea.images.length + ')</div>';
+    html += '<div class="ib-modal-media">';
+    idea.images.forEach(function(url) {
+      html += '<img src="' + esc(url) + '" alt="Attached media" loading="lazy">';
+    });
+    html += '</div>';
+  }
+
+  /* Comments */
+  html += '<div class="ib-modal-comments-label">Comments (' + comments.length + ')</div>';
+  html += '<div class="ib-modal-comments">';
+  if (comments.length) {
+    comments.forEach(function(c) {
+      html += '<div class="ib-modal-comment">' +
+        '<div class="ib-modal-comment-meta"><strong>' + esc(c.author) + '</strong> &middot; ' + formatDate(c.createdAt) + '</div>' +
+        esc(c.text) +
+      '</div>';
+    });
+  } else {
+    html += '<div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">No comments yet.</div>';
+  }
+  if (canComment) {
+    html += '<div class="ib-modal-comment-add">' +
+      '<input placeholder="Add a comment..." maxlength="500" onkeydown="if(event.key===\'Enter\')modalAddComment(\'' + ideaId + '\',this)">' +
+      '<button onclick="modalAddComment(\'' + ideaId + '\',this.previousElementSibling)">Post</button>' +
+    '</div>';
+  }
+  html += '</div>';
+
+  /* Action buttons */
+  var actions = [];
+  if (col === 'approved') {
+    actions.push('<button class="card-copy" onclick="modalCopyIdea(\'' + ideaId + '\',this)">&#128203; COPY</button>');
+  }
+  if (col === 'shared' && isLeader) {
+    if (idea.templateJson) {
+      actions.push('<button class="card-template" onclick="modalCopyTemplate(\'' + ideaId + '\',this)">&#128230; TEMPLATE</button>');
+    } else {
+      actions.push('<button class="card-template-add" onclick="closeCardModal();promptTemplate(event,\'' + ideaId + '\')">+ TEMPLATE</button>');
+    }
+  }
+  if (isLeader) {
+    actions.push('<button class="card-move-btn" onclick="toggleMoveDropdown(event,this)">Move to...</button>' +
+      '<div class="card-move-dropdown" data-id="' + ideaId + '" data-col="' + col + '"></div>');
+  }
+  if (actions.length) {
+    html += '<div class="ib-modal-actions">' + actions.join('') + '</div>';
+  }
+
+  html += '</div>';
+
+  var modal = document.getElementById('ibModal');
+  modal.innerHTML = html;
+  document.getElementById('ibModalBack').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCardModal() {
+  document.getElementById('ibModalBack').hidden = true;
+  document.getElementById('ibModal').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+function modalAddComment(ideaId, input) {
+  addComment(ideaId, input);
+  /* Re-render modal after a short delay so the new comment appears */
+  setTimeout(function() { openCardModal(ideaId); }, 200);
+}
+
+function modalCopyIdea(ideaId, btn) {
+  var idea = ideas.find(function(c) { return c.id === ideaId; });
+  if (!idea) return;
+  var text = idea.title;
+  if (idea.notes) text += '\n' + idea.notes;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.classList.add('copied');
+    btn.innerHTML = '&#10003;';
+    setTimeout(function() { btn.classList.remove('copied'); btn.innerHTML = '&#128203; COPY'; }, 1500);
+    showToast('Copied idea to clipboard');
+  });
+}
+
+function modalCopyTemplate(ideaId, btn) {
+  var idea = ideas.find(function(c) { return c.id === ideaId; });
+  if (!idea || !idea.templateJson) return;
+  navigator.clipboard.writeText(idea.templateJson).then(function() {
+    btn.classList.add('copied');
+    btn.innerHTML = '&#10003;';
+    setTimeout(function() { btn.classList.remove('copied'); btn.innerHTML = '&#128230; TEMPLATE'; }, 1500);
+    showToast('Template copied. Paste into EventForge Import.');
+  });
+}
+
+/* Close modal on backdrop click or Escape */
+document.getElementById('ibModalBack').addEventListener('click', function(e) {
+  if (e.target === this) closeCardModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && !document.getElementById('ibModalBack').hidden) {
+    closeCardModal();
+  }
+});
 
 /* ---- HELPERS ---- */
 
