@@ -20,6 +20,17 @@ async function ensureTable(db) {
     )`
     )
     .run();
+  await db
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS idea_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message_id TEXT NOT NULL,
+      author TEXT NOT NULL,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )`
+    )
+    .run();
   _tableReady = true;
 }
 
@@ -182,6 +193,22 @@ async function handleGet(context) {
     }
   }
 
+  const notesMap = new Map();
+  if (db) {
+    const notesResult = await db
+      .prepare("SELECT id, message_id, author, text, created_at FROM idea_notes ORDER BY created_at ASC")
+      .all();
+    for (const row of notesResult.results) {
+      if (!notesMap.has(row.message_id)) notesMap.set(row.message_id, []);
+      notesMap.get(row.message_id).push({
+        id: row.id,
+        author: row.author,
+        text: row.text,
+        createdAt: row.created_at,
+      });
+    }
+  }
+
   const merged = ideas.map((idea) => {
     const pos = positions.get(idea.id);
     return {
@@ -190,6 +217,7 @@ async function handleGet(context) {
       dismissed: pos ? !!pos.dismissed : false,
       dismissedBy: pos?.dismissed_by || null,
       movedBy: pos?.moved_by || null,
+      comments: notesMap.get(idea.id) || [],
     };
   });
 
@@ -214,7 +242,7 @@ async function handlePost(context) {
   } catch (_) {
     return json({ error: "invalid JSON" }, 400);
   }
-  const { action, message_id, column, user } = body;
+  const { action, message_id, column, user, text } = body;
 
   if (!message_id) return json({ error: "message_id required" }, 400);
 
@@ -225,6 +253,7 @@ async function handlePost(context) {
   const now = new Date().toISOString();
 
   if (action === "move") {
+    if (!user) return json({ error: "user required for move" }, 400);
     if (!VALID_COLUMNS.includes(column))
       return json({ error: "invalid column" }, 400);
     await db
@@ -238,7 +267,16 @@ async function handlePost(context) {
            dismissed = 0,
            dismissed_by = NULL`
       )
-      .bind(message_id, column, user || null, now)
+      .bind(message_id, column, user, now)
+      .run();
+  } else if (action === "add_note") {
+    if (!user) return json({ error: "user required for notes" }, 400);
+    if (!text || !text.trim()) return json({ error: "text required" }, 400);
+    await db
+      .prepare(
+        "INSERT INTO idea_notes (message_id, author, text, created_at) VALUES (?, ?, ?, ?)"
+      )
+      .bind(message_id, user, text.trim(), now)
       .run();
   } else if (action === "dismiss") {
     if (!user) return json({ error: "user required for dismiss" }, 400);

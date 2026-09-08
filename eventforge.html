@@ -83,6 +83,30 @@ textarea.listItem{min-height:0;height:auto;resize:none;white-space:pre-wrap;over
 .shared-item .si-cat{font-size:10px;padding:2px 8px;border-radius:99px;background:rgba(255,203,47,.1);color:#c9a227;font-weight:700;letter-spacing:.5px;white-space:nowrap}
 .shared-item .si-actions{display:flex;gap:6px}
 .shared-empty{text-align:center;padding:24px;color:#a99b78;font-size:13px}
+/* --- Timestamp Generator --- */
+.ts-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:75;display:none;place-items:center;padding:16px}
+.ts-overlay.open{display:grid}
+.ts-panel{width:min(540px,100%);max-height:90vh;overflow:auto;background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;box-shadow:0 20px 60px #000;padding:0}
+.ts-header{display:flex;align-items:center;padding:15px 16px;border-bottom:1px solid #3a2e1a}
+.ts-header h3{margin:0;font-family:'Cinzel',serif;font-size:15px;letter-spacing:.06em}
+.ts-header .spacer{flex:1}
+.ts-close{border:0;background:transparent;color:#a99b78;font-size:20px;padding:6px 8px;border-radius:8px;cursor:pointer}
+.ts-close:hover{background:#261f0f;color:white}
+.ts-body{padding:16px}
+.ts-inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.ts-inputs .field.full{grid-column:1/-1}
+.ts-table{width:100%;border-collapse:separate;border-spacing:0}
+.ts-table th{text-align:left;font-size:11px;color:#a99b78;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #3a2e1a}
+.ts-table td{padding:8px 10px;border-bottom:1px solid rgba(58,46,26,.5);vertical-align:middle}
+.ts-table tr:last-child td{border-bottom:0}
+.ts-syntax{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#c9b88a;background:#0a0805;padding:4px 8px;border-radius:6px;border:1px solid #3a2e1a;display:inline-block;white-space:nowrap;user-select:all}
+.ts-preview{color:#e6d9b8;font-size:13px}
+.ts-preview .timestampChip{background:#3f4147;padding:1px 4px;border-radius:3px;color:#e3e5e8;display:inline-block}
+.ts-copy{min-width:60px;padding:6px 10px;border:1px solid #3a2e1a;border-radius:8px;background:#1e1809;color:#e6d9b8;font-size:11px;font-weight:750;cursor:pointer;white-space:nowrap}
+.ts-copy:hover{border-color:#8a7449;color:#ffcb2f}
+.ts-copy.copied{border-color:#4ad04a;color:#4ad04a}
+.ts-hint{font-size:12px;color:#a99b78;margin-top:12px;line-height:1.5}
+@media(max-width:600px){.ts-inputs{grid-template-columns:1fr}.ts-table td,.ts-table th{padding:6px 8px;font-size:11px}.ts-syntax{font-size:11px}.ts-copy{min-height:44px}}
 </style>
 </head>
 <body>
@@ -104,6 +128,7 @@ textarea.listItem{min-height:0;height:auto;resize:none;white-space:pre-wrap;over
 <div class="app" id="app"><header class="topbar"><div class="brandrow"><div class="logo">EF</div><div class="brand"><h1>EventForge</h1><small>Discord Event Designer</small></div><div class="nav" id="nav"></div></div><div class="mobileMode"><div class="seg"><button id="mEdit" class="active">✏️ EDIT</button><button id="mPreview">👁 PREVIEW</button></div></div></header><main id="view"></main></div>
 <div class="emojiPicker" id="emojiPicker"><div class="emojiGrid" id="emojiGrid"></div></div>
 <div class="modalBack" id="modalBack"><div class="modal" id="modal"></div></div>
+<div class="ts-overlay" id="tsOverlay"><div class="ts-panel" id="tsPanel"></div></div>
 <div class="toast" id="toast"></div>
 <div class="bottomBar" id="bottomBar"><button class="btn" id="bottomToggle">👁 Preview</button><button class="btn" id="bottomSave">💾 Save</button><button class="btn gold" id="bottomCopy">📋 Copy</button></div>
 <input type="file" id="backupInput" hidden>
@@ -153,7 +178,7 @@ let state=loadState();
 function persist(){state.autosaveAt=Date.now();state.event.meta=state.event.meta||{};state.event.meta.updated=Date.now();localStorage.setItem(STORE_KEY,JSON.stringify(state));renderSaveStatus()}
 function markDirty(version=false){state.dirty=true;if(version)pushDraftVersion();clearTimeout(window.__saveT);window.__saveT=setTimeout(persist,300)}
 function pushDraftVersion(){const snap=clone(state.event);snap.__at=Date.now();state.draftHistory.unshift(snap);state.draftHistory=state.draftHistory.slice(0,10)}
-function nav(){return ['create','events','templates','shared','settings'].map(r=>`<button data-route="${r}" class="${state.route===r?'active':''}">${{create:'Create',events:'Events',templates:'Templates',shared:'Shared',settings:'Settings'}[r]}</button>`).join('')}
+function nav(){return ['create','events','templates','shared','settings'].map(r=>`<button data-route="${r}" class="${state.route===r?'active':''}">${{create:'Create',events:'Events',templates:'Templates',shared:'Shared',settings:'Settings'}[r]}</button>`).join('')+'<button id="tsNavBtn" title="Discord Timestamp Generator">🕐 Timestamp</button>'}
 function render(opts={}){eventDefaults(state.event);const restoreY=opts.restoreY;document.getElementById('nav').innerHTML=nav();document.getElementById('app').classList.toggle('mobilePreviewMode',!!state.mobilePreview);const v=document.getElementById('view');v.innerHTML=state.route==='create'?createView():state.route==='events'?eventsView():state.route==='templates'?templatesView():state.route==='shared'?sharedView():settingsView();bind();if(state.route==='shared')fetchShared();renderSaveStatus();if(Number.isFinite(restoreY))requestAnimationFrame(()=>window.scrollTo(0,restoreY))}
 function createView(){return `<div class="layout"><section class="builderPane">${builderCard()}${blocksCard()}</section><aside class="desktopPreview">${previewCard()}</aside></div>`}
 function builderCard(){const ready=completeness(),e=state.event,rec=e.recurrence||defaultRecurrence(),multi=!!e.multiDay,recSum=recurrenceSummary(rec,e.date),dur=durationText(e);return `<div class="card"><div class="cardHead"><h2>Event Core</h2><span class="spacer"></span><span class="status" id="saveStatus">Autosave on</span></div><div class="body"><div class="readyRow"><strong>${ready.score}% Ready</strong><div class="meter" style="flex:1"><span style="width:${ready.score}%"></span></div></div>${ready.issues.length?`<div class="hint warning" style="margin:7px 0 12px">${ready.issues.slice(0,3).map(x=>'• '+esc(x)).join(' &nbsp; ')}</div>`:`<div class="hint" style="margin:7px 0 12px">Core event information looks complete.</div>`}<div class="grid"><div class="field full"><label>Event Name <span class="req">*</span></label><input id="eventName" value="${esc(e.name)}" placeholder="P2P PK Trip"></div><div class="field"><label>Event Preset</label><select id="preset">${Object.keys(presets).map(x=>`<option ${e.preset===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Timezone</label><select id="timezone">${tzOptions(e.timezone)}</select></div><div class="field full"><label>Event Length</label><div class="postType"><button class="mini ${!multi?'active':''}" id="singleDayBtn">Single day</button><button class="mini ${multi?'active':''}" id="multiDayBtn">Multi-day</button><span class="hint" id="durationHint" style="align-self:center">${esc(dur)}</span></div></div><div class="field"><label>Start Date <span class="hint">optional</span></label><input id="date" type="date" value="${e.date||''}"><div class="rowBtns" style="margin-top:6px">${[['today','Today'],['tomorrow','Tomorrow'],['thisSat','This Sat'],['nextSat','Next Sat'],['clear','✕ No date']].map(([k,l])=>`<button class="mini quickDate" data-q="${k}">${l}</button>`).join('')}</div></div><div class="field"><label>Start Time <span class="hint">optional</span></label><input id="time" type="time" value="${e.time||''}"></div>${multi?`<div class="field"><label>End Date</label><input id="endDate" type="date" value="${e.endDate||''}"></div>`:''}<div class="field"><label>End Time <span class="hint">optional</span></label><input id="endTime" type="time" value="${e.endTime||''}"></div><div class="field"><label>Repeat</label><select id="recFreq">${[['none','None'],['daily','Daily'],['weekly','Weekly'],['biweekly','Biweekly'],['monthly','Monthly'],['custom','Custom']].map(([k,l])=>`<option value="${k}" ${rec.freq===k?'selected':''}>${l}</option>`).join('')}</select><span class="hint" id="recSummary">${recSum?'🔁 '+esc(recSum):''}</span></div>${rec.freq==='custom'?`<div class="field"><label>Every N Weeks</label><input id="recInterval" type="number" min="1" max="12" value="${rec.interval||1}"></div><div class="field full"><label>On Days</label><div class="rowBtns">${DOW.map((d,i)=>`<button class="mini recDay ${rec.days.includes(i)?'on':''}" data-d="${i}">${d.slice(0,3)}</button>`).join('')}</div></div>`:''}${rec.freq!=='none'?`<div class="field full"><div class="switchline"><label class="switch"><input id="repeatNote" type="checkbox" ${e.repeatNote?'checked':''}><span class="slider"></span></label><span>Add repeat note to the post${recSum?` ("${esc(recSum)}")`:''}</span></div></div>`:''}<div class="field full"><label>Tags</label><input id="tags" value="${esc((e.tags||[]).join(', '))}" placeholder="PK, Wilderness, Weekend"><span class="hint">Comma-separated. Used for search/filtering.</span></div></div><div class="rowBtns" style="margin-top:12px">${rec.freq!=='none'?`<button class="btn gold" id="genNext" title="Clone this event and advance all dates by one interval">⏭ Generate Next</button>`:''}<button class="btn" id="applyMaster">🎨 Apply Master Style</button><button class="btn" id="draftHistoryBtn">🕘 Draft History (${state.draftHistory.length})</button><button class="btn ${e.favorite?'gold':''}" id="favEvent">${e.favorite?'★ Favorite':'☆ Favorite'}</button><button class="btn" id="clearForm">🧹 Clear Form</button></div></div></div>`}
@@ -205,7 +230,7 @@ function editableDiscordPreview(){if(state.outputStyle==='compact')return render
 function peBlockHead(b,out){if(!b.showLabel)return;const emo=state.outputStyle==='minimal'?'':(b.emoji||''),pre=emo?emo+' ':'',lbl=`<span contenteditable="true" class="pedit" data-bid="${b.id}" data-field="label" data-ph="Label">${esc(b.label||'')}</span>`;if(b.importance==='featured')out.push(`<h1>${pre}${lbl}</h1>`);else if(b.importance==='medium')out.push(`<h2>${pre}${lbl}</h2>`);else if(b.importance==='small')out.push(`<p>${pre}<strong>${lbl}:</strong></p>`);else out.push(`<h3>${pre}${lbl}</h3>`)}
 function peBlockBody(b,out){const pe=`<span contenteditable="true" class="pedit"`;if(b.kind==='details'){if(b.world)out.push(`<p>${esc(lem('world'))}<strong>World:</strong> ${pe} data-bid="${b.id}" data-field="world" data-ph="World">${esc(b.world)}</span></p>`);if(b.location)out.push(`<p>${esc(lem('meet'))}<strong>Meet:</strong> ${pe} data-bid="${b.id}" data-field="location" data-ph="Location">${esc(b.location)}</span></p>`);if(b.host)out.push(`<p>${esc(lem('host'))}<strong>Host:</strong> ${pe} data-bid="${b.id}" data-field="host" data-ph="Host">${esc(b.host)}</span></p>`)}else if(['requirements','rules','prizes'].includes(b.kind)){let has=false;(b.items||[]).forEach((x,i)=>{if(!x.trim())return;if(!has){out.push('<ul>');has=true}out.push(`<li>${pe} data-bid="${b.id}" data-field="item" data-idx="${i}" data-ph="Item">${esc(x)}</span></li>`)});if(has)out.push('</ul>')}else if(b.kind==='gear'){if(b.provided)out.push(`<p><strong>Provided by clan:</strong> ${esc(b.provided)}</p>`);if(b.value)out.push(`<div contenteditable="true" class="pedit pedit-ml" data-bid="${b.id}" data-field="value" data-ph="Gear details">${esc(b.value).replace(/\n/g,'<br>')}</div>`)}else if(b.kind==='training'){if(b.name&&b.name!==b.label)out.push(`<p><strong>${pe} data-bid="${b.id}" data-field="name" data-ph="Session name">${esc(b.name)}</span></strong></p>`);const u=zonedUnix(b.date,b.time,b.timezone||state.event.timezone);if(u)out.push(`<p>${esc(lem('when'))}${fts(u,'F')}</p><p>${esc(lem('starts'))}${fts(u,'R')}</p>`);if(b.world)out.push(`<p>${esc(lem('world'))}<strong>World:</strong> ${pe} data-bid="${b.id}" data-field="world" data-ph="World">${esc(b.world)}</span></p>`);if(b.location)out.push(`<p>${esc(lem('meet'))}<strong>Meet:</strong> ${pe} data-bid="${b.id}" data-field="location" data-ph="Location">${esc(b.location)}</span></p>`);if(b.details)out.push(`<div contenteditable="true" class="pedit pedit-ml" data-bid="${b.id}" data-field="details" data-ph="Details">${esc(b.details).replace(/\n/g,'<br>')}</div>`)}else{if(b.value)out.push(`<div contenteditable="true" class="pedit pedit-ml" data-bid="${b.id}" data-field="value" data-ph="Content">${esc(b.value).replace(/\n/g,'<br>')}</div>`)}}
 function showCreateChooser(){const hasDraft=!!(state.event.name||state.event.blocks.some(b=>hasContent(b)));const templates=state.templates;let html='<div style="display:flex;flex-direction:column;gap:10px">';html+='<button class="btn gold fullWidth createOpt" data-action="blank">📄 Blank Event</button>';if(hasDraft)html+='<button class="btn fullWidth createOpt" data-action="draft">✏️ Continue Current Draft</button>';if(templates.length){html+='<div class="divider"></div><div class="hint" style="margin-bottom:6px">Or start from a saved template:</div>';html+='<div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto">';templates.forEach(t=>{html+=`<button class="btn fullWidth createOpt" data-action="template" data-id="${t.id}">${t.favorite?'★ ':''}${esc(t.templateName)} <span class="hint" style="margin-left:6px">${esc(t.event.preset||'Custom')} · ${t.event.blocks.length} blocks</span></button>`});html+='</div>'}html+='</div>';showModal('New Event',html,closeModal);document.getElementById('mSave').style.display='none';document.querySelectorAll('.createOpt').forEach(x=>x.onclick=()=>{const action=x.dataset.action;if(action==='blank'){state.event=freshEvent();state.draftHistory=[];markDirty(true)}else if(action==='template'){const t=state.templates.find(y=>y.id===x.dataset.id);if(t){const e=eventDefaults(clone(t.event));e.id=uid();e.versions=[];if(t.inheritMaster)applyMaster(e);applyFillIn(e,t);state.event=e;markDirty()}}state.route='create';state.mobilePreview=false;closeModal();render()})}
-function bind(){document.querySelectorAll('[data-route]').forEach(x=>x.onclick=()=>{if(x.dataset.route==='create'&&state.route!=='create'){showCreateChooser();return}state.route=x.dataset.route;state.mobilePreview=false;render()});const me=document.getElementById('mEdit'),mp=document.getElementById('mPreview');if(me){me.onclick=()=>{const y=state.mobileEditScrollY||0;state.mobilePreview=false;render({restoreY:y})};mp.onclick=()=>{state.mobileEditScrollY=window.scrollY;state.mobilePreview=true;render({restoreY:state.mobilePreviewScrollY||0})};me.classList.toggle('active',!state.mobilePreview);mp.classList.toggle('active',state.mobilePreview)}const bb=document.getElementById('bottomBar');bb.style.display=state.route==='create'?'':'none';const bt=document.getElementById('bottomToggle');bt.textContent=state.mobilePreview?'✏️ Edit':'👁 Preview';bt.onclick=()=>{if(state.mobilePreview){state.mobilePreviewScrollY=window.scrollY;const y=state.mobileEditScrollY||0;state.mobilePreview=false;render({restoreY:y})}else{state.mobileEditScrollY=window.scrollY;const y=state.mobilePreviewScrollY||0;state.mobilePreview=true;render({restoreY:y})}};document.getElementById('bottomCopy').onclick=copyCurrent;document.getElementById('bottomSave').onclick=saveEvent;if(state.route==='create')bindCreate();else if(state.route==='events')bindEvents();else if(state.route==='templates')bindTemplates();else if(state.route==='shared')bindShared();else bindSettings();bindFormatting();}
+function bind(){document.querySelectorAll('[data-route]').forEach(x=>x.onclick=()=>{if(x.dataset.route==='create'&&state.route!=='create'){showCreateChooser();return}state.route=x.dataset.route;state.mobilePreview=false;render()});document.getElementById('tsNavBtn')?.addEventListener('click',openTimestampGen);const me=document.getElementById('mEdit'),mp=document.getElementById('mPreview');if(me){me.onclick=()=>{const y=state.mobileEditScrollY||0;state.mobilePreview=false;render({restoreY:y})};mp.onclick=()=>{state.mobileEditScrollY=window.scrollY;state.mobilePreview=true;render({restoreY:state.mobilePreviewScrollY||0})};me.classList.toggle('active',!state.mobilePreview);mp.classList.toggle('active',state.mobilePreview)}const bb=document.getElementById('bottomBar');bb.style.display=state.route==='create'?'':'none';const bt=document.getElementById('bottomToggle');bt.textContent=state.mobilePreview?'✏️ Edit':'👁 Preview';bt.onclick=()=>{if(state.mobilePreview){state.mobilePreviewScrollY=window.scrollY;const y=state.mobileEditScrollY||0;state.mobilePreview=false;render({restoreY:y})}else{state.mobileEditScrollY=window.scrollY;const y=state.mobilePreviewScrollY||0;state.mobilePreview=true;render({restoreY:y})}};document.getElementById('bottomCopy').onclick=copyCurrent;document.getElementById('bottomSave').onclick=saveEvent;if(state.route==='create')bindCreate();else if(state.route==='events')bindEvents();else if(state.route==='templates')bindTemplates();else if(state.route==='shared')bindShared();else bindSettings();bindFormatting();}
 function bindCreate(){[['eventName','name'],['date','date'],['time','time'],['endDate','endDate'],['endTime','endTime'],['timezone','timezone']].forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.oninput=()=>{state.event[k]=el.value;el.classList.remove('missingField');markDirty();updateDurationHints();refreshPreview()}});document.getElementById('tags').oninput=e=>{state.event.tags=e.target.value.split(',').map(x=>x.trim()).filter(Boolean);markDirty()};document.getElementById('preset').onchange=e=>resetPreset(e.target.value);document.getElementById('collapseAll').onclick=()=>{state.event.blocks.forEach(b=>b.open=false);render()};document.querySelectorAll('.addBlock').forEach(x=>x.onclick=()=>{const nb=blockFactory[x.dataset.kind]();nb.open=true;state.event.blocks.push(nb);markDirty(true);render()});document.querySelectorAll('.addSavedField').forEach(x=>x.onclick=()=>addSavedField(x.dataset.id));document.querySelectorAll('.block').forEach(bindBlock);setupDrag();document.querySelectorAll('.postTypeBtn').forEach(x=>x.onclick=()=>{state.postType=x.dataset.type;render()});document.getElementById('copyBtn')?.addEventListener('click',copyCurrent);document.getElementById('saveEventBtn')?.addEventListener('click',saveEvent);document.getElementById('saveTemplateBtn')?.addEventListener('click',askTemplateName);document.getElementById('editResultsBtn')?.addEventListener('click',editResults);document.getElementById('applyMaster').onclick=()=>{applyMaster(state.event);markDirty(true);render();toast('Master style applied')};document.getElementById('draftHistoryBtn').onclick=showDraftHistory;document.getElementById('favEvent').onclick=()=>{state.event.favorite=!state.event.favorite;markDirty();render()};document.querySelectorAll('.quickDate').forEach(x=>x.onclick=()=>{const q=x.dataset.q;if(q==='clear'){state.event.date='';state.event.time='';state.event.endDate='';state.event.endTime='';state.event.multiDay=false}else{const t=new Date();let iso;if(q==='today')iso=toISO(t);else if(q==='tomorrow'){t.setDate(t.getDate()+1);iso=toISO(t)}else iso=nextDowISO(6,q==='nextSat'?1:0);state.event.date=iso;if(!state.event.time)state.event.time='20:00';if(!state.event.endTime)state.event.endTime='23:30'}markDirty();render()});document.getElementById('singleDayBtn')?.addEventListener('click',()=>{state.event.multiDay=false;state.event.endDate='';state.event.time=state.event.time||'20:00';state.event.endTime=state.event.endTime||'23:30';markDirty();render()});document.getElementById('multiDayBtn')?.addEventListener('click',()=>{state.event.multiDay=true;const fri=nextDowISO(5);state.event.date=state.event.date||fri;if(!state.event.endDate)state.event.endDate=addDaysISO(state.event.date||fri,2);state.event.time=state.event.time||'16:00';state.event.endTime=state.event.endTime||'22:00';if(state.event.time==='20:00')state.event.time='16:00';if(state.event.endTime==='23:30')state.event.endTime='22:00';markDirty();render()});document.getElementById('recFreq')?.addEventListener('change',e=>{state.event.recurrence.freq=e.target.value;if(e.target.value==='none')state.event.repeatNote=false;markDirty();render()});document.getElementById('recInterval')?.addEventListener('input',e=>{state.event.recurrence.interval=Math.max(1,+e.target.value||1);markDirty();updateDurationHints();refreshPreview()});document.querySelectorAll('.recDay').forEach(x=>x.onclick=()=>{const d=+x.dataset.d,arr=state.event.recurrence.days,i=arr.indexOf(d);i>=0?arr.splice(i,1):arr.push(d);markDirty();render()});document.getElementById('repeatNote')?.addEventListener('change',e=>{state.event.repeatNote=e.target.checked;markDirty();refreshPreview()});document.getElementById('genNext')?.addEventListener('click',generateNext);document.getElementById('clearForm')?.addEventListener('click',clearForm);document.querySelectorAll('.styleBtn').forEach(x=>x.onclick=()=>{state.outputStyle=x.dataset.style;persist();render()});document.querySelectorAll('.optBtn').forEach(x=>x.onclick=()=>{const k=x.dataset.opt;state.event[k]=!state.event[k];markDirty();render()});document.getElementById('rsvpEmoji')?.addEventListener('input',e=>{state.event.rsvpEmoji=e.target.value;markDirty();refreshPreview()})}
 function updateDurationHints(){const d=document.getElementById('durationHint');if(d)d.textContent=durationText(state.event);const r=document.getElementById('recSummary');if(r){const s=recurrenceSummary(state.event.recurrence,state.event.date);r.textContent=s?'🔁 '+s:''}}
 function generateNext(){const e=state.event;if(!e.date){toast('Set a start date first');return}const rec=e.recurrence;if(!rec||rec.freq==='none')return;pushDraftVersion();const next=nextOccurrenceISO(e.date,rec),delta=daysBetweenISO(e.date,next);const c=clone(e);c.id=uid();c.versions=[];c.meta={created:Date.now(),updated:Date.now()};c.date=next;if(c.endDate)c.endDate=addDaysISO(c.endDate,delta);c.blocks.forEach(b=>{if(b.kind==='training'&&b.date)b.date=addDaysISO(b.date,delta)});c.results={summary:'',winners:[]};state.event=c;markDirty();render();toast(`Next occurrence ready — ${DOW[fromISO(next).getDay()]} ${next}`)}
@@ -259,6 +284,85 @@ async function copyBackup(){const text=backupText();try{await navigator.clipboar
 function pasteBackupModal(){showModal('Paste Backup',`<div class="field"><label>Paste backup text here</label><textarea id="pasteArea" style="min-height:160px" placeholder='Paste the copied backup text — it starts with {"app":"MM EventForge"...'></textarea></div><p class="hint">Restoring replaces the EventForge data currently on this device.</p>`,()=>{if(!restoreBackupText(document.getElementById('pasteArea').value.trim()))toast('That text is not an EventForge backup')})}
 function showModal(title,html,onSave){const back=document.getElementById('modalBack'),m=document.getElementById('modal');m.innerHTML=`<h3>${title}</h3>${html}<div class="actions"><button class="btn" id="mCancel">Cancel</button><button class="btn gold" id="mSave">Save</button></div>`;back.classList.add('open');document.getElementById('mCancel').onclick=closeModal;document.getElementById('mSave').onclick=onSave}
 function closeModal(){document.getElementById('modalBack').classList.remove('open')}
+/* --- Timestamp Generator --- */
+function openTimestampGen(){
+  const ov=document.getElementById('tsOverlay'),panel=document.getElementById('tsPanel');
+  const now=new Date();
+  const defDate=toISO(now);
+  const defTime=pad2(now.getHours())+':'+pad2(now.getMinutes());
+  const defTz=state.settings.timezone||'America/New_York';
+  panel.innerHTML=`<div class="ts-header"><h3>Discord Timestamp Generator</h3><span class="spacer"></span><button class="ts-close" id="tsClose" title="Close">&times;</button></div>`+
+    `<div class="ts-body"><div class="ts-inputs">`+
+    `<div class="field"><label>Date</label><input type="date" id="tsDate" value="${defDate}"></div>`+
+    `<div class="field"><label>Time</label><input type="time" id="tsTime" value="${defTime}"></div>`+
+    `<div class="field full"><label>Timezone</label><select id="tsTz">${tzOptions(defTz)}</select></div>`+
+    `</div><table class="ts-table"><thead><tr><th>Format</th><th>Discord Syntax</th><th>Preview</th><th></th></tr></thead><tbody id="tsRows"></tbody></table>`+
+    `<div class="ts-hint">Each format renders in the viewer's local timezone. Paste the syntax into any Discord message.</div></div>`;
+  ov.classList.add('open');
+  tsRefreshRows();
+  document.getElementById('tsClose').onclick=closeTimestampGen;
+  document.getElementById('tsDate').oninput=tsRefreshRows;
+  document.getElementById('tsTime').oninput=tsRefreshRows;
+  document.getElementById('tsTz').onchange=tsRefreshRows;
+  ov.onclick=e=>{if(e.target===ov)closeTimestampGen()};
+}
+function closeTimestampGen(){document.getElementById('tsOverlay').classList.remove('open')}
+function tsRefreshRows(){
+  const d=document.getElementById('tsDate').value;
+  const t=document.getElementById('tsTime').value;
+  const tz=document.getElementById('tsTz').value;
+  const u=zonedUnix(d,t,tz);
+  const tbody=document.getElementById('tsRows');
+  if(!u){tbody.innerHTML='<tr><td colspan="4" style="color:#a99b78;text-align:center;padding:20px">Pick a date and time to generate timestamps.</td></tr>';return}
+  const formats=[
+    ['t','Short Time'],['T','Long Time'],
+    ['d','Short Date'],['D','Long Date'],
+    ['f','Short Date/Time'],['F','Long Date/Time'],
+    ['R','Relative']
+  ];
+  const dt=new Date(u*1000);
+  tbody.innerHTML=formats.map(([code,label])=>{
+    const syntax=`<t:${u}:${code}>`;
+    const preview=tsFormatPreview(dt,code);
+    return `<tr><td style="color:#a99b78;font-size:12px;white-space:nowrap">${esc(label)}</td>`+
+      `<td><span class="ts-syntax">${esc(syntax)}</span></td>`+
+      `<td class="ts-preview"><span class="timestampChip">${esc(preview)}</span></td>`+
+      `<td><button class="ts-copy" data-syntax="${esc(syntax)}">Copy</button></td></tr>`;
+  }).join('');
+  tbody.querySelectorAll('.ts-copy').forEach(btn=>{
+    btn.onclick=async()=>{
+      const text=btn.dataset.syntax;
+      try{await navigator.clipboard.writeText(text)}catch{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
+      btn.textContent='Copied!';btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},1200);
+      toast('Copied '+text);
+    };
+  });
+}
+function tsFormatPreview(dt,code){
+  const o={timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone};
+  try{
+    if(code==='t')return dt.toLocaleTimeString('en-US',{...o,hour:'numeric',minute:'2-digit'});
+    if(code==='T')return dt.toLocaleTimeString('en-US',{...o,hour:'numeric',minute:'2-digit',second:'2-digit'});
+    if(code==='d')return dt.toLocaleDateString('en-US',{...o,month:'2-digit',day:'2-digit',year:'numeric'});
+    if(code==='D')return dt.toLocaleDateString('en-US',{...o,month:'long',day:'numeric',year:'numeric'});
+    if(code==='f')return dt.toLocaleDateString('en-US',{...o,month:'long',day:'numeric',year:'numeric'})+' '+dt.toLocaleTimeString('en-US',{...o,hour:'numeric',minute:'2-digit'});
+    if(code==='F')return dt.toLocaleDateString('en-US',{...o,weekday:'long',month:'long',day:'numeric',year:'numeric'})+' '+dt.toLocaleTimeString('en-US',{...o,hour:'numeric',minute:'2-digit'});
+    if(code==='R'){
+      const diff=Math.floor((dt.getTime()-Date.now())/1000);
+      const abs=Math.abs(diff);
+      const suffix=diff>=0?'from now':'ago';
+      if(abs<60)return abs+' second'+(abs!==1?'s':'')+' '+suffix;
+      const mins=Math.floor(abs/60);
+      if(mins<60)return mins+' minute'+(mins!==1?'s':'')+' '+suffix;
+      const hrs=Math.floor(abs/3600);
+      if(hrs<24)return hrs+' hour'+(hrs!==1?'s':'')+' '+suffix;
+      const days=Math.floor(abs/86400);
+      return days+' day'+(days!==1?'s':'')+' '+suffix;
+    }
+  }catch(e){}
+  return '...';
+}
 function renderSaveStatus(){const el=document.getElementById('saveStatus');if(el)el.textContent=state.autosaveAt?'✓ Draft autosaved':'Autosave on'}
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.classList.remove('show'),1800)}
 window.addEventListener('beforeunload',persist);

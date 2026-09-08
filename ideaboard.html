@@ -395,6 +395,67 @@ body {
   border-left: 2px solid var(--gold-dim);
   white-space: pre-line;
 }
+/* COMMENTS */
+.card-comments-toggle {
+  font-size: 11px;
+  color: var(--gold-dim);
+  cursor: pointer;
+  margin-bottom: 4px;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.card-comments-toggle:hover { color: var(--gold); }
+.card-comments-toggle .count { color: var(--text-dim); font-size: 10px; }
+.card-comments {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background: rgba(0,0,0,0.2);
+  border-left: 2px solid var(--gold-dim);
+}
+.card-comment {
+  font-size: 11px;
+  color: var(--text);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.card-comment:last-of-type { margin-bottom: 0; }
+.card-comment-meta {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+.card-comment-meta strong { color: var(--gold-dim); }
+.card-comment-add {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.card-comment-input {
+  flex: 1;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 11px;
+  padding: 4px 6px;
+  font-family: inherit;
+  min-width: 0;
+}
+.card-comment-input:focus { border-color: var(--gold-dim); outline: none; }
+.card-comment-submit {
+  background: var(--gold-dim);
+  border: none;
+  color: var(--bg-dark);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.card-comment-submit:hover { background: var(--gold); }
+
 .card-tags {
   display: flex;
   gap: 4px;
@@ -747,7 +808,7 @@ function showToast(msg) {
 
 function ideasFingerprint(list) {
   return list.map(function(i) {
-    return i.id + ':' + i.column + ':' + (i.dismissed ? 1 : 0);
+    return i.id + ':' + i.column + ':' + (i.dismissed ? 1 : 0) + ':' + (i.comments || []).length;
   }).join('|');
 }
 
@@ -864,6 +925,24 @@ function buildCard(idea) {
       '<div class="card-notes" hidden>' + esc(idea.notes) + '</div>';
   }
 
+  var comments = idea.comments || [];
+  var commentsHtml =
+    '<div class="card-comments-toggle" onclick="toggleComments(event, this)">' +
+      '<span class="chevron">&#9654;</span> Comments <span class="count">(' + comments.length + ')</span>' +
+    '</div>' +
+    '<div class="card-comments" hidden>' +
+      comments.map(function(c) {
+        return '<div class="card-comment">' +
+          '<div class="card-comment-meta"><strong>' + esc(c.author) + '</strong> &middot; ' + formatDate(c.createdAt) + '</div>' +
+          esc(c.text) +
+        '</div>';
+      }).join('') +
+      '<div class="card-comment-add">' +
+        '<input class="card-comment-input" placeholder="Add a comment..." maxlength="500" onkeydown="if(event.key===\'Enter\')addComment(\'' + idea.id + '\',this)">' +
+        '<button class="card-comment-submit" onclick="addComment(\'' + idea.id + '\',this.previousElementSibling)">Post</button>' +
+      '</div>' +
+    '</div>';
+
   div.innerHTML =
     '<div class="card-top">' +
       '<span class="card-title">' + esc(idea.title) + '</span>' +
@@ -871,6 +950,7 @@ function buildCard(idea) {
     '</div>' +
     '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + '</div>' +
     notesHtml +
+    commentsHtml +
     '<div class="card-tags">' + tagsHtml + '</div>';
 
   return div;
@@ -907,7 +987,7 @@ function buildTagsHtml(tags) {
   }).join('');
 }
 
-/* ---- NOTES TOGGLE ---- */
+/* ---- NOTES / COMMENTS TOGGLE ---- */
 
 function toggleNotes(e, el) {
   e.stopPropagation();
@@ -916,6 +996,48 @@ function toggleNotes(e, el) {
   var open = !notes.hidden;
   notes.hidden = open;
   el.classList.toggle('open', !open);
+}
+
+function toggleComments(e, el) {
+  e.stopPropagation();
+  var panel = el.nextElementSibling;
+  if (!panel) return;
+  var open = !panel.hidden;
+  panel.hidden = open;
+  el.classList.toggle('open', !open);
+  if (!open) {
+    var input = panel.querySelector('.card-comment-input');
+    if (input) setTimeout(function() { input.focus(); }, 50);
+  }
+}
+
+async function addComment(ideaId, input) {
+  var text = input.value.trim();
+  if (!text) return;
+  var user = ensureUser();
+  if (!user) return;
+
+  var idea = ideas.find(function(c) { return c.id === ideaId; });
+  if (!idea) return;
+
+  input.value = '';
+  idea.comments = idea.comments || [];
+  idea.comments.push({ author: user, text: text, createdAt: new Date().toISOString() });
+  render();
+
+  try {
+    var res = await fetch('/api/ideaboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', message_id: ideaId, user: user, text: text }),
+    });
+    if (!res.ok) throw new Error();
+    showToast('Comment added');
+  } catch(e) {
+    idea.comments.pop();
+    render();
+    showToast('Failed to add comment');
+  }
 }
 
 /* ---- TAG GUIDE ---- */
@@ -1040,7 +1162,8 @@ async function moveCard(id, newCol) {
   if (!idea || idea.column === newCol) return;
 
   var oldCol = idea.column;
-  var user = getUser();
+  var user = ensureUser();
+  if (!user) return;
 
   idea.column = newCol;
   idea.movedBy = user;
