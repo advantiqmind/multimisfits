@@ -118,18 +118,33 @@ Not connected to Discord. Leaders upload and manage files directly on the websit
 - Discussion/comments per file: leaders can comment on any entry, timestamped notes
   attached to the file. Same pattern as Idea Board comments (name + text + timestamp).
   Lets leaders have conversations about specific documents with the evidence right there.
+- Version history: editing a file keeps the old version. "Last edited by X, N versions"
+  with dropdown to view previous versions. Prevents "who changed the rules?" issues.
+- Pin files: pin important files to the top of a folder so they don't get buried by date.
+- File linking: copy a direct link to any file (filecabinet.html#file=ID) for sharing
+  in Discord. Click-through to a specific document.
+- Recently updated feed: "Recent Activity" section showing last 5-10 changes across
+  all folders. "Koi ox updated Rank Requirements 2h ago."
+- Star/bookmark files: personal bookmarks (localStorage) for quick-access to
+  frequently used docs without digging through folders.
+- Export/download: download a file or entire folder as a backup.
+- Move between folders: dropdown or drag to move a file from one folder to another.
+- Import: JSON/text import for bulk-loading documents. Paste or upload a JSON file
+  with title, content, tags, folder. Useful for migrating existing Discord docs.
 
 **Access control:** Single-tier, leader-only. No read-only fallback. Entire tool locked
 behind FILECABINET_ACCESS_CODE. Code prompted on first visit, stored in localStorage
 (mm-filecabinet-code), validated against backend. Wrong code clears and re-prompts.
 
-**Storage:** D1 for metadata (folders, file entries, tags, comments). R2 for actual
-uploaded files (images, text files). Self-contained page (no style.css/app.js imports).
+**Storage:** D1 for metadata (folders, file entries, tags, comments, version history).
+R2 for actual uploaded files (images, text files). Self-contained page (no
+style.css/app.js imports).
 
-**Backend:** functions/api/filecabinet.js -- CRUD for folders, files, comments, search.
-All operations require access code. Cached reads.
+**Backend:** functions/api/filecabinet.js -- CRUD for folders, files, comments, search,
+versions, import/export. All operations require access code. Cached reads.
 
-**D1 tables:** filecabinet_folders, filecabinet_files, filecabinet_comments.
+**D1 tables:** filecabinet_folders, filecabinet_files, filecabinet_comments,
+filecabinet_versions.
 
 **Later integration:**
 - Idea Board: "Archive" button on Used column cards sends them to File Cabinet.
@@ -137,6 +152,14 @@ All operations require access code. Cached reads.
 
 **Armoury layout:** File Cabinet is a featured full-width card at the top of armoury.html,
 with the other 4 tools in a 2x2 grid below. Already built and deployed.
+
+### Armoury Version Display
+Each tool card on armoury.html shows a version number (e.g. "v1.0"). Version numbers
+are also displayed on each tool's own page (footer or header). Single source of truth:
+when a tool is updated, ALL places that reference its version must update at once.
+If Idea Board gets a new feature and bumps to v1.3, armoury.html AND ideaboard.html
+both show v1.3 in the same commit. No version drift between pages.
+Current tools to track: Loot Wheel, Bracket, Idea Board, EventForge, File Cabinet.
 
 ### Battle Royale Drawing
 A top-down arena (Wilderness/PvP themed) where player names spawn as dots or shields.
