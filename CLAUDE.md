@@ -342,8 +342,8 @@ Replaces the current Loot Value system with something far more flexible.
 - Timestamp tool: "Timestamp" button in nav opens a Discord timestamp generator overlay.
   Pick date, time, and timezone; see all 7 Discord format codes with live previews and
   copy buttons. Reuses existing zonedUnix() and timezone options. Click outside to close.
-- Time presets: single day defaults to 20:00-23:30, multi-day defaults to Friday 16:00
-  to Sunday 22:00. Quick date buttons also fill end time if empty.
+- Time presets: single day defaults to Sunday 21:00-23:59, multi-day defaults to Friday 16:00
+  to Sunday 23:59. Quick date buttons also fill end time if empty.
 - Shared saves: events and templates stored in D1 (eventforge_saves table) via /api/eventforge.
   Visible to all clan leaders. Required category (PvM/Skilling/Minigame/Social/Competition/Other)
   and name when saving to shared. Optimistic locking with version numbers for conflict resolution.
