@@ -131,6 +131,20 @@ Not connected to Discord. Leaders upload and manage files directly on the websit
 - Move between folders: dropdown or drag to move a file from one folder to another.
 - Import: JSON/text import for bulk-loading documents. Paste or upload a JSON file
   with title, content, tags, folder. Useful for migrating existing Discord docs.
+- Duplicate file: copy an existing doc into the same or different folder. Useful for
+  templating (duplicate last week's event results, change the names).
+- Sort options: toggle between newest first, oldest first, alphabetical, recently edited.
+  Different folders may need different default sort orders.
+- Folder descriptions: one-line description under each folder name explaining what goes
+  there. Keeps everyone filing in the right place.
+- Trash/recycle bin: deleted files go to trash for 15 days before permanent deletion.
+  "Empty Trash" button for manual cleanup. Prevents accidental loss.
+- File attachments on comments: leaders can attach a screenshot to a discussion comment,
+  not just text. Images stored in R2 alongside file uploads.
+- Activity log: audit trail per folder or global. "Mr. FlSH created Rank Requirements.
+  Koi ox moved it to Guides. Koi ox edited it." Answers who changed what and when.
+- Folder colors/icons: leaders pick a color or emoji for each folder so they're visually
+  distinct at a glance, especially on mobile.
 
 **Access control:** Single-tier, leader-only. No read-only fallback. Entire tool locked
 behind FILECABINET_ACCESS_CODE. Code prompted on first visit, stored in localStorage
