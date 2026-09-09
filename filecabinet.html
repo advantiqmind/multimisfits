@@ -623,6 +623,40 @@ body {
   margin-top: 14px;
 }
 
+/* Collapsible body wrapper */
+.fc-body-wrap {
+  position: relative;
+  max-height: 250px;
+  overflow: hidden;
+}
+.fc-body-wrap.expanded { max-height: none; }
+.fc-body-wrap:not(.expanded)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(transparent, var(--bg-card));
+  pointer-events: none;
+}
+.fc-body-toggle {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--gold-dim);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.fc-body-toggle:hover { border-color: var(--gold-dim); color: var(--gold); }
+
 /* Comments section */
 .fc-comments {
   margin-top: 18px;
@@ -938,9 +972,17 @@ body {
   }
   .fc-mob-actions {
     display: flex;
-    gap: 4px;
+    gap: 6px;
   }
-  .fc-mob-actions .fc-sidebar-btn { font-size: 9px; padding: 2px 6px; }
+  .fc-mob-actions .fc-sidebar-btn {
+    font-size: 16px;
+    padding: 8px 12px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .fc-mob-chevron {
     font-size: 10px;
     color: var(--text-dim);
@@ -1552,7 +1594,10 @@ function renderExpandedFile() {
     html += '</div>';
   }
 
-  html += '<div class="fc-expanded-body">' + esc(f.content || "(empty)") + '</div>';
+  html += '<div class="fc-body-wrap" id="bodyWrap">'
+    + '<div class="fc-expanded-body">' + esc(f.content || "(empty)") + '</div>'
+    + '</div>'
+    + '<button class="fc-body-toggle" id="bodyToggle" style="display:none;">Show more</button>';
 
   // Comments
   html += '<div class="fc-comments">'
@@ -1660,6 +1705,23 @@ function bindMainEvents() {
       handleFileAction(btn.dataset.act);
     };
   });
+
+  // Collapsible body
+  var bodyWrap = document.getElementById("bodyWrap");
+  var bodyToggle = document.getElementById("bodyToggle");
+  if (bodyWrap && bodyToggle) {
+    var bodyEl = bodyWrap.querySelector(".fc-expanded-body");
+    if (bodyEl && bodyEl.scrollHeight > 260) {
+      bodyToggle.style.display = "block";
+    } else {
+      bodyWrap.classList.add("expanded");
+    }
+    bodyToggle.onclick = function(e) {
+      e.stopPropagation();
+      bodyWrap.classList.toggle("expanded");
+      bodyToggle.textContent = bodyWrap.classList.contains("expanded") ? "Show less" : "Show more";
+    };
+  }
 
   // Comment
   var commentBtn = document.getElementById("commentBtn");
