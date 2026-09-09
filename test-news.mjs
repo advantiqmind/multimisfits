@@ -49,7 +49,28 @@ const emptyTitleMessages = [
 const emptyTitle = transformMessages(emptyTitleMessages);
 
 const checks = [
-  ["skips bot message", !all.some((i) => i.author === "dinkbot")],
+  ["skips bot message", !all.some((i) => i.id === "3")],
+  ["bot with publish reaction shows", (() => {
+    var botMsgs = [
+      { id: "b1", type: 0, timestamp: "2026-08-23T10:00:00Z",
+        author: { id: "333", username: "SiteBot", global_name: "MultiMisfits Site Bot", bot: true },
+        content: "Dink Settings Updated\nNew clan settings available!",
+        attachments: [], reactions: [{ emoji: { name: "avatar" }, count: 1 }] },
+      { id: "b2", type: 0, timestamp: "2026-08-23T09:00:00Z",
+        author: { id: "333", username: "SiteBot", global_name: "MultiMisfits Site Bot", bot: true },
+        content: "Some other bot message", attachments: [], reactions: [] },
+    ];
+    var r = transformMessages(botMsgs, { botReaction: "avatar" });
+    return r.length === 1 && r[0].id === "b1";
+  })()],
+  ["bot without publish reaction hidden", (() => {
+    var botMsgs = [
+      { id: "b3", type: 0, timestamp: "2026-08-23T10:00:00Z",
+        author: { id: "333", username: "SiteBot", bot: true },
+        content: "No reaction here", attachments: [], reactions: [] },
+    ];
+    return transformMessages(botMsgs, { botReaction: "avatar" }).length === 0;
+  })()],
   ["skips system join", !all.some((i) => i.id === "4")],
   ["keeps 3 real posts", all.length === 3],
   ["parses image attachment", all.some((i) => i.image === "https://cdn.discordapp.com/x.png")],

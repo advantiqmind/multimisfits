@@ -93,13 +93,20 @@ function stripDiscordRaw(s) {
 export function transformMessages(messages, opts = {}) {
   const limit = opts.limit || LIMIT;
   const reaction = opts.reaction || "";
+  const botReaction = opts.botReaction || "";
   const allowBots = !!opts.allowBots;
   const channels = opts.channels || {};
   const out = [];
 
   for (const m of Array.isArray(messages) ? messages : []) {
     if (m.type !== 0 && m.type !== 19) continue;            // default + reply only
-    if (!allowBots && m.author && m.author.bot) continue;   // skip bot posts
+    const isBot = m.author && m.author.bot;
+    if (isBot && !allowBots) {
+      if (!botReaction) continue;                            // no bot gate set -> skip all bots
+      const hasBotR = Array.isArray(m.reactions) &&
+        m.reactions.some((r) => r && r.emoji && r.emoji.name === botReaction);
+      if (!hasBotR) continue;                                // bot without publish reaction -> skip
+    }
     if (reaction) {
       const has = Array.isArray(m.reactions) &&
         m.reactions.some((r) => r && r.emoji && r.emoji.name === reaction);
@@ -193,7 +200,7 @@ export async function onRequest(context) {
     } catch {}
   }));
 
-  const items = transformMessages(messages, { limit: LIMIT, reaction, channels });
+  const items = transformMessages(messages, { limit: LIMIT, reaction, botReaction: reaction, channels });
   const res = json({ configured: true, items }, 200, { "Cache-Control": `public, max-age=${CACHE_TTL}` });
   context.waitUntil(cache.put(cacheKey, res.clone()));
   return res;
