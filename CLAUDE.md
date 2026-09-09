@@ -55,6 +55,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
 - functions/api/eventforge.js  GET/POST/PUT/DELETE /api/eventforge -> shared EventForge saves CRUD, D1 storage, optimistic locking, cached 30s; writes require EVENTFORGE_ACCESS_CODE
 - functions/api/ideaboard.js   GET/POST /api/ideaboard -> reads Discord thread ideas, D1 column positions + dismiss tracking, two-tier access codes, cached 30s
+- functions/api/announce-dink.js POST /api/announce-dink -> sends Dink update embed to #announcements, gated by DINK_ACCESS_CODE
 - functions/api/dink-auth.js   POST /api/dink-auth -> validates access code against DINK_ACCESS_CODE env var
 - functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
@@ -72,7 +73,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     EVENTS_CHANNEL_ID        (plain)  <- events forum channel
     GIVEAWAY_CHANNEL_ID      (plain)  <- giveaway forum channel
     IDEABOARD_THREAD_ID      (plain)  <- Discord thread for idea board (1481866333116436577)
-    PUBLISH_REACTION         (optional, e.g. "check" emoji, to gate news)
+    PUBLISH_REACTION         (optional, e.g. "avatar" emoji) gates human news + bot publish
     REFERRAL_CODES           (plain)  <- comma-separated codes, e.g. "TEQUILA,FLASH,KOI"
     DISCORD_INVITE           (plain, optional) <- override invite URL; defaults to hardcoded link
     REFERRAL_THREAD_ID       (plain, optional) <- forum thread ID for referral tracking
@@ -231,6 +232,9 @@ Replaces the current Loot Value system with something far more flexible.
   Collapsible comments section per card with add-comment form (leader/member only).
 - Name required for all actions (move, dismiss, add comment). Prompted on first use,
   stored in localStorage (mm-ideaboard-user). Change name via header link.
+- Collapsible columns: tap/click a column header to collapse/expand its cards.
+  Chevron rotates to indicate state. Persisted in localStorage (mm-ideaboard-collapsed).
+  Survives auto-refresh since render() only replaces card content, not column elements.
 - Auto-refresh: board polls every 30s, shows "Board updated" toast on changes.
   Pauses when tab is hidden or during drag. Fingerprint-based diff detection.
 - Dismiss records who dismissed it. Dismissed cards viewable via toggle, restorable.
