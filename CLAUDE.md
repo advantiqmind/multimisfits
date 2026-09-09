@@ -42,6 +42,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - armoury.html                 The Armoury landing page (leader tools hub, self-contained styles)
 - eventforge.html              EventForge (Discord event post designer, shared saves via D1, self-contained styles)
 - ideaboard.html               Idea Board (kanban for event ideas, Discord-sourced, self-contained styles)
+- filecabinet.html             File Cabinet (leader-only document archive, self-contained styles, D1 storage)
 - clandink.html                Clan Dink Settings page (copy button for Dink plugin import)
 - dink-config.txt              Dink plugin settings JSON (edit this file to update what members copy)
 - style.css                    theme
@@ -58,6 +59,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/announce-dink.js POST /api/announce-dink -> sends Dink update embed to #announcements, gated by DINK_ACCESS_CODE
 - functions/api/dink-auth.js   POST /api/dink-auth -> validates access code against DINK_ACCESS_CODE env var
 - functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
+- functions/api/filecabinet.js  GET/POST /api/filecabinet -> File Cabinet CRUD, D1 storage (5 tables), access code gated
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
 - functions/api/discord.js    Discord interactions endpoint (slash commands); GET = register commands
 - assets/ranks/*.png           rank icons (official, upscaled 2x nearest)
@@ -85,9 +87,10 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     IDEABOARD_LEADER_CODE    (secret) <- full access to Idea Board (move, dismiss, comment)
     IDEABOARD_MEMBER_CODE    (secret) <- comment-only access to Idea Board
     DINK_ACCESS_CODE         (secret) <- passphrase to unlock /clandink settings page
+    FILECABINET_ACCESS_CODE  (secret) <- passphrase for File Cabinet (leader-only, no read fallback)
 
 ## Bindings (Cloudflare Pages > Settings > Functions)
-    DB  ->  D1 database "multimisfits-auth"  (loot_entries, idea_positions, idea_notes, eventforge_saves tables)
+    DB  ->  D1 database "multimisfits-auth"  (loot_entries, idea_positions, idea_notes, eventforge_saves, fc_folders, fc_files, fc_versions, fc_comments, fc_activity tables)
 
 ## Status
 LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster,
@@ -100,72 +103,6 @@ LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster
   our side until the Dink fix is merged and released.
 
 ## Future ideas (not built yet)
-
-### File Cabinet
-Standalone upload/storage tool for clan documents. Lives at /filecabinet.html in The Armoury.
-Not connected to Discord. Leaders upload and manage files directly on the website.
-
-**Core features:**
-- 9 default folders: Clan Rules, Guides, Event Templates, Event Results, Rank System,
-  Announcements Archive, Clan Assets, Recruitment, Finances / Clan Coffers.
-- "+ New Folder" button to create custom folders.
-- Upload button per folder (text files, images, small documents).
-- Full-text search that looks inside content, not just titles.
-- File count per folder.
-- "Filed by" attribution on every entry (name prompted on first use, stored in localStorage).
-- Content preview snippets in the file list.
-- Tags on files for extra categorization.
-- Discussion/comments per file: leaders can comment on any entry, timestamped notes
-  attached to the file. Same pattern as Idea Board comments (name + text + timestamp).
-  Lets leaders have conversations about specific documents with the evidence right there.
-- Version history: editing a file keeps the old version. "Last edited by X, N versions"
-  with dropdown to view previous versions. Prevents "who changed the rules?" issues.
-- Pin files: pin important files to the top of a folder so they don't get buried by date.
-- File linking: copy a direct link to any file (filecabinet.html#file=ID) for sharing
-  in Discord. Click-through to a specific document.
-- Recently updated feed: "Recent Activity" section showing last 5-10 changes across
-  all folders. "Koi ox updated Rank Requirements 2h ago."
-- Star/bookmark files: personal bookmarks (localStorage) for quick-access to
-  frequently used docs without digging through folders.
-- Export/download: download a file or entire folder as a backup.
-- Move between folders: dropdown or drag to move a file from one folder to another.
-- Import: JSON/text import for bulk-loading documents. Paste or upload a JSON file
-  with title, content, tags, folder. Useful for migrating existing Discord docs.
-- Duplicate file: copy an existing doc into the same or different folder. Useful for
-  templating (duplicate last week's event results, change the names).
-- Sort options: toggle between newest first, oldest first, alphabetical, recently edited.
-  Different folders may need different default sort orders.
-- Folder descriptions: one-line description under each folder name explaining what goes
-  there. Keeps everyone filing in the right place.
-- Trash/recycle bin: deleted files go to trash for 15 days before permanent deletion.
-  "Empty Trash" button for manual cleanup. Prevents accidental loss.
-- File attachments on comments: leaders can attach a screenshot to a discussion comment,
-  not just text. Images stored in R2 alongside file uploads.
-- Activity log: audit trail per folder or global. "Mr. FlSH created Rank Requirements.
-  Koi ox moved it to Guides. Koi ox edited it." Answers who changed what and when.
-- Folder colors/icons: leaders pick a color or emoji for each folder so they're visually
-  distinct at a glance, especially on mobile.
-
-**Access control:** Single-tier, leader-only. No read-only fallback. Entire tool locked
-behind FILECABINET_ACCESS_CODE. Code prompted on first visit, stored in localStorage
-(mm-filecabinet-code), validated against backend. Wrong code clears and re-prompts.
-
-**Storage:** D1 for metadata (folders, file entries, tags, comments, version history).
-R2 for actual uploaded files (images, text files). Self-contained page (no
-style.css/app.js imports).
-
-**Backend:** functions/api/filecabinet.js -- CRUD for folders, files, comments, search,
-versions, import/export. All operations require access code. Cached reads.
-
-**D1 tables:** filecabinet_folders, filecabinet_files, filecabinet_comments,
-filecabinet_versions.
-
-**Later integration:**
-- Idea Board: "Archive" button on Used column cards sends them to File Cabinet.
-- EventForge: archive completed event posts to File Cabinet.
-
-**Armoury layout:** File Cabinet is a featured full-width card at the top of armoury.html,
-with the other 4 tools in a 2x2 grid below. Already built and deployed.
 
 ### Armoury Version Display
 Each tool card on armoury.html shows a version number (e.g. "v1.0"). Version numbers
@@ -498,6 +435,30 @@ Replaces the current Loot Value system with something far more flexible.
 - Assets: bracket-trophy-mm.png (MM-branded trophy), bracket-shield-mm.png (MM shield).
 - All CSS namespaced .bk-* in style.css. Mobile responsive (stacked layout on small screens,
   bracket scrolls horizontally). Reduced motion support.
+
+### File Cabinet
+- filecabinet.html: standalone document archive for clan leaders. Self-contained (inline CSS/JS).
+- Armoury-only tool (featured full-width card at top). Part of The Armoury leader tools.
+- NOT connected to Discord. Leaders upload and manage files directly on the website.
+- Single-tier access: entire tool locked behind FILECABINET_ACCESS_CODE. No read-only fallback.
+  Code prompted on first visit, stored in localStorage (mm-filecabinet-code).
+- 9 default folders seeded on first access: Clan Rules, Guides, Event Templates, Event Results,
+  Rank System, Announcements Archive, Clan Assets, Recruitment, Finances / Clan Coffers.
+- Custom folder creation with emoji icons, colors, and descriptions.
+- Files: title, content (text), tags, "filed by" attribution, pinning, starring (localStorage).
+- Full-text search across title, content, and tags. Scoped to current folder or all folders.
+- Discussion/comments per file: timestamped notes attached to any entry. Same pattern as Idea Board.
+- Version history: editing saves old version. View previous versions in modal.
+- Import: JSON bulk-load. Export: download file content.
+- Move files between folders, duplicate files, deep links (#file=ID).
+- Sort: newest, oldest, alphabetical, recently edited. Per-folder toggle.
+- Trash: 15-day retention, restore or empty. Auto-cleanup on each GET request.
+- Activity log: audit trail of all write operations.
+- D1 tables: fc_folders, fc_files, fc_versions, fc_comments, fc_activity (auto-created on first use).
+- Backend: functions/api/filecabinet.js. All POST operations require access code. GET cached.
+- User identity stored in localStorage (mm-filecabinet-user), prompted on first action.
+- Star/bookmark in localStorage (mm-filecabinet-stars).
+- Later: R2 for image uploads, Idea Board archive integration, EventForge archive integration.
 
 ### Discord invite lock
 - Site is fully public (no auth gate). Middleware passes all requests through.
