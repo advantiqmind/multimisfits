@@ -44,7 +44,7 @@ export async function onRequest(context) {
         title: "Dink Settings Updated",
         url: "https://multimisfits.us/clandink.html",
         description:
-          "New clan Dink settings are available! Visit the [Clan Dink Settings](https://multimisfits.us/clandink.html) page for details and to update your config.\n\n**The code is Trackme.**",
+          "New clan Dink settings are available! Visit the [Clan Dink Settings](https://multimisfits.us/clandink.html) page for details and to update your config.\n\nCheck <#1481841660982988920> for the access code.",
         fields: [
           {
             name: "✔ Webhook Fix",
