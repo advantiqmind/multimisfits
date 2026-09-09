@@ -1116,8 +1116,8 @@ async function api(method, params) {
     var res = await fetch(url);
     return res.json();
   }
-  params.access_code = state.code;
-  params.actor = state.user;
+  if (!params.access_code) params.access_code = state.code;
+  if (!params.actor) params.actor = state.user;
   var res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
