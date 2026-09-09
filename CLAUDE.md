@@ -101,6 +101,43 @@ LIVE: Site deployed on Cloudflare Pages. Discord bot wired up. All pages, roster
 
 ## Future ideas (not built yet)
 
+### File Cabinet
+Standalone upload/storage tool for clan documents. Lives at /filecabinet.html in The Armoury.
+Not connected to Discord. Leaders upload and manage files directly on the website.
+
+**Core features:**
+- 9 default folders: Clan Rules, Guides, Event Templates, Event Results, Rank System,
+  Announcements Archive, Clan Assets, Recruitment, Finances / Clan Coffers.
+- "+ New Folder" button to create custom folders.
+- Upload button per folder (text files, images, small documents).
+- Full-text search that looks inside content, not just titles.
+- File count per folder.
+- "Filed by" attribution on every entry (name prompted on first use, stored in localStorage).
+- Content preview snippets in the file list.
+- Tags on files for extra categorization.
+- Discussion/comments per file: leaders can comment on any entry, timestamped notes
+  attached to the file. Same pattern as Idea Board comments (name + text + timestamp).
+  Lets leaders have conversations about specific documents with the evidence right there.
+
+**Access control:** Single-tier, leader-only. No read-only fallback. Entire tool locked
+behind FILECABINET_ACCESS_CODE. Code prompted on first visit, stored in localStorage
+(mm-filecabinet-code), validated against backend. Wrong code clears and re-prompts.
+
+**Storage:** D1 for metadata (folders, file entries, tags, comments). R2 for actual
+uploaded files (images, text files). Self-contained page (no style.css/app.js imports).
+
+**Backend:** functions/api/filecabinet.js -- CRUD for folders, files, comments, search.
+All operations require access code. Cached reads.
+
+**D1 tables:** filecabinet_folders, filecabinet_files, filecabinet_comments.
+
+**Later integration:**
+- Idea Board: "Archive" button on Used column cards sends them to File Cabinet.
+- EventForge: archive completed event posts to File Cabinet.
+
+**Armoury layout:** File Cabinet is a featured full-width card at the top of armoury.html,
+with the other 4 tools in a 2x2 grid below. Already built and deployed.
+
 ### Battle Royale Drawing
 A top-down arena (Wilderness/PvP themed) where player names spawn as dots or shields.
 Random events eliminate names: shrinking danger zone, lightning strikes, sword clashes.
