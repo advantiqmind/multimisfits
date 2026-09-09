@@ -956,17 +956,20 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin: 8px 12px;
     padding: 10px 14px;
     cursor: pointer;
-    background: var(--bg-panel);
-    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
   }
+  .fc-mob-current.open { border-color: var(--gold-muted); border-radius: 4px 4px 0 0; margin-bottom: 0; }
   .fc-mob-current-emoji { font-size: 16px; }
   .fc-mob-current-name {
     font-family: 'Cinzel', serif;
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--gold);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text);
     letter-spacing: 1px;
     flex: 1;
   }
@@ -983,7 +986,7 @@ body {
   }
   .fc-mob-chevron {
     font-size: 10px;
-    color: var(--text-dim);
+    color: var(--gold-dim);
     transition: transform 0.2s;
   }
   .fc-mob-current.open .fc-mob-chevron { transform: rotate(180deg); }
@@ -991,8 +994,11 @@ body {
     display: none;
     flex-direction: column;
     padding: 0;
-    background: var(--bg-panel);
-    border-bottom: 1px solid var(--border);
+    margin: 0 12px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--gold-muted);
+    border-top: none;
+    border-radius: 0 0 4px 4px;
   }
   .fc-folder-list.mob-open { display: flex; }
   .fc-folder {
