@@ -239,6 +239,11 @@ body {
 .fc-sidebar-btn:hover { border-color: var(--gold-dim); color: var(--gold-dim); }
 .fc-sidebar-btn.active { border-color: var(--gold-dim); color: var(--gold); }
 
+/* Mobile folder toggle (hidden on desktop) */
+.fc-mob-current {
+  display: none;
+}
+
 .fc-folder-list {
   flex: 1;
   padding: 6px 0;
@@ -912,35 +917,53 @@ body {
 @media (max-width: 768px) {
   .fc-layout { grid-template-columns: 1fr; }
   .fc-sidebar { border-right: none; border-bottom: 1px solid var(--border); }
-  .fc-sidebar-head {
-    padding: 0 12px;
-    height: 36px;
+  .fc-sidebar-head { display: none; }
+  .fc-mob-current {
     display: flex;
     align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
   }
-  .fc-sidebar-title { font-size: 11px; }
-  .fc-sidebar-actions { gap: 4px; }
-  .fc-sidebar-btn { font-size: 9px; padding: 2px 6px; }
-  .fc-folder-list {
+  .fc-mob-current-emoji { font-size: 16px; }
+  .fc-mob-current-name {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    flex: 1;
+  }
+  .fc-mob-actions {
     display: flex;
-    flex: none;
-    overflow-x: auto;
-    padding: 0 8px;
-    gap: 0;
-    scrollbar-width: none;
-  }
-  .fc-folder-list::-webkit-scrollbar { display: none; }
-  .fc-folder {
-    flex-shrink: 0;
-    padding: 6px 10px 8px;
-    border-left: none;
-    border-bottom: 2px solid transparent;
     gap: 4px;
   }
-  .fc-folder.active { border-bottom-color: var(--gold); background: transparent; }
-  .fc-folder-emoji { font-size: 13px; width: 16px; }
-  .fc-folder-name { font-size: 10px; }
-  .fc-folder-count { display: none; }
+  .fc-mob-actions .fc-sidebar-btn { font-size: 9px; padding: 2px 6px; }
+  .fc-mob-chevron {
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  .fc-mob-current.open .fc-mob-chevron { transform: rotate(180deg); }
+  .fc-folder-list {
+    display: none;
+    flex-direction: column;
+    padding: 0;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .fc-folder-list.mob-open { display: flex; }
+  .fc-folder {
+    padding: 8px 14px;
+    border-left: 3px solid transparent;
+    gap: 8px;
+  }
+  .fc-folder.active { border-left-color: var(--gold); background: rgba(212,160,23,0.06); }
+  .fc-folder-emoji { font-size: 14px; width: 20px; }
+  .fc-folder-name { font-size: 11px; }
+  .fc-folder-count { font-size: 11px; }
   .fc-sidebar-foot { display: none; }
   .fc-search-bar { padding: 8px 12px; gap: 6px; position: sticky; top: 0; z-index: 5; }
   .fc-search-input { padding: 7px 8px 7px 30px; font-size: 12px; }
@@ -1011,6 +1034,15 @@ body {
         <button class="fc-sidebar-btn" id="trashBtn" title="Trash">&#128465;</button>
         <button class="fc-sidebar-btn" id="activityBtn" title="Activity log">&#128240;</button>
       </div>
+    </div>
+    <div class="fc-mob-current" id="mobFolderToggle">
+      <span class="fc-mob-current-emoji" id="mobCurrentEmoji"></span>
+      <span class="fc-mob-current-name" id="mobCurrentName"></span>
+      <span class="fc-mob-actions">
+        <button class="fc-sidebar-btn" id="mobTrashBtn" title="Trash">&#128465;</button>
+        <button class="fc-sidebar-btn" id="mobActivityBtn" title="Activity">&#128240;</button>
+      </span>
+      <span class="fc-mob-chevron">&#9660;</span>
     </div>
     <div class="fc-folder-list" id="folderList"></div>
     <div class="fc-sidebar-foot">
@@ -1277,11 +1309,25 @@ function renderSidebar() {
   list.innerHTML = html;
 
   list.querySelectorAll(".fc-folder").forEach(function(el) {
-    el.onclick = function() { selectFolder(el.dataset.id); };
+    el.onclick = function() {
+      selectFolder(el.dataset.id);
+      closeMobFolders();
+    };
   });
 
   document.getElementById("trashBtn").className = "fc-sidebar-btn" + (state.view === "trash" ? " active" : "");
   document.getElementById("activityBtn").className = "fc-sidebar-btn" + (state.view === "activity" ? " active" : "");
+
+  var cur = state.folders.find(function(f) { return f.id === state.currentFolder; });
+  if (cur) {
+    document.getElementById("mobCurrentEmoji").textContent = cur.emoji;
+    document.getElementById("mobCurrentName").textContent = cur.name;
+  }
+}
+
+function closeMobFolders() {
+  document.getElementById("folderList").classList.remove("mob-open");
+  document.getElementById("mobFolderToggle").classList.remove("open");
 }
 
 // ── Render: Main content ──
@@ -1915,6 +1961,32 @@ function showImportModal() {
 // ── Init ──
 
 document.getElementById("addFolderBtn").onclick = showFolderModal;
+
+document.getElementById("mobFolderToggle").onclick = function(e) {
+  if (e.target.closest(".fc-mob-actions")) return;
+  var list = document.getElementById("folderList");
+  var toggle = document.getElementById("mobFolderToggle");
+  list.classList.toggle("mob-open");
+  toggle.classList.toggle("open");
+};
+
+document.getElementById("mobTrashBtn").onclick = function(e) {
+  e.stopPropagation();
+  state.view = "trash";
+  state.expandedFile = null;
+  renderSidebar();
+  loadTrash();
+  closeMobFolders();
+};
+
+document.getElementById("mobActivityBtn").onclick = function(e) {
+  e.stopPropagation();
+  state.view = "activity";
+  state.expandedFile = null;
+  renderSidebar();
+  loadActivity();
+  closeMobFolders();
+};
 
 document.getElementById("trashBtn").onclick = function() {
   state.view = "trash";
