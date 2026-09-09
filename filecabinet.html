@@ -1036,8 +1036,7 @@ body {
       </div>
     </div>
     <div class="fc-mob-current" id="mobFolderToggle">
-      <span class="fc-mob-current-emoji" id="mobCurrentEmoji"></span>
-      <span class="fc-mob-current-name" id="mobCurrentName"></span>
+      <span class="fc-mob-current-name">Folders</span>
       <span class="fc-mob-actions">
         <button class="fc-sidebar-btn" id="mobTrashBtn" title="Trash">&#128465;</button>
         <button class="fc-sidebar-btn" id="mobActivityBtn" title="Activity">&#128240;</button>
@@ -1317,12 +1316,6 @@ function renderSidebar() {
 
   document.getElementById("trashBtn").className = "fc-sidebar-btn" + (state.view === "trash" ? " active" : "");
   document.getElementById("activityBtn").className = "fc-sidebar-btn" + (state.view === "activity" ? " active" : "");
-
-  var cur = state.folders.find(function(f) { return f.id === state.currentFolder; });
-  if (cur) {
-    document.getElementById("mobCurrentEmoji").textContent = cur.emoji;
-    document.getElementById("mobCurrentName").textContent = cur.name;
-  }
 }
 
 function closeMobFolders() {
