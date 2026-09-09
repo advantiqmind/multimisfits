@@ -315,7 +315,19 @@ body {
   justify-content: space-between;
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
 }
+.column-header:active { background: rgba(212,160,23,0.06); }
+.col-chevron {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 10px;
+  color: var(--text-dim);
+  transition: transform 0.25s ease;
+}
+.column.collapsed .col-chevron { transform: rotate(-90deg); }
 .column-title {
   font-family: 'Cinzel', serif;
   font-size: 13px;
@@ -337,6 +349,22 @@ body {
   flex-direction: column;
   gap: 8px;
   min-height: 100px;
+  transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+  overflow: hidden;
+}
+.column.collapsed .column-body {
+  max-height: 0 !important;
+  padding-top: 0;
+  padding-bottom: 0;
+  min-height: 0;
+  opacity: 0;
+  border: none;
+}
+.column.collapsed {
+  min-height: auto;
+}
+.column.collapsed .column-header {
+  border-bottom-color: transparent;
 }
 .column-body.drag-over {
   background: rgba(212,160,23,0.04);
@@ -1450,35 +1478,35 @@ body {
 <div class="board" id="board" hidden>
   <div class="column" data-col="review">
     <div class="column-header">
-      <span class="column-title">In Review</span>
+      <span class="col-chevron">&#9660;</span><span class="column-title">In Review</span>
       <span class="column-count" id="count-review">0</span>
     </div>
     <div class="column-body" id="col-review"></div>
   </div>
   <div class="column" data-col="approved">
     <div class="column-header">
-      <span class="column-title">Approved</span>
+      <span class="col-chevron">&#9660;</span><span class="column-title">Approved</span>
       <span class="column-count" id="count-approved">0</span>
     </div>
     <div class="column-body" id="col-approved"></div>
   </div>
   <div class="column" data-col="shared">
     <div class="column-header">
-      <span class="column-title">Created and Shared</span>
+      <span class="col-chevron">&#9660;</span><span class="column-title">Created and Shared</span>
       <span class="column-count" id="count-shared">0</span>
     </div>
     <div class="column-body" id="col-shared"></div>
   </div>
   <div class="column" data-col="onhold">
     <div class="column-header">
-      <span class="column-title">On Hold</span>
+      <span class="col-chevron">&#9660;</span><span class="column-title">On Hold</span>
       <span class="column-count" id="count-onhold">0</span>
     </div>
     <div class="column-body" id="col-onhold"></div>
   </div>
   <div class="column" data-col="used">
     <div class="column-header">
-      <span class="column-title">Completed</span>
+      <span class="col-chevron">&#9660;</span><span class="column-title">Completed</span>
       <span class="column-count" id="count-used">0</span>
     </div>
     <div class="column-body" id="col-used"></div>
@@ -1527,6 +1555,45 @@ var accessLevel = null; // null = not validated, 'leader', 'member', 'viewer'
 var searchQuery = '';
 var activeSort = 'default';
 var NEW_HOURS = 48;
+
+/* ---- COLLAPSIBLE COLUMNS ---- */
+
+function getCollapsed() {
+  try {
+    var raw = localStorage.getItem('mm-ideaboard-collapsed');
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+function setCollapsed(state) {
+  try { localStorage.setItem('mm-ideaboard-collapsed', JSON.stringify(state)); } catch(e) {}
+}
+
+function applyCollapseState() {
+  var state = getCollapsed();
+  COLUMNS.forEach(function(col) {
+    var el = document.querySelector('.column[data-col="' + col + '"]');
+    if (!el) return;
+    if (state[col]) el.classList.add('collapsed');
+    else el.classList.remove('collapsed');
+  });
+}
+
+function initCollapseHeaders() {
+  document.querySelectorAll('.column-header').forEach(function(header) {
+    header.addEventListener('click', function(e) {
+      if (e.target.closest && e.target.closest('.column-count')) return;
+      var col = header.closest('.column');
+      if (!col) return;
+      var colName = col.dataset.col;
+      col.classList.toggle('collapsed');
+      var state = getCollapsed();
+      state[colName] = col.classList.contains('collapsed');
+      setCollapsed(state);
+    });
+  });
+  applyCollapseState();
+}
 
 /* ---- USER IDENTITY ---- */
 
@@ -2891,6 +2958,7 @@ document.getElementById('searchClear').addEventListener('click', function() {
   this.hidden = true;
   render();
 });
+initCollapseHeaders();
 tryAutoValidate().then(function() {
   updateAccessDisplay();
   loadBoard().then(startPolling);
