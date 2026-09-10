@@ -51,24 +51,36 @@
 </header>
 
 <main>
-<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)">Leaderboard</h1><div class="tagline">Live from Wise Old Man</div></section>
+<section class="hero" style="padding:26px 20px"><h1 style="font-size:clamp(30px,6vw,52px)" id="lb-hero-title">Leaderboard</h1><div class="tagline" id="lb-hero-tag">Live from Wise Old Man</div></section>
   <div class="grid"><section class="panel col-2" id="roster">
-    <div class="head"><h2><span class="rune"></span>Leaderboard <span class="badge" id="roster-count">⟳ loading · WOM</span></h2><a class="more" href="https://wiseoldman.net/groups/26075" target="_blank" rel="noopener">On WOM →</a></div>
-    <div class="body">
-      <div class="roster-controls" id="roster-controls" style="display:none">
-        <input type="text" id="roster-search" class="roster-search" placeholder="Search player…">
-        <select id="roster-filter" class="roster-filter">
-          <option value="">All Ranks</option>
-        </select>
+    <div class="ev-tabs" id="lb-tabs">
+      <button class="ev-tab active" data-tab="clan">Clan Leaderboard</button>
+      <button class="ev-tab" data-tab="event">Event Leaderboard</button>
+    </div>
+    <div id="clan-lb-content">
+      <div class="head"><h2><span class="rune"></span>Leaderboard <span class="badge" id="roster-count">&#x27F3; loading &middot; WOM</span></h2><a class="more" href="https://wiseoldman.net/groups/26075" target="_blank" rel="noopener">On WOM &rarr;</a></div>
+      <div class="body">
+        <div class="roster-controls" id="roster-controls" style="display:none">
+          <input type="text" id="roster-search" class="roster-search" placeholder="Search player&#x2026;">
+          <select id="roster-filter" class="roster-filter">
+            <option value="">All Ranks</option>
+          </select>
+        </div>
+        <table class="roster roster-full"><thead><tr>
+          <th class="rank-num">#</th>
+          <th class="sortable" data-sort="name">Player</th>
+          <th class="sortable sort-desc" data-sort="rank">Rank</th>
+          <th class="sortable" data-sort="xp">Total XP</th>
+        </tr></thead>
+        <tbody id="roster-body" data-full="1"><tr><td colspan="4" class="roster-msg">Loading roster&#x2026;</td></tr></tbody></table>
+        <div class="roster-pagination" id="roster-pagination"></div>
       </div>
-      <table class="roster roster-full"><thead><tr>
-        <th class="rank-num">#</th>
-        <th class="sortable" data-sort="name">Player</th>
-        <th class="sortable sort-desc" data-sort="rank">Rank</th>
-        <th class="sortable" data-sort="xp">Total XP</th>
-      </tr></thead>
-      <tbody id="roster-body" data-full="1"><tr><td colspan="4" class="roster-msg">Loading roster…</td></tr></tbody></table>
-      <div class="roster-pagination" id="roster-pagination"></div>
+    </div>
+    <div id="event-lb-content" style="display:none">
+      <div class="head"><h2><span class="rune"></span>Event Leaderboard <span class="badge" id="event-lb-badge">loading</span></h2></div>
+      <div class="body" id="event-lb-body">
+        <p class="lv-loading">Loading event leaderboards...</p>
+      </div>
     </div>
   </section></div>
 

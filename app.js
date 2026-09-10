@@ -876,6 +876,9 @@ function featuredEventHtml(ev) {
   var teamBadge = teamBadgeHtml(ev.teams);
   var teamRoster = teamRosterHtml(ev.teams);
   var partBtn = participantBtnHtml(ev.participants, ev.id, theme);
+  var lvStandingsBtn = isLootValueEvent(ev)
+    ? '<a class="btn lv-standings-btn" href="/roster.html#event">View Full Standings</a>'
+    : "";
   return `<div class="ev-featured${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${imgStyle}>
     <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${teamBadge}${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
@@ -891,6 +894,7 @@ function featuredEventHtml(ev) {
         RSVP on Discord
       </a>
       ${partBtn}
+      ${lvStandingsBtn}
     </div>
   </div>`;
 }
@@ -1057,6 +1061,8 @@ function eventCard(ev) {
     : "";
   const liveClass = isLive ? " ev-card-live" : "";
   const lvTag = isLootValueEvent(ev) ? '<span class="lv-tag">LOOT</span>' : "";
+  const lvLink = isLootValueEvent(ev) && effStatus !== "completed"
+    ? '<a class="lv-lb-link" href="/roster.html#event" title="View standings">Standings</a>' : "";
   const theme = eventThemeClass(ev);
 
   var teamDots = teamDotsHtml(ev.teams);
@@ -1071,7 +1077,7 @@ function eventCard(ev) {
       <div class="ev-card-meta">${metaParts}</div>
       ${winnerLine}
     </div>
-    ${teamDots}${badge}
+    ${teamDots}${lvLink}${badge}
   </div>`;
 }
 
@@ -1432,6 +1438,118 @@ async function loadLootLeaderboards(events) {
   }));
 }
 
+/* ---- roster page event leaderboard tab ---- */
+var _eventLbLoaded = false;
+
+function wireRosterTabs() {
+  var tabs = document.getElementById("lb-tabs");
+  if (!tabs) return;
+  tabs.querySelectorAll(".ev-tab").forEach(function(tab) {
+    tab.addEventListener("click", function() {
+      switchLbTab(tab.dataset.tab);
+    });
+  });
+  var hash = location.hash.replace("#", "");
+  if (hash === "event" || hash.startsWith("event=")) {
+    switchLbTab("event");
+  }
+}
+
+function switchLbTab(target) {
+  var tabs = document.getElementById("lb-tabs");
+  if (!tabs) return;
+  tabs.querySelectorAll(".ev-tab").forEach(function(t) {
+    t.classList.toggle("active", t.dataset.tab === target);
+  });
+  var clanContent = document.getElementById("clan-lb-content");
+  var eventContent = document.getElementById("event-lb-content");
+  var heroTitle = document.getElementById("lb-hero-title");
+  var heroTag = document.getElementById("lb-hero-tag");
+  if (target === "event") {
+    if (clanContent) clanContent.style.display = "none";
+    if (eventContent) eventContent.style.display = "";
+    if (heroTitle) heroTitle.textContent = "Event Leaderboard";
+    if (heroTag) heroTag.textContent = "Live via Dink";
+    history.replaceState(null, "", "#event");
+    if (!_eventLbLoaded) {
+      _eventLbLoaded = true;
+      loadEventLeaderboard();
+    }
+  } else {
+    if (clanContent) clanContent.style.display = "";
+    if (eventContent) eventContent.style.display = "none";
+    if (heroTitle) heroTitle.textContent = "Leaderboard";
+    if (heroTag) heroTag.textContent = "Live from Wise Old Man";
+    history.replaceState(null, "", location.pathname);
+  }
+}
+
+async function loadEventLeaderboard() {
+  var body = document.getElementById("event-lb-body");
+  var badge = document.getElementById("event-lb-badge");
+  if (!body) return;
+
+  try {
+    var r = await fetch("/api/events", { headers: { accept: "application/json" } });
+    if (!r.ok) throw new Error("events " + r.status);
+    var data = await r.json();
+    var events = data && Array.isArray(data.events) ? data.events : [];
+    var lvEvents = events.filter(function(ev) {
+      if (!isLootValueEvent(ev)) return false;
+      var status = computeEventStatus(ev);
+      return status === "live" || status === "scheduled";
+    });
+
+    if (!lvEvents.length) {
+      body.innerHTML = '<div class="event-lb-empty">' +
+        '<p>No active Loot Value events right now.</p>' +
+        '<p style="color:var(--muted);font-size:14px;margin-top:8px">When a Loot Value event is running, standings will appear here.</p>' +
+        '</div>';
+      if (badge) badge.textContent = "no active events";
+      return;
+    }
+
+    if (badge) badge.textContent = lvEvents.length + " active";
+
+    var html = "";
+    var fetches = await Promise.all(lvEvents.map(function(ev) {
+      return fetch("/api/loot?event=" + encodeURIComponent(ev.id))
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .catch(function() { return null; });
+    }));
+
+    for (var i = 0; i < lvEvents.length; i++) {
+      var ev = lvEvents[i];
+      var lootData = fetches[i];
+      if (lootData) _lootData[ev.id] = lootData;
+      var effStatus = computeEventStatus(ev);
+      var statusBadge = eventStatusBadge(effStatus);
+      var eventName = cleanName(ev.name);
+      var dateStr = ev.hasParsedDate ? formatEventDate(ev.startTime) : "Date TBA";
+
+      html += '<div class="event-lb-card">';
+      html += '<div class="event-lb-card-header">';
+      html += '<h3>' + esc(eventName) + '</h3>';
+      html += '<div class="event-lb-card-meta">' + statusBadge + ' <span style="color:var(--muted);font-size:14px;margin-left:8px">' + esc(dateStr) + '</span></div>';
+      html += '</div>';
+      if (lootData) {
+        html += '<div class="lv-container">' + lootLeaderboardHtml(lootData, false) + '</div>';
+      } else {
+        html += '<p class="lv-loading">No loot data yet. Waiting for Dink reports...</p>';
+      }
+      html += '</div>';
+    }
+
+    body.innerHTML = html;
+  } catch (e) {
+    body.innerHTML = '<div class="event-lb-empty">' +
+      '<p>Could not load event data.</p>' +
+      '<p style="color:var(--muted);font-size:14px;margin-top:8px">Check back later or visit the Events page.</p>' +
+      '</div>';
+    if (badge) badge.textContent = "offline";
+  }
+}
+
 /* ---- giveaway ---- */
 const GIVEAWAY_FALLBACK = [
   {
@@ -1766,6 +1884,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadGallery();
   loadSpotlight();
   wireGiveawayTabs();
+  wireRosterTabs();
   showWinnerToast();
   showDinkFloater();
 });
