@@ -460,11 +460,6 @@ function achThumb(item) {
   return `<a class="ach-thumb lightbox-trigger" href="${esc(item.image || item.thumbnail)}"><img src="${esc(src)}" alt="" loading="lazy"></a>`;
 }
 
-function achMedal(item) {
-  if (item.avatar) return `<div class="medal ach-avatar"><img src="${esc(item.avatar)}" alt="" loading="lazy"></div>`;
-  return `<div class="medal">${esc(item.medal)}</div>`;
-}
-
 function achItem(item, full) {
   var label = ACH_LABELS[item.type] || "Achievement";
   var color = ACH_COLORS[item.type] || ACH_COLORS.default;
@@ -475,7 +470,7 @@ function achItem(item, full) {
   var thumb = achThumb(item);
   if (full) {
     return `<div class="ach ach-full">` +
-      achMedal(item) +
+      `<div class="medal">${esc(item.medal)}</div>` +
       `<div class="ach-info">` +
         `<div class="ach-row"><span class="who">${esc(item.player)}</span>${tagHtml}</div>` +
         `<div class="what">${esc(what)}</div>` +
@@ -484,7 +479,7 @@ function achItem(item, full) {
       `</div>${thumb}</div>`;
   }
   return `<div class="ach">` +
-    achMedal(item) +
+    `<div class="medal">${esc(item.medal)}</div>` +
     `<div class="ach-info">` +
       `<div class="who">${esc(item.player)}</div>` +
       `<div class="what">${esc(what)}</div>` +
