@@ -49,6 +49,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - app.js                       nav, toasts, Discord links, all panel rendering
 - functions/_middleware.js     pass-through middleware (no auth gate)
 - functions/api/wom.js         GET /api/wom  -> WOM group, cached 6h, sorted roster
+- functions/api/wom-score.js   GET /api/wom-score -> WOM event scoring, cached 5min; Scoring: config parsing + leaderboard
 - functions/api/news.js        GET /api/news -> reads #announcements via Discord bot
 - functions/api/events.js      GET /api/events -> reads forum threads (filters out giveaway threads), cached 5min
 - functions/api/achievements.js GET /api/achievements -> reads chest channel (Dink posts), cached 5min
@@ -64,8 +65,9 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
 - functions/api/discord.js    Discord interactions endpoint (slash commands); GET = register commands
 - assets/ranks/*.png           rank icons (official, upscaled 2x nearest)
+- assets/lb/*.png              leaderboard icons (medals, stat icons; OSRS pixel art, transparent)
 - assets/gallery/shot1-6.webp  clan screenshots (static fallback for gallery page)
-- test-*.mjs                   unit tests (7 files: wom, news, events, achievements, spotlight, giveaway, loot)
+- test-*.mjs                   unit tests (8 files: wom, news, events, achievements, spotlight, giveaway, loot, wom-score)
 
 ## Env vars (Cloudflare Pages > Settings > Environment variables)
     DISCORD_BOT_TOKEN        (secret)
@@ -129,28 +131,31 @@ leaders can override for bonus donations). Bot embed stores GP amount per entry.
 sums GP per player. Frontend shows "Top Donors" ranking on giveaway cards. Similar pattern
 to the Loot Value leaderboard but for GP contributions.
 
-### WOM Event Scoring System
-General-purpose scoring tool that pulls Wise Old Man API data (skills, bosses, clues,
-activities) for event date ranges and applies custom scoring weights to build leaderboards.
-Replaces the current Loot Value system with something far more flexible.
-
-**How it works:**
-- WOM tracks per-metric gains (XP, KC, scores) over any date range via their delta endpoint.
-- EventForge gets a "Scoring" config section where leaders pick which metrics to score
-  and assign point weights per tier (e.g. 1 KC at Chambers of Xeric = 5 pts, 1M Slayer XP = 3 pts).
-- Preset templates for common event types: bingo, skilling comp, boss KC race, total level race.
-- Backend pulls WOM deltas for event participants between event start/end dates,
-  applies the scoring weights, returns a ranked leaderboard.
-- Two display locations:
-  1. Event cards/modals: "View Standings" button shows live leaderboard during the event.
-  2. Leaderboard page (currently "coming soon"): becomes a hall of fame with past event
-     winners, historical standings, and a trophy case.
-- Supports team events (team score = sum of member scores) using existing team assignment system.
-- No new data entry needed from members. Everything derived from WOM tracking + RuneLite sync.
-- Key WOM endpoints: group deltas (gains per member over date range), player gains.
-- Scoring configs stored alongside event data in EventForge (D1).
+### WOM Event Scoring System (planned extensions)
+- Team events: team score = sum of member scores using existing team assignment system.
+- Hall of fame: leaderboard page historical standings, trophy case for past event winners.
+- Scoring configs stored in EventForge D1 saves (currently in-post only via Scoring: line).
 
 ## How things work
+
+### WOM Event Scoring
+- Scoring system that pulls WOM API data for event date ranges and applies custom weights.
+- Triggered by the "WOM Scored" Discord forum tag on event threads (same pattern as "Loot Value").
+- Event description must contain a `Scoring:` line (parsed by `parseScoringConfig()`).
+- Presets: `Scoring: clues` (beginner=1, easy=2, medium=5, hard=10, elite=20, master=35),
+  `Scoring: bossing` (all bosses at weight 1), `Scoring: skilling` (all skills at weight 1).
+- Custom weights: `Scoring: mining=3, smithing=2` or single metric `Scoring: slayer`.
+- Metrics validated against ALL_SKILLS (23), ALL_BOSSES (~60), ALL_CLUES (7) arrays.
+- Backend: GET /api/wom-score?event=THREAD_ID fetches event description from Discord,
+  parses Scoring: + When:/Ends: lines, calls WOM bulk-gained API, returns ranked leaderboard.
+- Response: `{ eventId, leaderboard: [{rank, player, points, breakdown}], stats, scoring }`.
+- Frontend: WOM Scored events show "WOM" tag on cards, leaderboard in modals and featured views,
+  and appear on the Event Leaderboard tab on roster.html alongside Loot Value events.
+- EventForge: "Scoring" toggle in preview options panel with preset picker (Clue Scrolls,
+  Bossing, Skilling, Custom) that auto-generates the `Scoring:` line in output.
+- `Scoring:` and `Boss:` are independent systems. An event uses one or the other, never both.
+- WOM API endpoint: `GET /groups/26075/bulk-gained?startDate=...&endDate=...`
+- Cache: 5-minute edge cache on responses.
 
 ### Discord name resolution
 - Events and giveaway endpoints fetch the guild members list to get server nicknames.

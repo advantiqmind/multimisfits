@@ -757,6 +757,14 @@ function isLootValueEvent(ev) {
   return false;
 }
 
+function isWomScoredEvent(ev) {
+  var tags = ev.tags || [];
+  for (var i = 0; i < tags.length; i++) {
+    if (tags[i].toLowerCase() === "wom scored") return true;
+  }
+  return false;
+}
+
 function eventThemeClass(ev) {
   var tags = ev.tags || [];
   for (var i = 0; i < tags.length; i++) {
@@ -868,8 +876,12 @@ function featuredEventHtml(ev) {
     : "";
   const metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
   const lvTag = isLootValueEvent(ev) ? '<span class="lv-tag" style="margin-left:8px">LOOT VALUE</span>' : "";
+  const wsTag = isWomScoredEvent(ev) ? '<span class="lv-tag ws-tag" style="margin-left:8px">WOM SCORED</span>' : "";
   const lvContainer = isLootValueEvent(ev)
     ? `<div class="lv-container" data-event-id="${esc(ev.id)}"><p class="lv-loading">Loading leaderboard...</p></div>`
+    : "";
+  const wsContainer = isWomScoredEvent(ev)
+    ? `<div class="ws-container" data-event-id="${esc(ev.id)}"><p class="lv-loading">Loading leaderboard...</p></div>`
     : "";
 
   var theme = eventThemeClass(ev);
@@ -879,14 +891,18 @@ function featuredEventHtml(ev) {
   var lvStandingsBtn = isLootValueEvent(ev)
     ? '<a class="btn lv-standings-btn" href="/roster.html#event">View Full Standings</a>'
     : "";
+  var wsStandingsBtn = isWomScoredEvent(ev)
+    ? '<a class="btn lv-standings-btn ws-standings-btn" href="/roster.html#event">View Full Standings</a>'
+    : "";
   return `<div class="ev-featured${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${imgStyle}>
-    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${teamBadge}${isLive ? "" : badge}</div>
+    <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${wsTag}${teamBadge}${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
       <span class="ev-date-text">${metaText}</span>
       ${countdownHtml}${interested}
     </div>
     ${desc ? `<div class="ev-desc">${desc}</div>` : ""}
     ${lvContainer}
+    ${wsContainer}
     ${teamRoster}
     <div class="ev-cta">
       <a class="btn join" data-discord href="#" aria-label="Join Discord for event details">
@@ -895,6 +911,7 @@ function featuredEventHtml(ev) {
       </a>
       ${partBtn}
       ${lvStandingsBtn}
+      ${wsStandingsBtn}
     </div>
   </div>`;
 }
@@ -1061,8 +1078,11 @@ function eventCard(ev) {
     : "";
   const liveClass = isLive ? " ev-card-live" : "";
   const lvTag = isLootValueEvent(ev) ? '<span class="lv-tag">LOOT</span>' : "";
+  const wsTag = isWomScoredEvent(ev) ? '<span class="lv-tag ws-tag">WOM</span>' : "";
   const lvLink = isLootValueEvent(ev) && effStatus !== "completed"
     ? '<a class="lv-lb-link" href="/roster.html#event" title="View standings">Standings</a>' : "";
+  const wsLink = isWomScoredEvent(ev) && effStatus !== "completed"
+    ? '<a class="lv-lb-link ws-link" href="/roster.html#event" title="View standings">Standings</a>' : "";
   const theme = eventThemeClass(ev);
 
   var teamDots = teamDotsHtml(ev.teams);
@@ -1073,11 +1093,11 @@ function eventCard(ev) {
   return `<div class="ev-card ev-clickable${liveClass}${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
-      <h3>${esc(cleanName(ev.name))}${lvTag ? " " + lvTag : ""}</h3>
+      <h3>${esc(cleanName(ev.name))}${lvTag ? " " + lvTag : ""}${wsTag ? " " + wsTag : ""}</h3>
       <div class="ev-card-meta">${metaParts}</div>
       ${winnerLine}
     </div>
-    ${teamDots}${lvLink}${badge}
+    ${teamDots}${lvLink}${wsLink}${badge}
   </div>`;
 }
 
@@ -1165,6 +1185,7 @@ function renderEvents(events, { cached } = {}) {
   wireEventModals();
   wireParticipantModal();
   loadLootLeaderboards(events);
+  loadWomScoreLeaderboards(events);
 }
 
 function wireEventModals() {
@@ -1179,6 +1200,7 @@ function wireEventModals() {
     var timeStr = formatEventTime(ev.startTime);
     var badge = eventStatusBadge(effStatus);
     var lvTag = isLootValueEvent(ev) ? '<span class="lv-tag" style="margin-left:8px">LOOT VALUE</span>' : "";
+    var wsTag = isWomScoredEvent(ev) ? '<span class="lv-tag ws-tag" style="margin-left:8px">WOM SCORED</span>' : "";
     var modal = overlay.querySelector(".ev-modal");
     if (modal) {
       modal.classList.remove("ev-wild", "ev-social", "ev-pvm");
@@ -1209,6 +1231,24 @@ function wireEventModals() {
       }
     }
 
+    var wsHtml = "";
+    if (isWomScoredEvent(ev)) {
+      if (_womScoreData[ev.id]) {
+        wsHtml = '<div class="ws-container">' + womScoreLeaderboardHtml(_womScoreData[ev.id], false) + '</div>';
+      } else {
+        wsHtml = '<div class="ws-container" data-event-id="' + esc(ev.id) + '"><p class="lv-loading">Loading leaderboard...</p></div>';
+        fetch("/api/wom-score?event=" + encodeURIComponent(ev.id))
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(data) {
+            if (!data) return;
+            _womScoreData[ev.id] = data;
+            var container = body.querySelector('.ws-container[data-event-id="' + ev.id + '"]');
+            if (container) container.innerHTML = womScoreLeaderboardHtml(data, false);
+          })
+          .catch(function() {});
+      }
+    }
+
     var teamBadge = teamBadgeHtml(ev.teams);
     var teamRoster = teamRosterHtml(ev.teams);
     var theme = eventThemeClass(ev);
@@ -1217,12 +1257,13 @@ function wireEventModals() {
       ? '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Winner</div><div class="ev-winner-name">' + esc(ev.winner) + '</div></div></div>'
       : '';
     body.innerHTML =
-      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + teamBadge + badge + '</div>' +
+      '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + wsTag + teamBadge + badge + '</div>' +
       '<div class="ev-modal-meta">' + dateStr + ' · ' + timeStr +
       (replies ? ' · ' + replies : '') + '</div>' +
       imgHtml +
       '<div class="ev-modal-desc">' + desc + '</div>' +
       lvHtml +
+      wsHtml +
       teamRoster +
       winnerHtml +
       '<div class="ev-cta" style="margin-top:16px"><a class="btn join" data-discord href="#" aria-label="Join Discord">' +
@@ -1379,6 +1420,7 @@ function wireGallery() {
 
 /* ---- loot value leaderboard ---- */
 var _lootData = {};
+var _womScoreData = {};
 
 function lootLeaderboardHtml(data, compact) {
   if (!data || !data.leaderboard || !data.leaderboard.length) {
@@ -1389,19 +1431,23 @@ function lootLeaderboardHtml(data, compact) {
   var stats = data.stats || {};
   var drops = data.notableDrops || [];
   var limit = compact ? 3 : 10;
-  var medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+  var medalImgs = [
+    '<img src="/assets/lb/medal-1.png" alt="1st" class="lv-medal">',
+    '<img src="/assets/lb/medal-2.png" alt="2nd" class="lv-medal">',
+    '<img src="/assets/lb/medal-3.png" alt="3rd" class="lv-medal">'
+  ];
 
   var html = '<div class="lv-stats">';
-  html += '<div class="lv-stat"><div class="lv-stat-value">' + (stats.totalPlayers || 0) + '</div><div class="lv-stat-label">Players</div></div>';
-  html += '<div class="lv-stat"><div class="lv-stat-value">' + (stats.totalKills || 0) + '</div><div class="lv-stat-label">Total KC</div></div>';
-  html += '<div class="lv-stat"><div class="lv-stat-value">' + formatLootValue(stats.totalValue || 0) + '</div><div class="lv-stat-label">Total Loot</div></div>';
+  html += '<div class="lv-stat"><img src="/assets/lb/icon-players.png" alt="" class="lv-stat-icon"><div class="lv-stat-value">' + (stats.totalPlayers || 0) + '</div><div class="lv-stat-label">Players</div></div>';
+  html += '<div class="lv-stat"><img src="/assets/lb/icon-kc.png" alt="" class="lv-stat-icon"><div class="lv-stat-value">' + (stats.totalKills || 0) + '</div><div class="lv-stat-label">Total KC</div></div>';
+  html += '<div class="lv-stat"><img src="/assets/lb/icon-loot.png" alt="" class="lv-stat-icon"><div class="lv-stat-value">' + formatLootValue(stats.totalValue || 0) + '</div><div class="lv-stat-label">Total Loot</div></div>';
   html += '</div>';
 
   html += '<div class="lv-table">';
   for (var i = 0; i < Math.min(lb.length, limit); i++) {
     var row = lb[i];
     var rankClass = i < 3 ? " lv-rank-" + (i + 1) : "";
-    var rankText = i < 3 ? medals[i] : "#" + row.rank;
+    var rankText = i < 3 ? medalImgs[i] : "#" + row.rank;
     html += '<div class="lv-row' + rankClass + '">';
     html += '<span class="lv-rank">' + rankText + '</span>';
     html += '<span class="lv-player">' + esc(row.player) + '</span>';
@@ -1412,7 +1458,7 @@ function lootLeaderboardHtml(data, compact) {
   html += '</div>';
 
   if (!compact && drops.length) {
-    html += '<h4 class="lv-drops-title">Notable Drops</h4>';
+    html += '<h4 class="lv-drops-title"><img src="/assets/lb/icon-chest.png" alt="" class="lv-drops-icon">Notable Drops</h4>';
     for (var j = 0; j < drops.length; j++) {
       var drop = drops[j];
       var qty = drop.quantity > 1 ? " x" + drop.quantity : "";
@@ -1442,6 +1488,86 @@ async function loadLootLeaderboards(events) {
       var container = document.querySelector('.lv-container[data-event-id="' + ev.id + '"]');
       if (container) {
         container.innerHTML = lootLeaderboardHtml(data, false);
+      }
+    } catch (e) {}
+  }));
+}
+
+function formatPoints(pts) {
+  if (pts >= 10000) return Math.round(pts / 1000) + "K";
+  return String(Math.round(pts));
+}
+
+function womPresetLabel(preset) {
+  if (preset === "clues") return "Clue Scrolls";
+  if (preset === "bossing") return "Boss KC";
+  if (preset === "skilling") return "Skills XP";
+  return "Custom Scoring";
+}
+
+function womScoreLeaderboardHtml(data, compact) {
+  if (!data || !data.leaderboard || !data.leaderboard.length) {
+    return '<p class="lv-loading">No WOM data yet. Waiting for gains...</p>';
+  }
+
+  var lb = data.leaderboard;
+  var stats = data.stats || {};
+  var limit = compact ? 3 : 10;
+  var medalImgs = [
+    '<img src="/assets/lb/medal-1.png" alt="1st" class="lv-medal">',
+    '<img src="/assets/lb/medal-2.png" alt="2nd" class="lv-medal">',
+    '<img src="/assets/lb/medal-3.png" alt="3rd" class="lv-medal">'
+  ];
+
+  var presetLabel = womPresetLabel(stats.preset);
+  var metricCount = stats.metrics ? stats.metrics.length : 0;
+
+  var html = '<div class="lv-stats">';
+  html += '<div class="lv-stat"><img src="/assets/lb/icon-players.png" alt="" class="lv-stat-icon"><div class="lv-stat-value">' + (stats.totalPlayers || 0) + '</div><div class="lv-stat-label">Players</div></div>';
+  html += '<div class="lv-stat"><img src="/assets/lb/icon-kc.png" alt="" class="lv-stat-icon"><div class="lv-stat-value">' + metricCount + '</div><div class="lv-stat-label">Metrics</div></div>';
+  html += '<div class="lv-stat"><img src="/assets/lb/icon-loot.png" alt="" class="lv-stat-icon"><div class="lv-stat-value">' + formatPoints(stats.totalPoints || 0) + '</div><div class="lv-stat-label">Total Pts</div></div>';
+  html += '</div>';
+
+  html += '<div class="lv-table">';
+  for (var i = 0; i < Math.min(lb.length, limit); i++) {
+    var row = lb[i];
+    var rankClass = i < 3 ? " lv-rank-" + (i + 1) : "";
+    var rankText = i < 3 ? medalImgs[i] : "#" + row.rank;
+    var breakdownParts = [];
+    if (row.breakdown) {
+      for (var metric in row.breakdown) {
+        var entry = row.breakdown[metric];
+        var shortMetric = metric.replace(/^clue_scrolls_/, "").replace(/_/g, " ");
+        breakdownParts.push(shortMetric + ": " + entry.gained);
+      }
+    }
+    var breakdownTip = breakdownParts.length ? ' title="' + esc(breakdownParts.join(", ")) + '"' : "";
+    html += '<div class="lv-row' + rankClass + '"' + breakdownTip + '>';
+    html += '<span class="lv-rank">' + rankText + '</span>';
+    html += '<span class="lv-player">' + esc(row.player) + '</span>';
+    html += '<span class="lv-value">' + formatPoints(row.points) + ' pts</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="lv-dink">Live via Wise Old Man · ' + esc(presetLabel) + '</div>';
+  return html;
+}
+
+async function loadWomScoreLeaderboards(events) {
+  var wsEvents = events.filter(isWomScoredEvent);
+  if (!wsEvents.length) return;
+
+  await Promise.all(wsEvents.map(async function(ev) {
+    try {
+      var r = await fetch("/api/wom-score?event=" + encodeURIComponent(ev.id));
+      if (!r.ok) return;
+      var data = await r.json();
+      _womScoreData[ev.id] = data;
+
+      var container = document.querySelector('.ws-container[data-event-id="' + ev.id + '"]');
+      if (container) {
+        container.innerHTML = womScoreLeaderboardHtml(data, false);
       }
     } catch (e) {}
   }));
@@ -1478,7 +1604,7 @@ function switchLbTab(target) {
     if (clanContent) clanContent.style.display = "none";
     if (eventContent) eventContent.style.display = "";
     if (heroTitle) heroTitle.textContent = "Event Leaderboard";
-    if (heroTag) heroTag.textContent = "Live via Dink";
+    if (heroTag) heroTag.textContent = "Live Standings";
     history.replaceState(null, "", "#event");
     if (!_eventLbLoaded) {
       _eventLbLoaded = true;
@@ -1503,51 +1629,71 @@ async function loadEventLeaderboard() {
     if (!r.ok) throw new Error("events " + r.status);
     var data = await r.json();
     var events = data && Array.isArray(data.events) ? data.events : [];
-    var lvEvents = events.filter(function(ev) {
-      if (!isLootValueEvent(ev)) return false;
+
+    var trackedEvents = events.filter(function(ev) {
+      if (!isLootValueEvent(ev) && !isWomScoredEvent(ev)) return false;
       var status = computeEventStatus(ev);
       return status === "live" || status === "scheduled";
     });
 
     _eventsData = _eventsData.length ? _eventsData : events;
 
-    if (!lvEvents.length) {
+    if (!trackedEvents.length) {
       body.innerHTML = '<div class="event-lb-empty">' +
-        '<p>No active Loot Value events right now.</p>' +
-        '<p style="color:var(--muted);font-size:14px;margin-top:8px">When a Loot Value event is running, standings will appear here.</p>' +
+        '<p>No active tracked events right now.</p>' +
+        '<p style="color:var(--muted);font-size:14px;margin-top:8px">When a Loot Value or WOM Scored event is running, standings will appear here.</p>' +
         '</div>';
       if (badge) badge.textContent = "no active events";
       return;
     }
 
-    if (badge) badge.textContent = lvEvents.length + " active";
+    if (badge) badge.textContent = trackedEvents.length + " active";
 
-    var html = "";
-    var fetches = await Promise.all(lvEvents.map(function(ev) {
-      return fetch("/api/loot?event=" + encodeURIComponent(ev.id))
-        .then(function(r) { return r.ok ? r.json() : null; })
-        .catch(function() { return null; });
+    var fetches = await Promise.all(trackedEvents.map(function(ev) {
+      if (isLootValueEvent(ev)) {
+        return fetch("/api/loot?event=" + encodeURIComponent(ev.id))
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .catch(function() { return null; });
+      }
+      if (isWomScoredEvent(ev)) {
+        return fetch("/api/wom-score?event=" + encodeURIComponent(ev.id))
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .catch(function() { return null; });
+      }
+      return Promise.resolve(null);
     }));
 
-    for (var i = 0; i < lvEvents.length; i++) {
-      var ev = lvEvents[i];
-      var lootData = fetches[i];
-      if (lootData) _lootData[ev.id] = lootData;
+    var html = "";
+    for (var i = 0; i < trackedEvents.length; i++) {
+      var ev = trackedEvents[i];
+      var fetchedData = fetches[i];
+      var isLV = isLootValueEvent(ev);
+      var isWS = isWomScoredEvent(ev);
+
+      if (isLV && fetchedData) _lootData[ev.id] = fetchedData;
+      if (isWS && fetchedData) _womScoreData[ev.id] = fetchedData;
+
       var effStatus = computeEventStatus(ev);
       var statusBadge = eventStatusBadge(effStatus);
       var eventName = cleanName(ev.name);
       var dateStr = ev.hasParsedDate ? formatEventDate(ev.startTime) : "Date TBA";
+      var typeTag = isLV ? '<span class="lv-tag" style="font-size:11px;margin-left:8px">LOOT</span>'
+        : '<span class="lv-tag ws-tag" style="font-size:11px;margin-left:8px">WOM</span>';
 
       html += '<div class="event-lb-card" data-ev-id="' + esc(ev.id) + '">';
       html += '<div class="event-lb-card-header">';
-      html += '<h3>' + esc(eventName) + '</h3>';
+      html += '<h3>' + esc(eventName) + typeTag + '</h3>';
       html += '<div class="event-lb-card-meta">' + statusBadge + ' <span style="color:var(--muted);font-size:14px;margin-left:8px">' + esc(dateStr) + '</span>' +
         ' <button class="btn event-lb-view-btn" data-ev-id="' + esc(ev.id) + '">View Event</button></div>';
       html += '</div>';
-      if (lootData) {
-        html += '<div class="lv-container">' + lootLeaderboardHtml(lootData, false) + '</div>';
+      if (fetchedData) {
+        if (isLV) {
+          html += '<div class="lv-container">' + lootLeaderboardHtml(fetchedData, false) + '</div>';
+        } else {
+          html += '<div class="ws-container">' + womScoreLeaderboardHtml(fetchedData, false) + '</div>';
+        }
       } else {
-        html += '<p class="lv-loading">No loot data yet. Waiting for Dink reports...</p>';
+        html += '<p class="lv-loading">' + (isLV ? 'No loot data yet. Waiting for Dink reports...' : 'No WOM data yet. Waiting for gains...') + '</p>';
       }
       html += '</div>';
     }
