@@ -34,6 +34,12 @@ async function ensureTable(db) {
   try {
     await db.prepare("ALTER TABLE idea_positions ADD COLUMN template_json TEXT").run();
   } catch (_) {}
+  try {
+    await db.prepare("ALTER TABLE idea_positions ADD COLUMN held INTEGER NOT NULL DEFAULT 0").run();
+  } catch (_) {}
+  try {
+    await db.prepare("ALTER TABLE idea_positions ADD COLUMN held_by TEXT").run();
+  } catch (_) {}
   _tableReady = true;
 }
 
@@ -195,7 +201,7 @@ async function handleGet(context) {
     await ensureTable(db);
     const result = await db
       .prepare(
-        "SELECT message_id, column_name, dismissed, dismissed_by, moved_by, updated_at, template_json FROM idea_positions"
+        "SELECT message_id, column_name, dismissed, dismissed_by, moved_by, updated_at, template_json, held, held_by FROM idea_positions"
       )
       .all();
     for (const row of result.results) {
@@ -228,6 +234,8 @@ async function handleGet(context) {
       dismissedBy: pos?.dismissed_by || null,
       movedBy: pos?.moved_by || null,
       templateJson: pos?.template_json || null,
+      held: pos ? !!pos.held : false,
+      heldBy: pos?.held_by || null,
       comments: notesMap.get(idea.id) || [],
     };
   });
@@ -278,7 +286,7 @@ async function handlePost(context) {
 
   const level = checkAccess(context.env, access_code);
 
-  if (action === "move" || action === "dismiss" || action === "restore" || action === "set_template") {
+  if (action === "move" || action === "dismiss" || action === "restore" || action === "set_template" || action === "hold" || action === "unhold") {
     if (level !== "leader") return json({ error: "leader access required" }, 403);
   } else if (action === "add_note") {
     if (!level) return json({ error: "access code required" }, 403);
@@ -299,7 +307,9 @@ async function handlePost(context) {
            moved_by = excluded.moved_by,
            updated_at = excluded.updated_at,
            dismissed = 0,
-           dismissed_by = NULL`
+           dismissed_by = NULL,
+           held = 0,
+           held_by = NULL`
       )
       .bind(message_id, column, user, now)
       .run();
@@ -340,6 +350,27 @@ async function handlePost(context) {
         `UPDATE idea_positions SET template_json = ?, updated_at = ? WHERE message_id = ?`
       )
       .bind(val || null, now, message_id)
+      .run();
+  } else if (action === "hold") {
+    if (!user) return json({ error: "user required for hold" }, 400);
+    await db
+      .prepare(
+        `INSERT INTO idea_positions (message_id, column_name, held, held_by, updated_at)
+         VALUES (?, 'review', 1, ?, ?)
+         ON CONFLICT(message_id) DO UPDATE SET
+           held = 1,
+           held_by = excluded.held_by,
+           updated_at = excluded.updated_at`
+      )
+      .bind(message_id, user, now)
+      .run();
+  } else if (action === "unhold") {
+    await db
+      .prepare(
+        `UPDATE idea_positions SET held = 0, held_by = NULL, updated_at = ?
+         WHERE message_id = ?`
+      )
+      .bind(now, message_id)
       .run();
   } else {
     return json({ error: "invalid action" }, 400);
