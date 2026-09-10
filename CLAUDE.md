@@ -493,6 +493,12 @@ Replaces the current Loot Value system with something far more flexible.
   "Saucy saucy" also means merge to main once the changes are committed and tests pass.
   Documentation-only updates (like CLAUDE.md) are exempt.
 - **NO EM DASHES.** Never use em dashes in any user-visible text. Non-negotiable.
+- **NO SECRETS IN CODE.** NEVER commit secrets, tokens, webhook URLs, API keys, or
+  passwords to ANY file in this repo. The repo is public. All credentials live in
+  Cloudflare Pages env vars only. If a static file needs a secret value, use a
+  `__PLACEHOLDER__` token and have a backend endpoint (Pages Function) inject the
+  real value from env vars at request time (see dink-config.txt + dink-config.js
+  for the pattern). Before every commit, check that no secret is being staged.
 - NEVER put the Discord bot token in client code. Server-side (Functions + env) only.
 - Keep it vanilla -- don't introduce React/Next/bundlers.
 - Don't add website-side editing of anything that has a Discord/WOM source.
