@@ -1267,6 +1267,15 @@ function wireEventModals() {
       });
     }
   }
+
+  document.querySelectorAll(".event-lb-view-btn").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var id = btn.getAttribute("data-ev-id");
+      var ev = _eventsData.find(function (x) { return x.id === id; });
+      if (ev) openModal(ev);
+    });
+  });
 }
 
 function wireParticipantModal() {
@@ -1500,6 +1509,8 @@ async function loadEventLeaderboard() {
       return status === "live" || status === "scheduled";
     });
 
+    _eventsData = _eventsData.length ? _eventsData : events;
+
     if (!lvEvents.length) {
       body.innerHTML = '<div class="event-lb-empty">' +
         '<p>No active Loot Value events right now.</p>' +
@@ -1527,10 +1538,11 @@ async function loadEventLeaderboard() {
       var eventName = cleanName(ev.name);
       var dateStr = ev.hasParsedDate ? formatEventDate(ev.startTime) : "Date TBA";
 
-      html += '<div class="event-lb-card">';
+      html += '<div class="event-lb-card" data-ev-id="' + esc(ev.id) + '">';
       html += '<div class="event-lb-card-header">';
       html += '<h3>' + esc(eventName) + '</h3>';
-      html += '<div class="event-lb-card-meta">' + statusBadge + ' <span style="color:var(--muted);font-size:14px;margin-left:8px">' + esc(dateStr) + '</span></div>';
+      html += '<div class="event-lb-card-meta">' + statusBadge + ' <span style="color:var(--muted);font-size:14px;margin-left:8px">' + esc(dateStr) + '</span>' +
+        ' <button class="btn event-lb-view-btn" data-ev-id="' + esc(ev.id) + '">View Event</button></div>';
       html += '</div>';
       if (lootData) {
         html += '<div class="lv-container">' + lootLeaderboardHtml(lootData, false) + '</div>';
@@ -1541,6 +1553,7 @@ async function loadEventLeaderboard() {
     }
 
     body.innerHTML = html;
+    wireEventModals();
   } catch (e) {
     body.innerHTML = '<div class="event-lb-empty">' +
       '<p>Could not load event data.</p>' +

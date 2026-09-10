@@ -556,6 +556,8 @@ nav.main a[href="/ge.html"]{display:none}
 .event-lb-card-header h3{font-family:"Cinzel",serif;font-size:clamp(16px,3vw,20px);color:var(--gold);margin:0 0 6px}
 .event-lb-card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .event-lb-empty{text-align:center;padding:40px 20px;font-family:"Jersey 15",monospace;font-size:18px;color:var(--parchment)}
+.event-lb-view-btn{font-family:"Jersey 15",monospace;font-size:13px;padding:4px 14px;margin-left:auto;cursor:pointer;color:var(--gold);background:rgba(255,203,47,.1);border:1px solid rgba(255,203,47,.25);border-radius:4px;white-space:nowrap;transition:background .15s}
+.event-lb-view-btn:hover{background:rgba(255,203,47,.2)}
 .lv-lb-link{font-family:"Jersey 15",monospace;font-size:13px;color:var(--gold);background:rgba(255,203,47,.1);border:1px solid rgba(255,203,47,.25);padding:3px 10px;border-radius:4px;text-decoration:none;white-space:nowrap;flex:0 0 auto;margin-right:4px;transition:background .15s}
 .lv-lb-link:hover{background:rgba(255,203,47,.2)}
 .lv-standings-btn{font-family:"Jersey 15",monospace;font-size:15px;color:var(--gold)!important;background:rgba(255,203,47,.08)!important;border:1px solid rgba(255,203,47,.25)!important;padding:10px 18px!important}
