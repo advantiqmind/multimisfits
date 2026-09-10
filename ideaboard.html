@@ -552,8 +552,33 @@ body {
 .card-discord { background: rgba(88,100,240,0.15); border-left: 3px solid #8090ff; }
 .card-website { background: rgba(200,140,30,0.12); border-left: 3px solid #f0b050; }
 
-/* On Hold column overrides card color */
-.column[data-col="onhold"] .card { background: rgba(180,40,40,0.15); border-left: 3px solid #e05050; }
+/* Final Approval column overrides card color */
+.column[data-col="onhold"] .card { background: rgba(200,160,40,0.12); border-left: 3px solid #e8b030; }
+
+/* Held card state (amber badge, any column) */
+.card.held { background: rgba(180,80,30,0.15) !important; border-left: 3px solid #e08030 !important; }
+.card-held-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #e08030;
+  background: rgba(224,128,48,0.15);
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+.card-hold-btn, .card-unhold-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px;
+  line-height: 1;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.card-hold-btn:hover, .card-unhold-btn:hover { opacity: 1; }
+.card-hold-btn { color: var(--text-dim); }
+.card-unhold-btn { color: #e08030; }
 
 /* Day counter badge */
 .card-age {
@@ -618,7 +643,7 @@ body {
   white-space: nowrap;
 }
 
-/* On Hold comment prompt */
+/* Comment prompt overlay (Final Approval / Hold) */
 .ib-onhold-overlay {
   position: fixed;
   inset: 0;
@@ -1372,7 +1397,8 @@ body {
 }
 
 /* Modal color accents */
-.ib-modal.modal-accent-onhold { border-left: 4px solid #e05050; }
+.ib-modal.modal-accent-onhold { border-left: 4px solid #e8b030; }
+.ib-modal.modal-accent-held { border-left: 4px solid #e08030; }
 .ib-modal.modal-accent-used { border-left: 4px solid #50e870; }
 .ib-modal.modal-accent-weekend { border-left: 4px solid #60f080; }
 .ib-modal.modal-accent-1day { border-left: 4px solid #60a0ff; }
@@ -1499,7 +1525,7 @@ body {
   </div>
   <div class="column" data-col="onhold">
     <div class="column-header">
-      <span class="col-chevron">&#9660;</span><span class="column-title">On Hold</span>
+      <span class="col-chevron">&#9660;</span><span class="column-title">Final Approval</span>
       <span class="column-count" id="count-onhold">0</span>
     </div>
     <div class="column-body" id="col-onhold"></div>
@@ -1758,7 +1784,7 @@ function showToast(msg) {
 
 function ideasFingerprint(list) {
   return list.map(function(i) {
-    return i.id + ':' + i.column + ':' + (i.dismissed ? 1 : 0) + ':' + (i.comments || []).length;
+    return i.id + ':' + i.column + ':' + (i.dismissed ? 1 : 0) + ':' + (i.held ? 1 : 0) + ':' + (i.comments || []).length;
   }).join('|');
 }
 
@@ -1871,7 +1897,7 @@ function render() {
 function buildCard(idea, col) {
   var div = document.createElement('div');
   var mainTag = (idea.tags || []).find(function(t) { return MAIN_TAGS.indexOf(t) !== -1; });
-  div.className = 'card' + (mainTag ? ' card-' + mainTag : '');
+  div.className = 'card' + (mainTag ? ' card-' + mainTag : '') + (idea.held ? ' held' : '');
   var isLeader = accessLevel === 'leader';
   div.draggable = isLeader;
   div.dataset.id = idea.id;
@@ -1899,7 +1925,7 @@ function buildCard(idea, col) {
       var t = e.target;
       var skip = 'button, input, textarea, a, .card-notes-toggle, .card-comments-toggle, ' +
         '.card-media-toggle, .card-move-btn, .card-copy, .card-copy-ai, .card-template, .card-template-add, .card-template-remove, ' +
-        '.card-comment-submit, .card-move-dropdown, .card-move-option, .card-delete';
+        '.card-comment-submit, .card-move-dropdown, .card-move-option, .card-delete, .card-hold-btn, .card-unhold-btn';
       if (t.closest(skip)) return;
       openCardModal(ideaId);
     });
@@ -1965,6 +1991,15 @@ function buildCard(idea, col) {
       commentAddHtml +
     '</div>';
 
+  var holdBtn = '';
+  if (isLeader) {
+    if (idea.held) {
+      holdBtn = '<button class="card-unhold-btn" onclick="unholdCard(event,\'' + idea.id + '\')" title="Remove hold">&#9654;</button>';
+    } else {
+      holdBtn = '<button class="card-hold-btn" onclick="event.stopPropagation();promptHoldCard(\'' + idea.id + '\')" title="Put on hold">&#9208;</button>';
+    }
+  }
+
   var dismissBtn = isLeader
     ? '<button class="card-delete" onclick="dismissCard(\'' + idea.id + '\')" title="Dismiss">&times;</button>'
     : '';
@@ -1998,6 +2033,10 @@ function buildCard(idea, col) {
     ageHtml = '<span class="card-age' + (stale ? ' stale' : '') + '">' + label + '</span>';
   }
 
+  var heldBadge = idea.held
+    ? '<span class="card-held-badge">HELD' + (idea.heldBy ? ' by ' + esc(idea.heldBy) : '') + '</span>'
+    : '';
+
   var authorIdHtml = '';
   if (col === 'review') {
     var avatarEl = '';
@@ -2016,8 +2055,10 @@ function buildCard(idea, col) {
     '<div class="card-top">' +
       '<span class="card-title">' + titleHtml + '</span>' +
       commentBadgeHtml +
+      holdBtn +
       dismissBtn +
     '</div>' +
+    heldBadge +
     (col === 'review'
       ? authorIdHtml + '<div class="card-meta">' + dateStr + ' ' + ageHtml + '</div>'
       : '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + ' ' + copyBtn + templateBtn + '</div>') +
@@ -2193,7 +2234,7 @@ function promptTemplate(e, ideaId) {
   showTemplateOverlay(ideaId, idea.title, false);
 }
 
-var COL_LABELS = { review: 'In Review', approved: 'Approved', shared: 'Created and Shared', onhold: 'On Hold', used: 'Completed' };
+var COL_LABELS = { review: 'In Review', approved: 'Approved', shared: 'Created and Shared', onhold: 'Final Approval', used: 'Completed' };
 
 function toggleMoveDropdown(e, btn) {
   e.stopPropagation();
@@ -2445,7 +2486,7 @@ function moveCard(id, newCol) {
   if (!idea || idea.column === newCol) return;
 
   if (newCol === 'onhold') {
-    promptOnHoldComment(id);
+    promptFinalApprovalComment(id);
     return;
   }
 
@@ -2457,7 +2498,7 @@ function moveCard(id, newCol) {
   doMove(id, newCol);
 }
 
-function promptOnHoldComment(id) {
+function promptFinalApprovalComment(id) {
   var idea = ideas.find(function(c) { return c.id === id; });
   if (!idea) return;
 
@@ -2465,12 +2506,12 @@ function promptOnHoldComment(id) {
   overlay.className = 'ib-onhold-overlay';
   overlay.innerHTML =
     '<div class="ib-onhold-panel">' +
-      '<h3>On Hold</h3>' +
-      '<p>Moving "' + esc(idea.title) + '" to On Hold. Explain why or what needs to change:</p>' +
-      '<textarea id="onholdComment" placeholder="Why is this on hold?"></textarea>' +
+      '<h3>Final Approval</h3>' +
+      '<p>Moving "' + esc(idea.title) + '" to Final Approval. Add any review notes:</p>' +
+      '<textarea id="onholdComment" placeholder="Any notes for final review?"></textarea>' +
       '<div class="ib-onhold-btns">' +
         '<button class="ib-btn ib-btn-sm" id="onholdCancel">Cancel</button>' +
-        '<button class="ib-btn ib-btn-primary ib-btn-sm" id="onholdConfirm">Move to On Hold</button>' +
+        '<button class="ib-btn ib-btn-primary ib-btn-sm" id="onholdConfirm">Move to Final Approval</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
@@ -2483,7 +2524,7 @@ function promptOnHoldComment(id) {
     var text = document.getElementById('onholdComment').value.trim();
     if (!text) {
       document.getElementById('onholdComment').style.borderColor = '#e05050';
-      showToast('Comment is required for On Hold');
+      showToast('Comment is required for Final Approval');
       return;
     }
     overlay.remove();
@@ -2509,13 +2550,106 @@ function promptOnHoldComment(id) {
   };
 }
 
+function promptHoldCard(id) {
+  var idea = ideas.find(function(c) { return c.id === id; });
+  if (!idea) return;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'ib-onhold-overlay';
+  overlay.innerHTML =
+    '<div class="ib-onhold-panel">' +
+      '<h3>Hold Idea</h3>' +
+      '<p>Putting "' + esc(idea.title) + '" on hold. Explain why it needs to wait:</p>' +
+      '<textarea id="onholdComment" placeholder="Why is this on hold?"></textarea>' +
+      '<div class="ib-onhold-btns">' +
+        '<button class="ib-btn ib-btn-sm" id="onholdCancel">Cancel</button>' +
+        '<button class="ib-btn ib-btn-primary ib-btn-sm" id="onholdConfirm">Put on Hold</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  setTimeout(function() { document.getElementById('onholdComment').focus(); }, 50);
+
+  document.getElementById('onholdCancel').onclick = function() { overlay.remove(); };
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  document.getElementById('onholdConfirm').onclick = function() {
+    var text = document.getElementById('onholdComment').value.trim();
+    if (!text) {
+      document.getElementById('onholdComment').style.borderColor = '#e05050';
+      showToast('Comment is required when holding');
+      return;
+    }
+    overlay.remove();
+
+    var user = ensureUser();
+    if (!user) return;
+
+    idea.comments = idea.comments || [];
+    idea.comments.push({ author: user, text: text, createdAt: new Date().toISOString() });
+    idea.held = true;
+    idea.heldBy = user;
+    render();
+
+    fetch('/api/ideaboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_note', message_id: id, user: user, text: text, access_code: getAccessCode() }),
+    }).then(function(res) {
+      if (!res.ok) throw new Error();
+      return fetch('/api/ideaboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'hold', message_id: id, user: user, access_code: getAccessCode() }),
+      });
+    }).then(function(res) {
+      if (!res.ok) throw new Error();
+      showToast('Idea put on hold');
+    }).catch(function() {
+      idea.comments.pop();
+      idea.held = false;
+      idea.heldBy = null;
+      render();
+      showToast('Failed to hold idea');
+    });
+  };
+}
+
+function unholdCard(e, id) {
+  if (e) e.stopPropagation();
+  if (accessLevel !== 'leader') {
+    showToast('Leader access required');
+    return;
+  }
+  var idea = ideas.find(function(c) { return c.id === id; });
+  if (!idea) return;
+
+  idea.held = false;
+  idea.heldBy = null;
+  render();
+
+  fetch('/api/ideaboard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'unhold', message_id: id, access_code: getAccessCode() }),
+  }).then(function(res) {
+    if (!res.ok) throw new Error();
+    showToast('Hold removed');
+  }).catch(function() {
+    idea.held = true;
+    render();
+    showToast('Failed to remove hold');
+  });
+}
+
 function doMove(id, newCol) {
   var idea = ideas.find(function(c) { return c.id === id; });
   if (!idea || idea.column === newCol) return;
 
   var oldCol = idea.column;
+  var wasHeld = idea.held;
   var user = ensureUser();
   if (!user) return;
+  if (idea.held) { idea.held = false; idea.heldBy = null; }
 
   idea.column = newCol;
   idea.movedBy = user;
@@ -2598,6 +2732,9 @@ function openCardModal(ideaId) {
   if (idea.movedBy) {
     html += '<div class="ib-modal-meta" style="font-style:italic;">Moved by ' + esc(idea.movedBy) + '</div>';
   }
+  if (idea.held) {
+    html += '<div style="margin:6px 0;"><span class="card-held-badge">HELD' + (idea.heldBy ? ' by ' + esc(idea.heldBy) : '') + '</span></div>';
+  }
 
   /* Tags */
   if (mainTagHtml || tagsHtml) {
@@ -2667,7 +2804,8 @@ function openCardModal(ideaId) {
 
   /* Determine color accent for modal */
   var accentClass = '';
-  if (col === 'onhold') accentClass = 'modal-accent-onhold';
+  if (idea.held) accentClass = 'modal-accent-held';
+  else if (col === 'onhold') accentClass = 'modal-accent-onhold';
   else if (col === 'used') accentClass = 'modal-accent-used';
   else if (mainTag === 'weekend') accentClass = 'modal-accent-weekend';
   else if (mainTag === '1day') accentClass = 'modal-accent-1day';

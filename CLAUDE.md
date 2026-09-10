@@ -198,7 +198,8 @@ Replaces the current Loot Value system with something far more flexible.
 - Main tags (#weekend, #1day, #discord, #website) color the entire card with
   a tinted background and left accent border for quick visual identification.
   Other tags are sub-category chips that appear on the card but don't color it.
-  Cards in the On Hold column always show red regardless of tag.
+  Cards in the Final Approval column show amber/gold regardless of tag.
+  Cards with the "held" flag show amber/orange regardless of tag.
   Cards in the Used column show green with green glow.
 - Color key bar at top shows "Color Coded:" with visual swatches for each main tag.
   Collapsible hashtag guide shows sub-category tags with descriptions.
@@ -220,22 +221,29 @@ Replaces the current Loot Value system with something far more flexible.
   `idea_positions` table for column placement and dismiss state, and `idea_notes` for
   comments. Cached 30s.
 - POST /api/ideaboard: actions "move" (column, requires leader code), "dismiss" (leader),
-  "restore" (leader), "add_note" (leader or member code), "validate" (check code validity).
+  "restore" (leader), "hold" (leader, sets held flag), "unhold" (leader, clears held flag),
+  "add_note" (leader or member code), "validate" (check code validity).
   All write actions require access_code in request body.
 - Two-tier access control: IDEABOARD_LEADER_CODE = full access (move, dismiss, restore, comment).
   IDEABOARD_MEMBER_CODE = comment only. No code = read-only view. If neither env var set,
   everyone gets leader access (backwards compatible). Frontend stores code in localStorage
   (mm-ideaboard-code), auto-validates on page load, shows access badge (Leader/Member/View Only).
-- D1 table `idea_positions`: message_id (PK), column_name, dismissed, dismissed_by, moved_by, updated_at.
+- D1 table `idea_positions`: message_id (PK), column_name, dismissed, dismissed_by, moved_by, held, held_by, updated_at.
 - D1 table `idea_notes`: id (autoincrement), message_id, author, text, created_at.
-- Frontend: kanban board with 5 columns (In Review, Approved, Created and Shared, On Hold, Used).
+- Frontend: kanban board with 5 columns (In Review, Approved, Created and Shared, Final Approval, Completed).
   Drag-and-drop moves cards between columns (leader only, optimistic UI, reverts on API error).
 - Valid columns: review, approved, shared, onhold, used.
 - Old column names (planned, active, done, ideas, rejected) auto-migrate to new keys on read.
-- On Hold column: ideas that weren't approved but aren't dismissed. Moving a card to On Hold
-  requires a comment explaining why (overlay prompt, comment posted before the move).
-  Cards show red styling. Awaiting discussion about improvements.
-- Day counter: cards in In Review and On Hold show "X days" badge based on creation date.
+- Final Approval column (key: onhold): the last review step before Completed. Moving a card
+  to Final Approval requires a comment (overlay prompt, comment posted before the move).
+  Cards show amber/gold styling. Linear flow: In Review -> Approved -> Created and Shared
+  -> Final Approval -> Completed.
+- Hold flag: any card can be put "on hold" by a leader. Requires a comment explaining why.
+  Held cards get an amber HELD badge and orange tint. Comments section serves as the
+  discussion space for why it's held. Leaders can unhold to release the card. Moving a
+  held card to another column automatically clears the hold. Separate from dismiss (which
+  is for cancelled/done ideas).
+- Day counter: cards in In Review and Final Approval show "X days" badge based on creation date.
   After 7 days, the badge pulses to flag stale ideas that need attention.
 - Copy button appears ONLY on cards in the Approved column. Copies title + notes for
   pasting into EventForge AI Assist.
