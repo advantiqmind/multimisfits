@@ -453,11 +453,17 @@ async function loadNews() {
 /* ---- achievements ---- */
 const ACH_LABELS = { pet: "Pet", drop: "Loot Drop", ca: "Combat Achievement", max: "Maxed", xp: "XP Milestone", quest: "Quest", clue: "Clue Scroll", pb: "Personal Best", default: "Achievement" };
 const ACH_COLORS = { pet: "#5bc0de", drop: "#ffcb2f", ca: "#e04040", max: "#ff9900", xp: "#4ad04a", quest: "#c090ff", clue: "#d99f1c", pb: "#4a90d9", default: "#999" };
+const ACH_ICONS = { pet: "ach-pet.png", drop: "ach-drop.png", ca: "ach-ca.png", max: "ach-max.png", xp: "ach-xp.png", quest: "ach-quest.png", clue: "ach-clue.png", pb: "ach-pb.png", default: "ach-default.png" };
 
 function achThumb(item) {
   var src = item.thumbnail || item.image || "";
   if (!src) return "";
   return `<a class="ach-thumb lightbox-trigger" href="${esc(item.image || item.thumbnail)}"><img src="${esc(src)}" alt="" loading="lazy"></a>`;
+}
+
+function achMedal(item) {
+  var icon = ACH_ICONS[item.type] || ACH_ICONS.default;
+  return `<div class="medal ach-icon"><img src="/assets/${esc(icon)}" alt="" loading="lazy"></div>`;
 }
 
 function achItem(item, full) {
@@ -470,7 +476,7 @@ function achItem(item, full) {
   var thumb = achThumb(item);
   if (full) {
     return `<div class="ach ach-full">` +
-      `<div class="medal">${esc(item.medal)}</div>` +
+      achMedal(item) +
       `<div class="ach-info">` +
         `<div class="ach-row"><span class="who">${esc(item.player)}</span>${tagHtml}</div>` +
         `<div class="what">${esc(what)}</div>` +
@@ -479,7 +485,7 @@ function achItem(item, full) {
       `</div>${thumb}</div>`;
   }
   return `<div class="ach">` +
-    `<div class="medal">${esc(item.medal)}</div>` +
+    achMedal(item) +
     `<div class="ach-info">` +
       `<div class="who">${esc(item.player)}</div>` +
       `<div class="what">${esc(what)}</div>` +
