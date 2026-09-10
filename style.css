@@ -142,7 +142,7 @@ main{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
 .chan-chip{display:inline;background:rgba(255,203,47,.12);border:1px solid rgba(255,203,47,.35);color:var(--gold);border-radius:4px;padding:0 5px;font-weight:700;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 
 /* ---------- events ---------- */
-.event{display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:center;padding:11px 0;border-bottom:1px dashed rgba(255,203,47,.18)}
+.event{display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:center;padding:11px 12px;border-bottom:1px dashed rgba(255,203,47,.18)}
 .event:last-child{border-bottom:0;padding-bottom:0}
 .event .date{border:2px solid #000;border-radius:6px;text-align:center;background:linear-gradient(180deg,#3a2f1d,#241d10);box-shadow:inset 0 1px 0 var(--bronze-lite);padding:5px 0}
 .event .date .d{font-family:"Jersey 15";font-size:22px;color:var(--gold);line-height:1}
@@ -150,7 +150,7 @@ main{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
 .event .date.date-tba .d{font-size:14px;letter-spacing:1px}
 .event .date.date-tba .m{color:var(--gold-dim)}
 .event h3{font-family:"Cinzel";font-size:16px;color:var(--parchment)}
-.event .when{font-family:"Jersey 15";font-size:14px;color:var(--gold-dim)}
+.event .when{font-family:"Jersey 15";font-size:18px;color:var(--gold-dim)}
 
 /* ---------- achievements ---------- */
 .ach{display:flex;gap:11px;align-items:center;padding:10px 0;border-bottom:1px dashed rgba(255,203,47,.18)}
