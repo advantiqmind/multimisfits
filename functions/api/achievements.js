@@ -261,9 +261,13 @@ export function transformMessages(messages, opts = {}) {
     const parsed = parseDinkMessage(m);
     if (!parsed) continue;
 
+    const avatar = m.author && m.author.id && m.author.avatar
+      ? `https://cdn.discordapp.com/avatars/${m.author.id}/${m.author.avatar}.png?size=64`
+      : null;
     out.push({
       id: m.id,
       timestamp: m.timestamp || null,
+      avatar,
       ...parsed,
     });
     if (out.length >= limit) break;

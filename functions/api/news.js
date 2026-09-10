@@ -115,6 +115,26 @@ export function transformMessages(messages, opts = {}) {
     let content = (m.content || "").trim();
     const attachments = Array.isArray(m.attachments) ? m.attachments : [];
     const image = attachments.find((a) => (a.content_type || "").startsWith("image/"));
+
+    // Bot posts put real content in embeds, not m.content (which is just @everyone)
+    const embeds = Array.isArray(m.embeds) ? m.embeds : [];
+    const contentStripped = stripDiscordRaw(content);
+    if (!contentStripped && embeds.length > 0) {
+      const e = embeds[0];
+      const parts = [];
+      if (e.title) parts.push(e.title);
+      if (e.description) parts.push(e.description);
+      if (Array.isArray(e.fields)) {
+        for (const f of e.fields) {
+          if (f.name && f.value) parts.push("**" + f.name + ":** " + f.value);
+        }
+      }
+      content = parts.join("\n");
+      if (!content && e.image && e.image.url && !image) {
+        content = e.title || "Announcement";
+      }
+    }
+
     if (!content && !image) continue;                        // nothing to show
 
     const mentions = Array.isArray(m.mentions) ? m.mentions : [];

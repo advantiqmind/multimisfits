@@ -460,6 +460,11 @@ function achThumb(item) {
   return `<a class="ach-thumb lightbox-trigger" href="${esc(item.image || item.thumbnail)}"><img src="${esc(src)}" alt="" loading="lazy"></a>`;
 }
 
+function achMedal(item) {
+  if (item.avatar) return `<div class="medal ach-avatar"><img src="${esc(item.avatar)}" alt="" loading="lazy"></div>`;
+  return `<div class="medal">${esc(item.medal)}</div>`;
+}
+
 function achItem(item, full) {
   var label = ACH_LABELS[item.type] || "Achievement";
   var color = ACH_COLORS[item.type] || ACH_COLORS.default;
@@ -470,7 +475,7 @@ function achItem(item, full) {
   var thumb = achThumb(item);
   if (full) {
     return `<div class="ach ach-full">` +
-      `<div class="medal">${esc(item.medal)}</div>` +
+      achMedal(item) +
       `<div class="ach-info">` +
         `<div class="ach-row"><span class="who">${esc(item.player)}</span>${tagHtml}</div>` +
         `<div class="what">${esc(what)}</div>` +
@@ -479,7 +484,7 @@ function achItem(item, full) {
       `</div>${thumb}</div>`;
   }
   return `<div class="ach">` +
-    `<div class="medal">${esc(item.medal)}</div>` +
+    achMedal(item) +
     `<div class="ach-info">` +
       `<div class="who">${esc(item.player)}</div>` +
       `<div class="what">${esc(what)}</div>` +
@@ -896,7 +901,10 @@ function homeEventCard(ev) {
   const month = ev.hasParsedDate ? d.toLocaleDateString(undefined, { month: "short" }).toUpperCase() : "TBA";
   const timeStr = ev.hasParsedDate && effStatus !== "live" ? formatEventTime(ev.startTime) : "";
   const liveBadge = effStatus === "live" ? '<div class="when" style="color:#e04040">LIVE</div>' : "";
-  return `<div class="event"><div class="date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div><div><h3>${esc(cleanName(ev.name))}</h3>${liveBadge || (timeStr ? `<div class="when">${timeStr}</div>` : "")}</div></div>`;
+  const bgStyle = ev.image
+    ? ` style="background:linear-gradient(to right,rgba(18,13,6,.92),rgba(18,13,6,.7)),url('${esc(ev.image)}') center/cover;"`
+    : "";
+  return `<div class="event"${bgStyle}><div class="date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div><div><h3>${esc(cleanName(ev.name))}</h3>${liveBadge || (timeStr ? `<div class="when">${timeStr}</div>` : "")}</div></div>`;
 }
 
 function renderHomeEvents(events) {

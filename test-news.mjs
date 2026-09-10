@@ -133,6 +133,24 @@ const checks = [
     ]);
     return ids.length === 3 && ids.includes("111") && ids.includes("222") && ids.includes("333");
   })()],
+  ["bot embed fallback: content with only @everyone uses embed title+description", (() => {
+    var msgs = [{ id: "be1", type: 0, timestamp: "2026-08-23T10:00:00Z",
+      author: { id: "333", username: "SiteBot", global_name: "MultiMisfits Site Bot", bot: true },
+      content: "@everyone",
+      embeds: [{ title: "Dink Settings Updated", description: "New clan Dink settings are available.\nPlease re-import your settings." }],
+      attachments: [], reactions: [{ emoji: { name: "avatar" }, count: 1 }] }];
+    var r = transformMessages(msgs, { botReaction: "avatar" });
+    return r.length === 1 && r[0].titleHtml.includes("Dink Settings Updated") && r[0].bodyHtml.includes("re-import");
+  })()],
+  ["bot embed fallback: embed fields included in body", (() => {
+    var msgs = [{ id: "be2", type: 0, timestamp: "2026-08-23T10:00:00Z",
+      author: { id: "333", username: "SiteBot", bot: true },
+      content: "",
+      embeds: [{ title: "Update", description: "Check it out", fields: [{ name: "Version", value: "1.5" }] }],
+      attachments: [], reactions: [{ emoji: { name: "avatar" }, count: 1 }] }];
+    var r = transformMessages(msgs, { botReaction: "avatar" });
+    return r.length === 1 && r[0].bodyHtml.includes("Version");
+  })()],
   ["channels flow through transformMessages", (() => {
     var msgs = [{ id: "c1", type: 0, timestamp: "2026-08-27T12:42:00Z",
       author: { id: "555", username: "stwidu" },
