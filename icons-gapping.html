@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Security Incident</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080b10;--surface:#0f1318;--border:#1c2028;--border-alert:#4a1520;
+  --red:#c0392b;--red-bright:#e74c3c;--red-glow:rgba(192,57,43,.08);
+  --amber:#b8860b;--text:#b8bfc6;--dim:#5a6270;
+  --mono:'IBM Plex Mono','Consolas','Liberation Mono',monospace;
+  --sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);
+  display:flex;justify-content:center;padding:40px 16px 60px;min-height:100vh}
+.wrap{max-width:640px;width:100%}
+.hdr{text-align:center;margin-bottom:32px}
+.hdr-icon{display:block;margin:0 auto 14px}
+.hdr-status{display:inline-flex;align-items:center;gap:7px;
+  font:600 10px/1 var(--mono);color:var(--red-bright);
+  text-transform:uppercase;letter-spacing:1.2px;margin-bottom:14px}
+.hdr-dot{width:6px;height:6px;background:var(--red-bright);border-radius:50%;
+  animation:blink 2s steps(2,start) infinite}
+@keyframes blink{50%{opacity:.15}}
+.hdr h1{font:700 19px/1.2 var(--mono);color:var(--red);
+  text-transform:uppercase;letter-spacing:1.6px;margin:0 0 6px}
+.hdr-sub{font:400 11px/1 var(--mono);color:var(--dim);letter-spacing:.4px}
+.blk{background:var(--surface);border:1px solid var(--border);
+  padding:18px 22px;margin-bottom:16px}
+.blk-alert{border-color:var(--border-alert);border-left:3px solid var(--red);
+  box-shadow:0 0 40px var(--red-glow)}
+.blk-label{display:block;font:600 10px/1 var(--mono);text-transform:uppercase;
+  letter-spacing:1.5px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.blk-alert .blk-label{color:var(--red-bright)}
+.blk-device .blk-label{color:var(--amber)}
+.blk-legal .blk-label{color:var(--dim)}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:7px 14px;font-size:12px}
+@media(max-width:480px){.kv{grid-template-columns:1fr;gap:2px}
+  .kv-k{margin-top:8px}.kv-k:first-child{margin-top:0}}
+.kv-k{font:400 10px/1.8 var(--mono);color:var(--dim);
+  text-transform:uppercase;letter-spacing:.5px}
+.kv-v{font:400 12px/1.6 var(--mono);color:var(--text);word-break:break-all}
+.kv-v.hi{color:var(--amber)}
+.kv-v.crit{color:var(--red-bright)}
+.law{font:400 12px/1.65 var(--sans);color:var(--dim);
+  margin-bottom:12px;padding-left:14px;position:relative}
+.law:last-child{margin-bottom:0}
+.law::before{content:'';position:absolute;left:0;top:7px;
+  width:4px;height:4px;background:var(--red)}
+.law strong{color:var(--text);font-weight:600}
+.foot{text-align:center;font:400 11px/1.7 var(--mono);color:var(--dim);
+  padding-top:20px;border-top:1px solid var(--border);margin-top:8px}
+.foot .ret{color:var(--red);font-weight:700}
+.foot .tmr{display:flex;align-items:center;justify-content:center;
+  gap:6px;margin-top:10px;font-size:11px}
+.foot .tmr-val{color:var(--red-bright);font-weight:600;font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.hdr-dot{animation:none;opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <svg class="hdr-icon" width="52" height="52" viewBox="0 0 52 52" fill="none">
+      <path d="M26 6L48 44H4L26 6Z" stroke="#c0392b" stroke-width="2" fill="none"/>
+      <rect x="24.5" y="20" width="3" height="14" rx="1" fill="#c0392b"/>
+      <rect x="24.5" y="37" width="3" height="3" rx="1" fill="#c0392b"/>
+    </svg>
+    <div class="hdr-status"><span class="hdr-dot"></span> Active Monitoring</div>
+    <h1>Unauthorized Access Detected</h1>
+    <div class="hdr-sub">Automated Security Monitoring System</div>
+  </div>
+  <div class="blk blk-alert">
+    <span class="blk-label">Incident Report</span>
+    <div class="kv">
+      <span class="kv-k">Incident ID</span>
+      <span class="kv-v hi" id="iid">---</span>
+      <span class="kv-k">Timestamp</span>
+      <span class="kv-v" id="its">---</span>
+      <span class="kv-k">Category</span>
+      <span class="kv-v">Unauthorized access / Reconnaissance</span>
+      <span class="kv-k">Severity</span>
+      <span class="kv-v hi">HIGH</span>
+      <span class="kv-k">Status</span>
+      <span class="kv-v crit">LOGGED // FORWARDED TO SITE ADMINISTRATION</span>
+    </div>
+  </div>
+  <div class="blk blk-device">
+    <span class="blk-label">Device Signature Captured</span>
+    <div class="kv">
+      <span class="kv-k">User Agent</span>
+      <span class="kv-v" id="dua">---</span>
+      <span class="kv-k">Platform</span>
+      <span class="kv-v" id="dpl">---</span>
+      <span class="kv-k">Language</span>
+      <span class="kv-v" id="dln">---</span>
+      <span class="kv-k">Display</span>
+      <span class="kv-v" id="dsc">---</span>
+      <span class="kv-k">Timezone</span>
+      <span class="kv-v" id="dtz">---</span>
+      <span class="kv-k">Connection</span>
+      <span class="kv-v" id="dcn">---</span>
+      <span class="kv-k">Referrer</span>
+      <span class="kv-v" id="drf">---</span>
+    </div>
+  </div>
+  <div class="blk blk-legal">
+    <span class="blk-label">Applicable Statutes</span>
+    <div class="law">
+      <strong>18 U.S.C. &sect; 1030 (CFAA):</strong> Unauthorized access to protected computer systems. Penalties include fines and imprisonment of up to 10 years for first offenses, 20 years for repeat violations.
+    </div>
+    <div class="law">
+      <strong>18 U.S.C. &sect; 1029:</strong> Fraud and related activity in connection with access devices, including automated tools used to interact with protected systems without authorization.
+    </div>
+    <div class="law">
+      <strong>17 U.S.C. &sect; 1201 (DMCA):</strong> Circumvention of technological measures that control access to copyrighted works. Civil damages and criminal penalties apply.
+    </div>
+    <div class="law">
+      <strong>State Computer Crime Statutes:</strong> All 50 U.S. states maintain independent computer fraud and abuse laws with additional civil and criminal penalties. Jurisdiction determined by location of the accessed system.
+    </div>
+  </div>
+  <div class="foot">
+    This incident has been recorded and archived.<br>
+    Device signature retained for <span class="ret">365 days</span> per site security policy.<br>
+    Repeated access attempts will escalate this report.
+    <div class="tmr">
+      Session monitored: <span class="tmr-val" id="tmr">00:00</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var hex='';
+  for(var i=0;i<24;i++)hex+=(Math.random()*16|0).toString(16);
+  $('iid').textContent='INC-'+hex.substring(0,4).toUpperCase()+'-'
+    +hex.substring(4,8).toUpperCase()+'-'+hex.substring(8,12).toUpperCase()
+    +'-'+hex.substring(12,16).toUpperCase();
+  var now=new Date();
+  $('its').textContent=now.toISOString().replace('T',' ').replace(/\.\d+Z/,'')+' UTC';
+  $('dua').textContent=navigator.userAgent||'Unavailable';
+  $('dpl').textContent=(navigator.platform||navigator.userAgentData&&navigator.userAgentData.platform||'Unknown')
+    +(navigator.hardwareConcurrency?' / '+navigator.hardwareConcurrency+' logical cores':'');
+  $('dln').textContent=navigator.language+(navigator.languages&&navigator.languages.length>1
+    ?' ['+navigator.languages.join(', ')+']':'');
+  $('dsc').textContent=screen.width+' x '+screen.height+' @ '
+    +(window.devicePixelRatio||1)+'x pixel ratio'
+    +(screen.colorDepth?', '+screen.colorDepth+'-bit color':'');
+  try{$('dtz').textContent=Intl.DateTimeFormat().resolvedOptions().timeZone}
+  catch(e){$('dtz').textContent='UTC'+(now.getTimezoneOffset()>0?'-':'+')+Math.abs(now.getTimezoneOffset()/60)}
+  var c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  $('dcn').textContent=c?(c.effectiveType||'?').toUpperCase()+' / ~'+(c.downlink||'?')+' Mbps downlink':'Not disclosed';
+  $('drf').textContent=document.referrer||'Direct access (no referrer)';
+  var t0=Date.now();
+  setInterval(function(){var s=(Date.now()-t0)/1000|0;var m=s/60|0;s=s%60;
+    $('tmr').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s},1000);
+})();
+</script>
+</body>
+</html>
