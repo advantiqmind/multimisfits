@@ -546,6 +546,10 @@ nav.main a[href="/ge.html"]{display:none}
 .lv-drop-value{color:var(--xp);flex:0 0 auto}
 .lv-dink{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.5px}
 
+/* ---------- roster tab content inset ---------- */
+#clan-lb-content .head,#event-lb-content .head{margin:0 10px;border-radius:5px}
+#clan-lb-content .body,#event-lb-content .body{padding:14px 18px}
+
 /* ---------- event leaderboard page + links ---------- */
 .event-lb-card{background:var(--panel-2);border:2px solid var(--bronze);border-radius:8px;padding:20px;margin-bottom:18px}
 .event-lb-card-header{margin-bottom:14px}
