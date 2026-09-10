@@ -58,6 +58,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/ideaboard.js   GET/POST /api/ideaboard -> reads Discord thread ideas, D1 column positions + dismiss tracking, two-tier access codes, cached 30s
 - functions/api/announce-dink.js POST /api/announce-dink -> sends Dink update embed to #announcements, gated by DINK_ACCESS_CODE
 - functions/api/dink-auth.js   POST /api/dink-auth -> validates access code against DINK_ACCESS_CODE env var
+- functions/api/dink-config.js POST /api/dink-config -> returns dink-config.txt with secrets injected from env vars, gated by DINK_ACCESS_CODE
 - functions/api/loot.js        POST /api/loot -> receives Dink loot webhooks, stores in D1, forwards big drops to Discord; GET returns leaderboard
 - functions/api/filecabinet.js  GET/POST /api/filecabinet -> File Cabinet CRUD, D1 storage (5 tables), access code gated
 - functions/api/referral.js    POST /api/referral -> validates referral codes, tracks redemptions in Discord forum thread
@@ -87,6 +88,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
     IDEABOARD_LEADER_CODE    (secret) <- full access to Idea Board (move, dismiss, comment)
     IDEABOARD_MEMBER_CODE    (secret) <- comment-only access to Idea Board
     DINK_ACCESS_CODE         (secret) <- passphrase to unlock /clandink settings page
+    DINK_DISCORD_WEBHOOK     (secret) <- Discord webhook URL injected into Dink config at download time
     FILECABINET_ACCESS_CODE  (secret) <- passphrase for File Cabinet (leader-only, no read fallback)
 
 ## Bindings (Cloudflare Pages > Settings > Functions)
