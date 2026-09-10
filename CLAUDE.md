@@ -493,6 +493,10 @@ Replaces the current Loot Value system with something far more flexible.
   "Saucy saucy" also means merge to main once the changes are committed and tests pass.
   Documentation-only updates (like CLAUDE.md) are exempt.
 - **NO EM DASHES.** Never use em dashes in any user-visible text. Non-negotiable.
+- **PADDING BY DEFAULT.** Every content area needs side padding (min 12-14px). Never
+  place text or controls flush against a panel/card edge. When adding wrapper divs
+  inside a `.panel`, make sure `.head` and `.body` selectors still apply (the panel
+  uses `.panel .head` and `.panel .body` for padding). Check your output visually.
 - **NO SECRETS IN CODE.** NEVER commit secrets, tokens, webhook URLs, API keys, or
   passwords to ANY file in this repo. The repo is public. All credentials live in
   Cloudflare Pages env vars only. If a static file needs a secret value, use a

@@ -94,17 +94,17 @@ main{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
   border:2px solid #000;border-radius:7px;box-shadow:var(--frame);
   padding:0;overflow:hidden;
 }
-.panel > .head{
+.panel > .head,.panel .head{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:10px 14px;
   background:linear-gradient(180deg,#3a2f1d,#26200f);
   border-bottom:2px solid #000;box-shadow:inset 0 1px 0 var(--bronze-lite);
 }
-.panel > .head h2{font-size:19px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.panel > .head .rune{width:14px;height:14px;transform:rotate(45deg);background:linear-gradient(135deg,var(--gold),var(--gold-dim));box-shadow:0 0 0 1px #000, 0 0 8px rgba(255,203,47,.4)}
-.panel > .head a.more{font-family:"Jersey 15";font-size:15px;color:var(--gold-dim)}
-.panel > .head a.more:hover{color:var(--gold)}
-.panel > .body{padding:14px;overflow-x:auto}
+.panel .head h2{font-size:19px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.panel .head .rune{width:14px;height:14px;transform:rotate(45deg);background:linear-gradient(135deg,var(--gold),var(--gold-dim));box-shadow:0 0 0 1px #000, 0 0 8px rgba(255,203,47,.4)}
+.panel .head a.more{font-family:"Jersey 15";font-size:15px;color:var(--gold-dim)}
+.panel .head a.more:hover{color:var(--gold)}
+.panel > .body,.panel .body{padding:14px;overflow-x:auto}
 
 .badge{font-family:"Jersey 15";font-size:13px;color:var(--muted);border:1px solid var(--bronze);border-radius:4px;padding:1px 7px;margin-left:6px;vertical-align:2px}
 .badge-offline{color:#b08030;border-color:rgba(176,128,48,.45)}
@@ -444,7 +444,7 @@ nav.main a[href="/ge.html"]{display:none}
   .spotlight-label{font-size:15px;letter-spacing:2px}
   .ach-thumb{width:44px;height:44px}
   .ev-grid{grid-template-columns:1fr}
-  .panel > .head a.more{padding:10px 0}
+  .panel .head a.more{padding:10px 0}
   /* roster mobile */
   table.roster.roster-full th{font-size:14px;padding:15px 6px}
   table.roster.roster-full td{padding:10px 6px}
