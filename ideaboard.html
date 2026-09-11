@@ -555,16 +555,19 @@ body {
 /* Final Approval column overrides card color */
 .column[data-col="onhold"] .card { background: rgba(200,160,40,0.12); border-left: 3px solid #e8b030; }
 
-/* Held card state (amber badge, any column) */
-.card.held { background: rgba(180,80,30,0.15) !important; border-left: 3px solid #e08030 !important; }
+/* Held card state (red badge, any column) */
+.card.held { background: rgba(200,40,40,0.12) !important; border-left: 3px solid #cc3333 !important; }
 .card-held-badge {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: #e08030;
-  background: rgba(224,128,48,0.15);
-  padding: 2px 6px;
+  color: #ff4444;
+  background: rgba(204,51,51,0.2);
+  border: 1px solid rgba(204,51,51,0.35);
+  padding: 2px 8px;
+  border-radius: 3px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .card-hold-btn, .card-unhold-btn {
   background: none;
@@ -1398,7 +1401,7 @@ body {
 
 /* Modal color accents */
 .ib-modal.modal-accent-onhold { border-left: 4px solid #e8b030; }
-.ib-modal.modal-accent-held { border-left: 4px solid #e08030; }
+.ib-modal.modal-accent-held { border-left: 4px solid #cc3333; }
 .ib-modal.modal-accent-used { border-left: 4px solid #50e870; }
 .ib-modal.modal-accent-weekend { border-left: 4px solid #60f080; }
 .ib-modal.modal-accent-1day { border-left: 4px solid #60a0ff; }
@@ -2054,11 +2057,11 @@ function buildCard(idea, col) {
   div.innerHTML =
     '<div class="card-top">' +
       '<span class="card-title">' + titleHtml + '</span>' +
+      heldBadge +
       commentBadgeHtml +
       holdBtn +
       dismissBtn +
     '</div>' +
-    heldBadge +
     (col === 'review'
       ? authorIdHtml + '<div class="card-meta">' + dateStr + ' ' + ageHtml + '</div>'
       : '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + ' ' + copyBtn + templateBtn + '</div>') +
