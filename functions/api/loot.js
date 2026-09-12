@@ -21,6 +21,20 @@ const NOTABLE_DROPS_LIMIT = 5;
 const LEADERBOARD_CACHE_TTL = 60;
 const DEFAULT_DISCORD_MIN_VALUE = 150000;
 
+export function parseEventDateField(content, field) {
+  const re = new RegExp("\\b" + field + ":\\s*(.+)", "i");
+  const m = content.match(re);
+  if (!m) return null;
+  let s = m[1].trim();
+  const ts = s.match(/<t:(\d+)(?::[tTdDfFR])?>/);
+  if (ts) return new Date(parseInt(ts[1], 10) * 1000).toISOString();
+  if (/^in\s+\d/i.test(s)) return null;
+  s = s.replace(/^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s*/i, "");
+  s = s.replace(/\s+at\s+/i, " ");
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
 function json(obj, status = 200, extra = {}) {
   return new Response(JSON.stringify(obj), {
     status,
@@ -120,8 +134,11 @@ async function fetchActiveLootEvents(env) {
         );
         if (!msgRes.ok) return null;
         const msg = await msgRes.json();
-        const bossFilter = parseBossFilter((msg.content || "").trim());
-        return { id: t.id, name: t.name, bossFilter };
+        const content = (msg.content || "").trim();
+        const bossFilter = parseBossFilter(content);
+        const startTime = parseEventDateField(content, "When") || null;
+        const endTime = parseEventDateField(content, "Ends?") || null;
+        return { id: t.id, name: t.name, bossFilter, startTime, endTime };
       } catch {
         return null;
       }
@@ -286,30 +303,43 @@ async function handlePost(context) {
   maybeForwardToDiscord(context, contentType, rawBody, loot.totalValue);
 
   const activeEvents = await getActiveLootEvents(context.env);
-  const matched = activeEvents.filter(e => matchesBoss(loot.source, e.bossFilter));
+  const now = Date.now();
+  const matched = activeEvents.filter(e => {
+    if (!matchesBoss(loot.source, e.bossFilter)) return false;
+    if (e.startTime && new Date(e.startTime).getTime() > now) return false;
+    if (e.endTime && new Date(e.endTime).getTime() < now) return false;
+    return true;
+  });
 
   if (!matched.length) {
+    const bossMatched = activeEvents.filter(e => matchesBoss(loot.source, e.bossFilter));
+    let reason = "no_matching_event";
+    if (bossMatched.length) {
+      const first = bossMatched[0];
+      if (first.startTime && new Date(first.startTime).getTime() > now) reason = "event_not_started";
+      else if (first.endTime && new Date(first.endTime).getTime() < now) reason = "event_ended";
+    }
     await logDebug(db, {
       payloadType: "LOOT",
       player: loot.player,
       source: loot.source,
       totalValue: loot.totalValue,
-      result: "no_matching_event",
+      result: reason,
       forwarded: willForward ? 1 : 0,
     });
-    return json({ stored: false, reason: "no_matching_event", forwarded: willForward });
+    return json({ stored: false, reason, forwarded: willForward });
   }
 
   await ensureTable(db);
 
-  const now = new Date().toISOString();
+  const createdAt = new Date().toISOString();
   const itemsJson = JSON.stringify(loot.items);
 
   for (const event of matched) {
     await db.prepare(
       `INSERT INTO loot_entries (event_id, player, source, kill_count, items, total_value, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(event.id, loot.player, loot.source, loot.killCount, itemsJson, loot.totalValue, now).run();
+    ).bind(event.id, loot.player, loot.source, loot.killCount, itemsJson, loot.totalValue, createdAt).run();
   }
 
   await logDebug(db, {
@@ -353,6 +383,21 @@ async function handleGet(context) {
   if (hit) return hit;
 
   await ensureTable(db);
+
+  let eventMeta = null;
+  const activeEvents = await getActiveLootEvents(context.env);
+  const ev = activeEvents.find(e => e.id === eventId);
+  if (ev) {
+    const now = Date.now();
+    const started = !ev.startTime || new Date(ev.startTime).getTime() <= now;
+    const ended = ev.endTime && new Date(ev.endTime).getTime() < now;
+    eventMeta = {
+      startTime: ev.startTime || null,
+      endTime: ev.endTime || null,
+      ended: !!ended,
+      started,
+    };
+  }
 
   const lbResult = await db.prepare(
     `SELECT player, SUM(total_value) as total, COUNT(*) as kills
@@ -404,7 +449,13 @@ async function handleGet(context) {
   allItems.sort((a, b) => b.value - a.value);
   const notableDrops = allItems.slice(0, NOTABLE_DROPS_LIMIT);
 
-  const res = json({ eventId, leaderboard, stats, notableDrops }, 200, {
+  const payload = { eventId, leaderboard, stats, notableDrops };
+  if (eventMeta) {
+    payload.ended = eventMeta.ended;
+    payload.startTime = eventMeta.startTime;
+    payload.endTime = eventMeta.endTime;
+  }
+  const res = json(payload, 200, {
     "Cache-Control": `public, max-age=${LEADERBOARD_CACHE_TTL}`,
   });
   context.waitUntil(cache.put(cacheKey, res.clone()));

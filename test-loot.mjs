@@ -2,6 +2,7 @@ import {
   parseBossFilter,
   matchesBoss,
   extractLootData,
+  parseEventDateField,
 } from "./functions/api/loot.js";
 
 let pass = 0;
@@ -227,6 +228,28 @@ assert(
   deepEqual(parseBossFilter("Boss: The Corrupted Gauntlet"), ["the corrupted gauntlet"]),
   "multi-word boss"
 );
+
+/* ---- parseEventDateField ---- */
+
+console.log("--- parseEventDateField ---");
+
+assert(parseEventDateField("", "When") === null, "empty string returns null");
+assert(parseEventDateField("No date here", "When") === null, "no When: line returns null");
+
+var discordTs = parseEventDateField("When: <t:1724871600:F>", "When");
+assert(discordTs !== null, "Discord timestamp parsed");
+assert(discordTs === new Date(1724871600 * 1000).toISOString(), "Discord timestamp value correct");
+
+var discordTsNoFormat = parseEventDateField("Ends: <t:1724871600>", "Ends?");
+assert(discordTsNoFormat !== null, "Discord timestamp without format code parsed");
+
+var endsMatch = parseEventDateField("When: something\nEnds: <t:1726012740:F>", "Ends?");
+assert(endsMatch !== null, "Ends: line parsed from multi-line content");
+
+assert(parseEventDateField("When: in 2 days", "When") === null, "relative 'in X days' skipped");
+
+var plainDate = parseEventDateField("When: September 20, 2026 9:00 PM", "When");
+assert(plainDate !== null, "plain text date parsed");
 
 /* ---- summary ---- */
 

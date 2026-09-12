@@ -1470,7 +1470,11 @@ function lootLeaderboardHtml(data, compact) {
     }
   }
 
-  html += '<div class="lv-dink">Live via Dink</div>';
+  if (data.ended) {
+    html += '<div class="lv-dink lv-dink-ended">Event Ended (Locked)</div>';
+  } else {
+    html += '<div class="lv-dink">Live via Dink</div>';
+  }
   return html;
 }
 
@@ -1630,11 +1634,18 @@ async function loadEventLeaderboard() {
     var data = await r.json();
     var events = data && Array.isArray(data.events) ? data.events : [];
 
-    var trackedEvents = events.filter(function(ev) {
+    var activeAndScheduled = events.filter(function(ev) {
       if (!isLootValueEvent(ev) && !isWomScoredEvent(ev)) return false;
       var status = computeEventStatus(ev);
       return status === "live" || status === "scheduled";
     });
+    var hasActiveLootEvent = activeAndScheduled.some(function(ev) {
+      return isLootValueEvent(ev) && computeEventStatus(ev) === "live";
+    });
+    var completedLoot = hasActiveLootEvent ? [] : events.filter(function(ev) {
+      return isLootValueEvent(ev) && computeEventStatus(ev) === "completed";
+    });
+    var trackedEvents = activeAndScheduled.concat(completedLoot);
 
     _eventsData = _eventsData.length ? _eventsData : events;
 
@@ -1647,7 +1658,14 @@ async function loadEventLeaderboard() {
       return;
     }
 
-    if (badge) badge.textContent = trackedEvents.length + " active";
+    var activeCount = activeAndScheduled.length;
+    var endedCount = completedLoot.length;
+    if (badge) {
+      if (activeCount && endedCount) badge.textContent = activeCount + " active, " + endedCount + " ended";
+      else if (activeCount) badge.textContent = activeCount + " active";
+      else if (endedCount) badge.textContent = endedCount + " ended";
+      else badge.textContent = "no active events";
+    }
 
     var fetches = await Promise.all(trackedEvents.map(function(ev) {
       if (isLootValueEvent(ev)) {
@@ -1680,7 +1698,14 @@ async function loadEventLeaderboard() {
       var typeTag = isLV ? '<span class="lv-tag" style="font-size:11px;margin-left:8px">LOOT</span>'
         : '<span class="lv-tag ws-tag" style="font-size:11px;margin-left:8px">WOM</span>';
 
-      html += '<div class="event-lb-card" data-ev-id="' + esc(ev.id) + '">';
+      var isEnded = effStatus === "completed" && isLV;
+      var endedFromApi = fetchedData && fetchedData.ended;
+      var showEnded = isEnded || endedFromApi;
+
+      html += '<div class="event-lb-card' + (showEnded ? ' event-lb-ended' : '') + '" data-ev-id="' + esc(ev.id) + '">';
+      if (showEnded) {
+        html += '<div class="event-lb-locked-banner">FINAL STANDINGS (LOCKED)</div>';
+      }
       html += '<div class="event-lb-card-header">';
       html += '<h3>' + esc(eventName) + typeTag + '</h3>';
       html += '<div class="event-lb-card-meta">' + statusBadge + ' <span style="color:var(--muted);font-size:14px;margin-left:8px">' + esc(dateStr) + '</span>' +
