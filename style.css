@@ -327,11 +327,11 @@ th.sortable.sort-desc::after{content:"▼";opacity:1;color:var(--gold)}
 @media(max-width:600px){.ga-winner-toast{left:12px;right:12px;max-width:none;transform:translateY(-20px)}.ga-winner-toast.ga-winner-toast-show{transform:translateY(0)}}
 
 /* countdown toast (24h before event) */
-.cd-toast{position:fixed;top:80px;left:24px;z-index:81;display:flex;align-items:center;gap:10px;background:rgba(30,24,16,.94);border:1px solid rgba(230,140,40,.3);border-left:3px solid #e68c28;border-radius:8px;padding:12px 14px;box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 12px rgba(230,140,40,.1);backdrop-filter:blur(6px);transform:translateY(-20px);opacity:0;transition:transform .6s ease,opacity .6s ease;max-width:340px;overflow:hidden;cursor:pointer;text-decoration:none}
+.cd-toast{position:fixed;top:80px;right:24px;z-index:81;display:flex;align-items:center;gap:10px;background:rgba(30,24,16,.94);border:1px solid rgba(230,140,40,.3);border-right:3px solid #e68c28;border-radius:8px;padding:12px 14px;box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 12px rgba(230,140,40,.1);backdrop-filter:blur(6px);transform:translateY(-20px);opacity:0;transition:transform .6s ease,opacity .6s ease;max-width:340px;overflow:hidden;cursor:pointer;text-decoration:none}
 .cd-toast::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(230,140,40,.14),transparent);animation:cd-shimmer 1s .4s ease-out forwards;pointer-events:none}
 .cd-toast-show{transform:translateY(0);opacity:1;animation:cd-glow 3s 1.2s ease-in-out infinite}
 @keyframes cd-shimmer{to{left:100%}}
-@keyframes cd-glow{0%,100%{border-left-color:#e68c28;box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 12px rgba(230,140,40,.08)}50%{border-left-color:#f0a040;box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 22px rgba(230,140,40,.2),0 0 6px rgba(230,140,40,.12)}}
+@keyframes cd-glow{0%,100%{border-right-color:#e68c28;box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 12px rgba(230,140,40,.08)}50%{border-right-color:#f0a040;box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 22px rgba(230,140,40,.2),0 0 6px rgba(230,140,40,.12)}}
 .cd-toast-icon{flex-shrink:0;width:36px;height:36px;border-radius:6px;background:linear-gradient(135deg,rgba(230,140,40,.15),rgba(200,110,30,.08));border:1px solid rgba(230,140,40,.2);display:flex;align-items:center;justify-content:center}
 .cd-toast-icon svg{width:18px;height:18px;fill:#e68c28}
 .cd-toast-body{flex:1;min-width:0}
@@ -565,6 +565,18 @@ nav.main a[href="/ge.html"]{display:none}
 .event-lb-empty{text-align:center;padding:40px 20px;font-family:"Jersey 15",monospace;font-size:18px;color:var(--parchment)}
 .event-lb-view-btn{font-family:"Jersey 15",monospace;font-size:13px;padding:4px 14px;margin-left:auto;cursor:pointer;color:var(--gold);background:rgba(255,203,47,.1);border:1px solid rgba(255,203,47,.25);border-radius:4px;white-space:nowrap;transition:background .15s}
 .event-lb-view-btn:hover{background:rgba(255,203,47,.2)}
+.event-lb-past{margin-top:22px}
+.event-lb-past-toggle{display:flex;align-items:center;gap:10px;background:rgba(224,64,64,.1);border:1px solid rgba(224,64,64,.3);border-radius:6px;padding:12px 16px;cursor:pointer;transition:background .15s,border-color .15s;user-select:none}
+.event-lb-past-toggle:hover{background:rgba(224,64,64,.16);border-color:rgba(224,64,64,.45)}
+.event-lb-past-title{font-family:"Cinzel",serif;font-size:13px;font-weight:700;letter-spacing:1.5px;color:#e04040;flex:1}
+.event-lb-past-count{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted)}
+.event-lb-past-chevron{font-size:14px;color:#e04040;transition:transform .25s}
+.event-lb-past-open .event-lb-past-chevron{transform:rotate(90deg)}
+.event-lb-past-list{display:none;padding-top:12px}
+.event-lb-past-open .event-lb-past-list{display:block}
+.event-lb-standings{overflow:hidden;transition:max-height .3s ease}
+.event-lb-standings-btn{font-family:"Jersey 15",monospace;font-size:12px;padding:3px 12px;cursor:pointer;color:#e04040;background:rgba(224,64,64,.08);border:1px solid rgba(224,64,64,.2);border-radius:4px;white-space:nowrap;transition:background .15s}
+.event-lb-standings-btn:hover{background:rgba(224,64,64,.18)}
 .lv-lb-link{font-family:"Jersey 15",monospace;font-size:13px;color:var(--gold);background:rgba(255,203,47,.1);border:1px solid rgba(255,203,47,.25);padding:3px 10px;border-radius:4px;text-decoration:none;white-space:nowrap;flex:0 0 auto;margin-right:4px;transition:background .15s}
 .lv-lb-link:hover{background:rgba(255,203,47,.2)}
 .lv-standings-btn{font-family:"Jersey 15",monospace;font-size:15px;color:var(--gold)!important;background:rgba(255,203,47,.08)!important;border:1px solid rgba(255,203,47,.25)!important;padding:10px 18px!important}

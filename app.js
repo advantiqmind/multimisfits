@@ -1682,8 +1682,9 @@ async function loadEventLeaderboard() {
     }));
 
     var html = "";
-    for (var i = 0; i < trackedEvents.length; i++) {
-      var ev = trackedEvents[i];
+
+    for (var i = 0; i < activeAndScheduled.length; i++) {
+      var ev = activeAndScheduled[i];
       var fetchedData = fetches[i];
       var isLV = isLootValueEvent(ev);
       var isWS = isWomScoredEvent(ev);
@@ -1698,14 +1699,7 @@ async function loadEventLeaderboard() {
       var typeTag = isLV ? '<span class="lv-tag" style="font-size:11px;margin-left:8px">LOOT</span>'
         : '<span class="lv-tag ws-tag" style="font-size:11px;margin-left:8px">WOM</span>';
 
-      var isEnded = effStatus === "completed" && isLV;
-      var endedFromApi = fetchedData && fetchedData.ended;
-      var showEnded = isEnded || endedFromApi;
-
-      html += '<div class="event-lb-card' + (showEnded ? ' event-lb-ended' : '') + '" data-ev-id="' + esc(ev.id) + '">';
-      if (showEnded) {
-        html += '<div class="event-lb-locked-banner">FINAL STANDINGS (LOCKED)</div>';
-      }
+      html += '<div class="event-lb-card" data-ev-id="' + esc(ev.id) + '">';
       html += '<div class="event-lb-card-header">';
       html += '<h3>' + esc(eventName) + typeTag + '</h3>';
       html += '<div class="event-lb-card-meta">' + statusBadge + ' <span style="color:var(--muted);font-size:14px;margin-left:8px">' + esc(dateStr) + '</span>' +
@@ -1723,7 +1717,69 @@ async function loadEventLeaderboard() {
       html += '</div>';
     }
 
+    if (completedLoot.length) {
+      html += '<div class="event-lb-past" id="event-lb-past">';
+      html += '<div class="event-lb-past-toggle">';
+      html += '<span class="event-lb-past-title">FINAL STANDINGS</span>';
+      html += '<span class="event-lb-past-count">' + completedLoot.length + ' past event' + (completedLoot.length > 1 ? 's' : '') + '</span>';
+      html += '<span class="event-lb-past-chevron">&#9656;</span>';
+      html += '</div>';
+      html += '<div class="event-lb-past-list">';
+
+      for (var j = 0; j < completedLoot.length; j++) {
+        var ev = completedLoot[j];
+        var fetchedData = fetches[activeAndScheduled.length + j];
+        var isLV = true;
+
+        if (fetchedData) _lootData[ev.id] = fetchedData;
+
+        var eventName = cleanName(ev.name);
+        var dateStr = ev.hasParsedDate ? formatEventDate(ev.startTime) : "Date TBA";
+
+        html += '<div class="event-lb-card event-lb-ended" data-ev-id="' + esc(ev.id) + '">';
+        html += '<div class="event-lb-card-header">';
+        html += '<h3>' + esc(eventName) + '<span class="lv-tag" style="font-size:11px;margin-left:8px">LOOT</span></h3>';
+        html += '<div class="event-lb-card-meta">' + eventStatusBadge("completed") +
+          ' <span style="color:var(--muted);font-size:14px;margin-left:8px">' + esc(dateStr) + '</span>' +
+          ' <button class="btn event-lb-view-btn" data-ev-id="' + esc(ev.id) + '">View Event</button>' +
+          ' <button class="btn event-lb-standings-btn" data-ev-id="' + esc(ev.id) + '">View Standings</button></div>';
+        html += '</div>';
+        html += '<div class="event-lb-standings" data-ev-id="' + esc(ev.id) + '" hidden>';
+        html += '<div class="event-lb-locked-banner">FINAL STANDINGS (LOCKED)</div>';
+        if (fetchedData) {
+          html += '<div class="lv-container">' + lootLeaderboardHtml(fetchedData, false) + '</div>';
+        } else {
+          html += '<p class="lv-loading">No loot data available.</p>';
+        }
+        html += '</div>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+      html += '</div>';
+    }
+
     body.innerHTML = html;
+
+    var pastToggle = document.querySelector(".event-lb-past-toggle");
+    if (pastToggle) {
+      pastToggle.addEventListener("click", function() {
+        var parent = this.closest(".event-lb-past");
+        if (parent) parent.classList.toggle("event-lb-past-open");
+      });
+    }
+
+    body.addEventListener("click", function(e) {
+      var btn = e.target.closest(".event-lb-standings-btn");
+      if (!btn) return;
+      var evId = btn.getAttribute("data-ev-id");
+      var standings = body.querySelector('.event-lb-standings[data-ev-id="' + evId + '"]');
+      if (!standings) return;
+      var showing = !standings.hidden;
+      standings.hidden = showing;
+      btn.textContent = showing ? "View Standings" : "Hide Standings";
+    });
+
     wireEventModals();
   } catch (e) {
     body.innerHTML = '<div class="event-lb-empty">' +

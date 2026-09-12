@@ -399,11 +399,40 @@ async function handleGet(context) {
     };
   }
 
+  if (eventMeta && !eventMeta.started) {
+    const emptyPayload = {
+      eventId,
+      leaderboard: [],
+      stats: { totalPlayers: 0, totalKills: 0, totalValue: 0 },
+      notableDrops: [],
+      started: false,
+      startTime: eventMeta.startTime,
+      endTime: eventMeta.endTime,
+      ended: false,
+    };
+    const emptyRes = json(emptyPayload, 200, {
+      "Cache-Control": `public, max-age=${LEADERBOARD_CACHE_TTL}`,
+    });
+    context.waitUntil(cache.put(cacheKey, emptyRes.clone()));
+    return emptyRes;
+  }
+
+  let timeWhere = "";
+  const timeParams = [];
+  if (eventMeta && eventMeta.startTime) {
+    timeWhere += " AND created_at >= ?";
+    timeParams.push(eventMeta.startTime);
+  }
+  if (eventMeta && eventMeta.endTime) {
+    timeWhere += " AND created_at <= ?";
+    timeParams.push(eventMeta.endTime);
+  }
+
   const lbResult = await db.prepare(
     `SELECT player, SUM(total_value) as total, COUNT(*) as kills
-     FROM loot_entries WHERE event_id = ?
+     FROM loot_entries WHERE event_id = ?${timeWhere}
      GROUP BY player ORDER BY total DESC LIMIT ?`
-  ).bind(eventId, LEADERBOARD_LIMIT).all();
+  ).bind(eventId, ...timeParams, LEADERBOARD_LIMIT).all();
 
   const leaderboard = (lbResult.results || []).map((row, i) => ({
     rank: i + 1,
@@ -414,8 +443,8 @@ async function handleGet(context) {
 
   const statsResult = await db.prepare(
     `SELECT COUNT(DISTINCT player) as players, COUNT(*) as kills, SUM(total_value) as value
-     FROM loot_entries WHERE event_id = ?`
-  ).bind(eventId).first();
+     FROM loot_entries WHERE event_id = ?${timeWhere}`
+  ).bind(eventId, ...timeParams).first();
 
   const stats = {
     totalPlayers: (statsResult && statsResult.players) || 0,
@@ -425,9 +454,9 @@ async function handleGet(context) {
 
   const topKills = await db.prepare(
     `SELECT player, items, total_value, created_at
-     FROM loot_entries WHERE event_id = ?
+     FROM loot_entries WHERE event_id = ?${timeWhere}
      ORDER BY total_value DESC LIMIT 30`
-  ).bind(eventId).all();
+  ).bind(eventId, ...timeParams).all();
 
   const allItems = [];
   for (const row of (topKills.results || [])) {
