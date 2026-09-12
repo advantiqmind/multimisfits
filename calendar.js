@@ -31,7 +31,7 @@
     s.textContent = `
 .cal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;place-items:center;padding:16px}
 .cal-overlay.open{display:grid}
-.cal-modal{width:min(720px,calc(100% - 32px));max-height:90vh;overflow:auto;background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;box-shadow:0 20px 60px #000;padding:0;color:#e6d9b8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px}
+.cal-modal{width:min(960px,calc(100% - 32px));max-height:90vh;overflow-y:auto;overflow-x:hidden;background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;box-shadow:0 20px 60px #000;padding:0;color:#e6d9b8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px}
 .cal-head{padding:14px 16px;border-bottom:1px solid #3a2e1a;display:flex;align-items:center;gap:10px}
 .cal-head h3{margin:0;font-family:'Cinzel',serif;font-size:16px;letter-spacing:.04em}
 .cal-close{border:0;background:transparent;color:#a99b78;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px;margin-left:auto}
@@ -47,15 +47,15 @@
 .cal-nav button:hover{border-color:#6b5836;color:#ffcb2f}
 .cal-nav .cal-month-label{font-family:'Cinzel',serif;font-size:15px;font-weight:700;min-width:180px;text-align:center}
 .cal-nav .cal-today{margin-left:auto;font-size:12px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 16px 16px;gap:1px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto;grid-auto-rows:90px;padding:0 16px 16px;gap:1px}
 .cal-day-head{padding:8px 4px;text-align:center;font-size:11px;font-weight:800;color:#7a6c4a;text-transform:uppercase;letter-spacing:.06em}
-.cal-cell{min-height:80px;background:#110e07;border:1px solid #2a2010;padding:4px;position:relative;transition:background .15s}
+.cal-cell{background:#110e07;border:1px solid #2a2010;padding:4px;position:relative;transition:background .15s;overflow:hidden;box-sizing:border-box;min-height:0}
 .cal-cell.other-month{opacity:.35}
 .cal-cell.today{border-color:#6b5836;background:#1a1305}
 .cal-cell.drop-target{background:#261f0f;border-color:#8a7449}
 .cal-cell .cal-date{font-size:11px;color:#7a6c4a;font-weight:700;padding:2px 4px}
 .cal-cell.today .cal-date{color:#ffcb2f}
-.cal-pill{display:block;padding:3px 6px;margin:1px 0;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:transform .1s}
+.cal-pill{display:block;padding:3px 6px;margin:1px 0;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:transform .1s;max-width:100%;box-sizing:border-box}
 .cal-pill:hover{transform:scale(1.03)}
 .cal-pill.draft{background:#1a1305;border:1px dashed #6b5836;color:#c9a227}
 .cal-pill.draft[draggable="true"]{cursor:grab}
@@ -85,7 +85,7 @@
 .cal-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:#1a1305;border:1px solid #3a2e1a;border-radius:10px;padding:10px 14px;opacity:0;pointer-events:none;transition:.2s;z-index:220;color:#e6d9b8;font-size:13px}
 .cal-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(max-width:600px){
-  .cal-cell{min-height:56px}
+  .cal-grid{grid-auto-rows:64px}
   .cal-pill{font-size:10px;padding:2px 4px}
   .cal-month-label{font-size:13px!important;min-width:140px!important}
 }
