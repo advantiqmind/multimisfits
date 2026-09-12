@@ -282,14 +282,22 @@ to the Loot Value leaderboard but for GP contributions.
   Backend fetches channel available_tags to resolve tag IDs. Frontend receives tag names
   in the event's `tags` array from /api/events.
 - Endpoint checks active events with the "Loot Value" tag (cached 5min), matches boss, stores in D1.
+- Time boundaries enforced: loot only stored between When: start and Ends: end times.
+  Before start: rejected with "event_not_started". After end: rejected with "event_ended".
+  Events without When/Ends dates track loot immediately (no time restriction).
+  `parseEventDateField()` in loot.js parses When/Ends lines (Discord timestamps + plain text).
 - D1 table `loot_entries` auto-created on first use (id, event_id, player, source, kill_count,
   items JSON, total_value, created_at).
-- GET /api/loot?event=THREAD_ID returns leaderboard (top 20), stats, notable drops (top 5 items).
+- GET /api/loot?event=THREAD_ID returns leaderboard (top 20), stats, notable drops (top 5 items),
+  plus `ended`, `startTime`, `endTime` fields when event metadata is available.
 - Frontend renders leaderboard on featured event + event modal for Loot Value tagged events.
 - Event cards show "LOOT" tag. Featured + modal show "LOOT VALUE" tag.
 - Leaderboard shows medals for top 3, KC per player, total loot value.
 - Notable drops section shows highest individual item values.
-- "Live via Dink" badge at bottom of leaderboard.
+- "Live via Dink" badge at bottom of active leaderboards.
+- Ended events show "Event Ended (Locked)" badge and "FINAL STANDINGS (LOCKED)" banner.
+  Ended leaderboards remain visible on the Event Leaderboard tab until a new live loot event
+  starts, then they are hidden. No new entries accepted after end time.
 - Forwarding proxy: site receives ALL drops (Dink min value = 1), stores for events,
   and forwards drops >= LOOT_DISCORD_MIN_VALUE (default 150k) to Discord chest channel.
   Members only need one URL in Dink: https://multimisfits.us/api/loot?key=SECRET
