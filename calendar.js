@@ -47,7 +47,7 @@
 .cal-nav button:hover{border-color:#6b5836;color:#ffcb2f}
 .cal-nav .cal-month-label{font-family:'Cinzel',serif;font-size:15px;font-weight:700;min-width:180px;text-align:center}
 .cal-nav .cal-today{margin-left:auto;font-size:12px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:auto;grid-auto-rows:90px;padding:0 16px 16px;gap:1px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto;grid-auto-rows:90px;padding:0 16px 16px;gap:1px}
 .cal-day-head{padding:8px 4px;text-align:center;font-size:11px;font-weight:800;color:#7a6c4a;text-transform:uppercase;letter-spacing:.06em}
 .cal-cell{background:#110e07;border:1px solid #2a2010;padding:4px;position:relative;transition:background .15s;overflow:hidden;box-sizing:border-box;min-height:0}
 .cal-cell.other-month{opacity:.35}
