@@ -42,6 +42,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - armoury.html                 The Armoury landing page (leader tools hub, self-contained styles)
 - eventforge.html              EventForge (Discord event post designer, shared saves via D1, self-contained styles)
 - ideaboard.html               Idea Board (kanban for event ideas, Discord-sourced, self-contained styles)
+- calendar.js                  Event Calendar overlay (shared by EventForge + Idea Board, month grid, drag-to-reschedule)
 - filecabinet.html             File Cabinet (leader-only document archive, self-contained styles, D1 storage)
 - clandink.html                Clan Dink Settings page (copy button for Dink plugin import)
 - dink-config.txt              Dink plugin settings JSON (edit this file to update what members copy)
@@ -387,6 +388,26 @@ to the Loot Value leaderboard but for GP contributions.
   to make it!" as a custom block. Emphasizes JSON-only output (no code fences, no explanation).
   Import handles wrapped template format, bare events, strips markdown code fences, assigns
   fresh UIDs.
+
+### Event Calendar
+- calendar.js: shared month-grid calendar overlay used by both EventForge and Idea Board.
+- Self-contained IIFE that injects its own CSS. Entry point: `window.openEventCalendar(options)`.
+- Data sources: GET /api/eventforge?fields=calendar (draft saves with date fields extracted),
+  GET /api/events (live Discord events). Drafts are draggable; live events are display-only.
+- `?fields=calendar` API parameter extracts date, time, endDate, endTime, timezone from the
+  data JSON blob without returning the full blob. Separate cache key from the normal list.
+- Drag-and-drop: HTML5 drag API for desktop. Mobile: tap pill to select (highlighted),
+  tap destination cell to place. Rescheduling updates dates via PUT /api/eventforge with
+  optimistic locking (version field).
+- Click popover: shows event details. Draft popovers have editable date/time fields and
+  "Open in EventForge" link. Live events show read-only info.
+- Search bar filters events by name. Filter buttons: All / Drafts / Live.
+- Month navigation with prev/next arrows and "Today" button.
+- Conflict badge: shows count when 2+ events share the same day.
+- Legend at bottom: Draft (draggable) / Live (posted).
+- Access code read from localStorage key "mm-eventforge-access" (same as EventForge).
+- EventForge: calendar button in nav bar (next to Timestamp and AI Assist).
+- Idea Board: calendar button in the header actions row.
 
 ### Loot Wheel
 - wheel.html: client-side prize wheel ported from the 1BOX wheel (1box.online copy untouched).
