@@ -465,11 +465,9 @@ ${ideaLine}
 CRITICAL RULES:
 - Return ONLY valid JSON. No explanation, no markdown code fences, no text before or after.
 - NEVER use em dashes anywhere in the output. Use hyphens (-) instead.
-- The ONLY emoji allowed in text content are: ⚔️ (crossed swords) and ✅ (green checkmark).
-- Do NOT use any other emoji in text fields (titles, rules, requirements, custom blocks, etc.).
+- The ONLY emoji allowed in text content is ⚔️ (crossed swords). Do NOT use ✅ or any other emoji in text fields (titles, rules, requirements, custom blocks, etc.).
 - Medal emoji (🥇🥈🥉) are the ONLY exception, allowed exclusively in prize item lines.
-- EVERY event MUST end with this RSVP line as the very last thing a reader sees. Add a custom block at the end of the blocks array with this exact text:
-  "✅ React with ✅ if you plan to make it!"
+- Do NOT add an RSVP line, RSVP block, or "React with checkmark" text anywhere. EventForge handles RSVP automatically.
 - Always set "rsvp": true and "rsvpEmoji": "✅" in the event.
 
 FORMATTING RULES:
@@ -572,7 +570,7 @@ Common block fields (all blocks have these):
 - id: unique string
 - kind: block type name from above
 - label: display name (e.g. "Rules", "Prizes")
-- emoji: single emoji for the section header (use ⚔️ or ✅ only)
+- emoji: single emoji for the section header (use ⚔️ only)
 - importance: "small" | "normal" | "medium" | "featured"
 - visible: true (set false to hide a block)
 - showLabel: true (set false to hide the section heading)
