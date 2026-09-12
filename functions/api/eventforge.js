@@ -103,23 +103,42 @@ async function handleGet(context) {
   }
 
   // List all saves -- summary without data, cached
+  const fields = url.searchParams.get("fields");
+  const wantCalendar = fields === "calendar";
+
   const cache = caches.default;
   const cacheKey = new Request(
-    url.origin + "/api/eventforge",
+    url.origin + "/api/eventforge" + (wantCalendar ? "?fields=calendar" : ""),
     { method: "GET" }
   );
   const hit = await cache.match(cacheKey);
   if (hit) return hit;
 
-  const result = await db
-    .prepare(
-      `SELECT id, type, name, category, created_by, updated_by, version, created_at, updated_at
-       FROM eventforge_saves ORDER BY updated_at DESC`
-    )
-    .all();
+  const query = wantCalendar
+    ? "SELECT id, type, name, category, data, created_by, updated_by, version, created_at, updated_at FROM eventforge_saves ORDER BY updated_at DESC"
+    : "SELECT id, type, name, category, created_by, updated_by, version, created_at, updated_at FROM eventforge_saves ORDER BY updated_at DESC";
+
+  const result = await db.prepare(query).all();
+
+  let saves = result.results;
+  if (wantCalendar) {
+    saves = saves.map((row) => {
+      let date = null, time = null, endDate = null, endTime = null, timezone = null;
+      try {
+        const d = JSON.parse(row.data);
+        date = d.date || null;
+        time = d.time || null;
+        endDate = d.endDate || null;
+        endTime = d.endTime || null;
+        timezone = d.timezone || null;
+      } catch (_) {}
+      const { data: _, ...rest } = row;
+      return { ...rest, date, time, endDate, endTime, timezone };
+    });
+  }
 
   const res = json(
-    { saves: result.results },
+    { saves },
     200,
     { "Cache-Control": `public, max-age=${LIST_CACHE_TTL}` }
   );

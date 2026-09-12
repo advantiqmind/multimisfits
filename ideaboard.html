@@ -1431,6 +1431,7 @@ body {
   <p>Post ideas in Discord. Drag cards to organize. Click a card's notes to expand.</p>
   <div class="ib-actions">
     <a class="ib-btn ib-btn-primary" id="discordLink" href="#" target="_blank" rel="noopener">+ Post in Discord</a>
+    <button class="ib-btn ib-btn-sm" id="calendarBtn" onclick="window.openEventCalendar({accessCode:localStorage.getItem('mm-eventforge-access')||''})">📅 Calendar</button>
     <button class="ib-btn ib-btn-sm" id="dismissToggle" onclick="toggleDismissed()">Show Dismissed (0)</button>
   </div>
   <div class="ib-user" id="userBar">
@@ -3111,6 +3112,7 @@ document.addEventListener('visibilitychange', function() {
   else { loadBoard(true); startPolling(); }
 });
 </script>
+<script src="calendar.js"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw-armoury.js');</script>
 </body>
 </html>
