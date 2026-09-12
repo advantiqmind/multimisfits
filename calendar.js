@@ -31,7 +31,7 @@
     s.textContent = `
 .cal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;place-items:center;padding:16px}
 .cal-overlay.open{display:grid}
-.cal-modal{width:min(900px,100%);max-height:90vh;overflow:auto;background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;box-shadow:0 20px 60px #000;padding:0;color:#e6d9b8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px}
+.cal-modal{width:min(720px,calc(100% - 32px));max-height:90vh;overflow:auto;background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;box-shadow:0 20px 60px #000;padding:0;color:#e6d9b8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px}
 .cal-head{padding:14px 16px;border-bottom:1px solid #3a2e1a;display:flex;align-items:center;gap:10px}
 .cal-head h3{margin:0;font-family:'Cinzel',serif;font-size:16px;letter-spacing:.04em}
 .cal-close{border:0;background:transparent;color:#a99b78;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px;margin-left:auto}
@@ -115,6 +115,20 @@
 
   function dateKey(dateStr) {
     return dateStr || "";
+  }
+
+  function localDate(isoStr) {
+    if (!isoStr) return "";
+    if (isoStr.length === 10) return isoStr;
+    const d = new Date(isoStr);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function localTime(isoStr) {
+    if (!isoStr) return "";
+    if (isoStr.length <= 10) return "";
+    const d = new Date(isoStr);
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
   }
 
   function addDays(isoDate, n) {
@@ -239,10 +253,10 @@
         .map((e) => ({
           id: e.id,
           name: e.name,
-          startDate: e.startTime.slice(0, 10),
-          startTime: e.startTime.slice(11, 16),
-          endDate: e.endTime ? e.endTime.slice(0, 10) : "",
-          endTime: e.endTime ? e.endTime.slice(11, 16) : "",
+          startDate: localDate(e.startTime),
+          startTime: localTime(e.startTime),
+          endDate: e.endTime ? localDate(e.endTime) : "",
+          endTime: e.endTime ? localTime(e.endTime) : "",
           status: e.status,
           tags: e.tags || [],
           type: "live",
@@ -397,7 +411,7 @@
 
     const { year, month } = calState;
     const cells = getMonthGrid(year, month);
-    const todayISO = new Date().toISOString().slice(0, 10);
+    const todayISO = localDate(new Date().toISOString());
 
     let html = "";
     // Day headers
