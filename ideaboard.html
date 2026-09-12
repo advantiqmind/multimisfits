@@ -2165,8 +2165,9 @@ function buildIdeaAiPrompt(idea) {
     'CRITICAL RULES:\n' +
     '- Return ONLY valid JSON. No explanation, no markdown code fences, no text before or after.\n' +
     '- NEVER use em dashes anywhere in the output. Use hyphens (-) instead.\n' +
-    '- The ONLY emoji allowed in text content is crossed swords. Do NOT use checkmarks or any other emoji in text fields.\n' +
-    '- Medal emoji are the ONLY exception, allowed exclusively in prize item lines.\n' +
+    '- Do NOT use checkmarks anywhere in text fields. They are reserved for RSVP.\n' +
+    '- Use a VARIETY of emoji for section headers (e.g. swords, shield, target, scroll, gem, fire, star, bow, compass). Pick different ones per section. Do NOT repeat the same emoji on every block.\n' +
+    '- Medal emoji are allowed exclusively in prize item lines.\n' +
     '- Do NOT add an RSVP line, RSVP block, or "React with checkmark" text anywhere. EventForge handles RSVP automatically.\n' +
     '- Always set "rsvp": true and "rsvpEmoji": "checkmark" in the event.\n\n' +
     'FORMATTING RULES:\n' +
