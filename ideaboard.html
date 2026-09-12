@@ -557,17 +557,18 @@ body {
 
 /* Held card state (red badge, any column) */
 .card.held { background: rgba(200,40,40,0.12) !important; border-left: 3px solid #cc3333 !important; }
-.card-held-badge {
+.card-held-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
   color: #ff4444;
-  background: rgba(204,51,51,0.2);
-  border: 1px solid rgba(204,51,51,0.35);
-  padding: 2px 8px;
-  border-radius: 3px;
-  white-space: nowrap;
-  flex-shrink: 0;
+  background: rgba(204,51,51,0.18);
+  border-bottom: 1px solid rgba(204,51,51,0.3);
+  padding: 4px 10px;
+  margin: -10px -12px 8px;
 }
 .card-hold-btn, .card-unhold-btn {
   background: none;
@@ -2013,7 +2014,7 @@ function buildCard(idea, col) {
     : '';
 
   var templateBtn = '';
-  if (col === 'shared' && isLeader) {
+  if ((col === 'shared' || col === 'onhold') && isLeader) {
     if (idea.templateJson) {
       templateBtn = '<button class="card-template" onclick="copyTemplate(event,\'' + idea.id + '\',this)">&#128230; TEMPLATE</button>' +
         '<button class="card-template-remove" onclick="removeTemplate(event,\'' + idea.id + '\')" title="Remove template">&times;</button>';
@@ -2036,8 +2037,8 @@ function buildCard(idea, col) {
     ageHtml = '<span class="card-age' + (stale ? ' stale' : '') + '">' + label + '</span>';
   }
 
-  var heldBadge = idea.held
-    ? '<span class="card-held-badge">HELD' + (idea.heldBy ? ' by ' + esc(idea.heldBy) : '') + '</span>'
+  var heldBanner = idea.held
+    ? '<div class="card-held-banner">HELD' + (idea.heldBy ? ' by ' + esc(idea.heldBy) : '') + '</div>'
     : '';
 
   var authorIdHtml = '';
@@ -2055,9 +2056,9 @@ function buildCard(idea, col) {
   }
 
   div.innerHTML =
+    heldBanner +
     '<div class="card-top">' +
       '<span class="card-title">' + titleHtml + '</span>' +
-      heldBadge +
       commentBadgeHtml +
       holdBtn +
       dismissBtn +
@@ -2736,7 +2737,7 @@ function openCardModal(ideaId) {
     html += '<div class="ib-modal-meta" style="font-style:italic;">Moved by ' + esc(idea.movedBy) + '</div>';
   }
   if (idea.held) {
-    html += '<div style="margin:6px 0;"><span class="card-held-badge">HELD' + (idea.heldBy ? ' by ' + esc(idea.heldBy) : '') + '</span></div>';
+    html += '<div class="card-held-banner" style="margin:-16px -20px 12px;padding:6px 14px;">HELD' + (idea.heldBy ? ' by ' + esc(idea.heldBy) : '') + '</div>';
   }
 
   /* Tags */
@@ -2787,7 +2788,7 @@ function openCardModal(ideaId) {
     actions.push('<button class="card-copy" onclick="modalCopyIdea(\'' + ideaId + '\',this)" title="Copy text">&#128203; COPY</button>');
     actions.push('<button class="card-copy-ai" onclick="modalCopyIdeaWithPrompt(\'' + ideaId + '\',this)" title="Copy AI prompt">&#129302; AI PROMPT</button>');
   }
-  if (col === 'shared' && isLeader) {
+  if ((col === 'shared' || col === 'onhold') && isLeader) {
     if (idea.templateJson) {
       actions.push('<button class="card-template" onclick="modalCopyTemplate(\'' + ideaId + '\',this)">&#128230; TEMPLATE</button>' +
         '<button class="card-template-remove" onclick="modalRemoveTemplate(\'' + ideaId + '\')" title="Remove template">&times;</button>');
