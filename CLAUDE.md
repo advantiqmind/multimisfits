@@ -128,8 +128,10 @@ Planned for later, after the slot machine is done.
 
 ### Giveaway Donation Leaderboard
 GP tracking via /giveaway-entry `gp` parameter is built (backend sums explicit GP per player,
-falls back to entries * rate). Frontend "Top Donors" ranking on giveaway cards not yet built.
-Similar pattern to the Loot Value leaderboard but for GP contributions.
+falls back to entries * rate). Per-player `gp` field included in API entries when explicit GP
+was tracked. Clan Leaderboard (roster.html) has a "Donated" column showing cumulative GP across
+all rounds, fetched from /api/giveaway. Frontend "Top Donors" ranking on giveaway cards not
+yet built. Similar pattern to the Loot Value leaderboard but for GP contributions.
 
 ### WOM Event Scoring System (planned extensions)
 - Team events: team score = sum of member scores using existing team assignment system.
