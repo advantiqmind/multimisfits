@@ -171,6 +171,8 @@ function wireToasts() {
   });
 }
 
+var _donationMap = {};
+
 function rosterRow(m, showXP, num) {
   const cls = "rank rank--" + esc(m.role || "member");
   const displayName = capitalizeName(m.name);
@@ -185,6 +187,8 @@ function rosterRow(m, showXP, num) {
   html += `<td class="ign">${nameHtml}</td>` +
     `<td><span class="${cls}">${rankMark(m.role)}${esc(m.rankLabel)}</span></td>`;
   if (showXP) {
+    const donated = _donationMap[m.name.toLowerCase()] || 0;
+    html += `<td class="donated-cell">${donated ? donated + "M" : ""}</td>`;
     html += `<td class="xp-cell">${formatXP(m.exp)}</td>`;
   }
   html += "</tr>";
@@ -236,6 +240,9 @@ function getFilteredRoster() {
       case "xp":
         cmp = (a.exp || 0) - (b.exp || 0);
         break;
+      case "donated":
+        cmp = (_donationMap[a.name.toLowerCase()] || 0) - (_donationMap[b.name.toLowerCase()] || 0);
+        break;
       case "rank":
       default:
         cmp = (a.priority || 0) - (b.priority || 0);
@@ -263,7 +270,7 @@ function renderFullRoster() {
 
   body.innerHTML = page.length
     ? page.map((m, i) => rosterRow(m, true, start + i + 1)).join("")
-    : '<tr><td colspan="4" class="roster-msg">No players found</td></tr>';
+    : '<tr><td colspan="5" class="roster-msg">No players found</td></tr>';
 
   const badge = document.getElementById("roster-count");
   if (badge) {
@@ -353,7 +360,7 @@ function wireRosterControls() {
         rosterState.sortDesc = !rosterState.sortDesc;
       } else {
         rosterState.sort = sort;
-        rosterState.sortDesc = sort === "rank" || sort === "xp";
+        rosterState.sortDesc = sort === "rank" || sort === "xp" || sort === "donated";
       }
       rosterState.page = 1;
       renderFullRoster();
@@ -361,15 +368,39 @@ function wireRosterControls() {
   });
 }
 
+async function loadDonationMap() {
+  try {
+    const r = await fetch("/api/giveaway", { headers: { accept: "application/json" } });
+    if (!r.ok) return;
+    const data = await r.json();
+    const rounds = data && Array.isArray(data.rounds) ? data.rounds : [];
+    const map = {};
+    for (const round of rounds) {
+      const rate = round.gpPerEntry || 0;
+      const entries = Array.isArray(round.entries) ? round.entries : [];
+      for (const e of entries) {
+        const key = (e.player || "").toLowerCase();
+        if (!key) continue;
+        const gp = e.gp !== undefined ? e.gp : e.count * rate;
+        map[key] = (map[key] || 0) + gp;
+      }
+    }
+    _donationMap = map;
+  } catch {}
+}
+
 async function loadRoster() {
   const body = document.getElementById("roster-body");
   if (!body) return;
-  const cols = body.dataset.full === "1" ? 3 : 2;
+  const cols = body.dataset.full === "1" ? 5 : 2;
   body.innerHTML = `<tr><td colspan="${cols}" class="roster-msg">Loading leaderboard…</td></tr>`;
   try {
-    const r = await fetch("/api/wom", { headers: { accept: "application/json" } });
-    if (!r.ok) throw new Error("bad status " + r.status);
-    const data = await r.json();
+    const [womRes] = await Promise.all([
+      fetch("/api/wom", { headers: { accept: "application/json" } }),
+      body.dataset.full === "1" ? loadDonationMap() : Promise.resolve(),
+    ]);
+    if (!womRes.ok) throw new Error("bad status " + womRes.status);
+    const data = await womRes.json();
     if (!data || !Array.isArray(data.members) || !data.members.length) throw new Error("empty");
     renderRoster(data.members, { cached: false });
   } catch (e) {
@@ -1638,6 +1669,11 @@ async function loadEventLeaderboard() {
       if (!isLootValueEvent(ev) && !isWomScoredEvent(ev)) return false;
       var status = computeEventStatus(ev);
       return status === "live" || status === "scheduled";
+    });
+    activeAndScheduled.sort(function(a, b) {
+      var ta = a.startTime ? new Date(a.startTime).getTime() : Infinity;
+      var tb = b.startTime ? new Date(b.startTime).getTime() : Infinity;
+      return ta - tb;
     });
     var hasActiveLootEvent = activeAndScheduled.some(function(ev) {
       return isLootValueEvent(ev) && computeEventStatus(ev) === "live";

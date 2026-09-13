@@ -749,6 +749,8 @@ const gpExplicitMessages = buildMessages("2001", [
 const gpExplicitRounds = transformGiveawayData([THREAD_ACTIVE], gpExplicitMessages);
 check("gpRaised uses explicit GP (3M not 2M)", gpExplicitRounds[0].gpRaised === 3);
 check("entries still 2", gpExplicitRounds[0].totalEntries === 2);
+const gpExplicitEntry = gpExplicitRounds[0].entries.find(e => e.player === "Vilence");
+check("entry has per-player gp field", gpExplicitEntry && gpExplicitEntry.gp === 3);
 
 console.log("\n== gpRaised: gp:0 free entry ==");
 const gpFreeMessages = buildMessages("2001", [
@@ -769,6 +771,8 @@ const gpFreeMessages = buildMessages("2001", [
 const gpFreeRounds = transformGiveawayData([THREAD_ACTIVE], gpFreeMessages);
 check("gpRaised is 0 for free entry", gpFreeRounds[0].gpRaised === 0);
 check("free entry still counts as 1 entry", gpFreeRounds[0].totalEntries === 1);
+const gpFreeEntry = gpFreeRounds[0].entries.find(e => e.player === "FreeWinner");
+check("free entry has gp:0 field", gpFreeEntry && gpFreeEntry.gp === 0);
 
 console.log("\n== gpRaised: mixed explicit and default GP ==");
 const gpMixedMessages = buildMessages("2001", [
@@ -788,8 +792,10 @@ const gpMixedMessages = buildMessages("2001", [
   },
 ]);
 const gpMixedRounds = transformGiveawayData([THREAD_ACTIVE], gpMixedMessages);
-check("mixed: Vilence 1 entry default GP (1M)", true);
-check("mixed: Artolux 2 entries explicit GP (5M)", true);
+const mixedVil = gpMixedRounds[0].entries.find(e => e.player === "Vilence");
+check("mixed: Vilence has no gp field (reaction entry)", mixedVil && mixedVil.gp === undefined);
+const mixedArt = gpMixedRounds[0].entries.find(e => e.player === "Artolux");
+check("mixed: Artolux has gp:5", mixedArt && mixedArt.gp === 5);
 check("mixed gpRaised = 1 (default) + 5 (explicit) = 6", gpMixedRounds[0].gpRaised === 6);
 
 console.log(`\n${pass + fail} checks: ${pass} passed, ${fail} failed`);

@@ -204,12 +204,14 @@ export function transformGiveawayData(threads, threadMessages, nickMap) {
     for (const [key, p] of participants) {
       const total = Math.min(Math.max(p.reactionCount + p.manualSum, 0), MAX_ENTRIES_PER_PERSON);
       if (total <= 0) continue;
-      entries.push({
+      const row = {
         player: p.name || key,
         playerId: p.playerId || "manual:" + key,
         count: total,
         timestamp: p.timestamp,
-      });
+      };
+      if (p.gpSum !== null) row.gp = Math.max(p.gpSum, 0);
+      entries.push(row);
     }
 
     const totalEntries = entries.reduce((sum, e) => sum + e.count, 0);

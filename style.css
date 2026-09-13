@@ -239,6 +239,9 @@ table.roster.roster-full .ign a{font-size:24px}
 .roster-full .rank-icon{width:28px;height:28px}
 .roster-full .chev{border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid var(--gold-dim)}
 
+/* ---------- donated column ---------- */
+.donated-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--gold);text-align:right;white-space:nowrap}
+
 /* ---------- xp column ---------- */
 .xp-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--xp);text-align:right;white-space:nowrap}
 
@@ -453,6 +456,7 @@ nav.main a[href="/ge.html"]{display:none}
   .roster-full .rank{font-size:14px;gap:6px}
   .roster-full .rank-icon{width:20px;height:20px}
   .roster-full .chev{border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid var(--gold-dim)}
+  .donated-cell{font-size:16px}
   .xp-cell{font-size:16px}
   .roster-controls{gap:8px}
   .roster-search,.roster-filter{font-size:16px;padding:10px 12px}
