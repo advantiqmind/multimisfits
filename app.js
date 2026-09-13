@@ -501,7 +501,7 @@ async function loadClanCoffer() {
       }
     }
     if (total <= 0) return;
-    el.innerHTML = '<div class="coffer-label">Clan Coffer</div><div class="coffer-amount">' + total + 'M GP</div>';
+    el.innerHTML = '<div class="coffer-label">Total Donated</div><div class="coffer-amount">' + total + 'M GP</div><div class="coffer-sub">All-Time</div>';
     el.classList.add("loaded");
   } catch {}
 }

@@ -134,6 +134,7 @@ main{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
 .coffer.loaded{opacity:1}
 .coffer-label{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
 .coffer-amount{font-size:26px;color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.coffer-sub{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;opacity:.7}
 
 /* ---------- news ---------- */
 .news-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed rgba(255,203,47,.18)}
