@@ -1347,7 +1347,7 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
     { name: isRemoval ? "Removed by" : "Added by", value: addedBy, inline: true },
   ];
   if (gpValue !== null) {
-    fields.push({ name: "GP", value: String(gpValue), inline: true });
+    fields.push({ name: "GP", value: gpValue + "M", inline: true });
   }
 
   const postRes = await fetch(

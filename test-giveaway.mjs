@@ -696,7 +696,7 @@ const beWithGp = extractBotEntry({
     { name: "Player", value: "TestPlayer" },
     { name: "Entries", value: "2" },
     { name: "Added by", value: "mr flsh" },
-    { name: "GP", value: "3" },
+    { name: "GP", value: "3M" },
   ]}],
 });
 check("extracts gp value", beWithGp && beWithGp.gp === 3);
@@ -714,7 +714,7 @@ const beGpZero = extractBotEntry({
   embeds: [{ title: "Entry Added", fields: [
     { name: "Player", value: "TestPlayer" },
     { name: "Entries", value: "1" },
-    { name: "GP", value: "0" },
+    { name: "GP", value: "0M" },
   ]}],
 });
 check("gp:0 is valid (free entry)", beGpZero && beGpZero.gp === 0);
@@ -724,7 +724,7 @@ const beRemovedGp = extractBotEntry({
     { name: "Player", value: "TestPlayer" },
     { name: "Entries", value: "2" },
     { name: "Removed by", value: "Leader" },
-    { name: "GP", value: "3" },
+    { name: "GP", value: "3M" },
   ]}],
 });
 check("Entry Removed with GP returns negative gp", beRemovedGp && beRemovedGp.gp === -3);
@@ -741,7 +741,7 @@ const gpExplicitMessages = buildMessages("2001", [
       { name: "Player", value: "Vilence", inline: true },
       { name: "Entries", value: "2", inline: true },
       { name: "Added by", value: "mr flsh", inline: true },
-      { name: "GP", value: "3", inline: true },
+      { name: "GP", value: "3M", inline: true },
     ]}],
     mentions: [], attachments: [], reactions: [],
   },
@@ -761,7 +761,7 @@ const gpFreeMessages = buildMessages("2001", [
       { name: "Player", value: "FreeWinner", inline: true },
       { name: "Entries", value: "1", inline: true },
       { name: "Added by", value: "mr flsh", inline: true },
-      { name: "GP", value: "0", inline: true },
+      { name: "GP", value: "0M", inline: true },
     ]}],
     mentions: [], attachments: [], reactions: [],
   },
@@ -782,7 +782,7 @@ const gpMixedMessages = buildMessages("2001", [
       { name: "Player", value: "Artolux", inline: true },
       { name: "Entries", value: "2", inline: true },
       { name: "Added by", value: "mr flsh", inline: true },
-      { name: "GP", value: "5", inline: true },
+      { name: "GP", value: "5M", inline: true },
     ]}],
     mentions: [], attachments: [], reactions: [],
   },
