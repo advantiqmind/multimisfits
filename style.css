@@ -261,9 +261,11 @@ th[data-sort="xp"]{text-align:right;width:140px}
 /* ---------- sortable headers ---------- */
 th.sortable{cursor:pointer;user-select:none;transition:color .15s;position:relative}
 th.sortable:hover{color:var(--gold)}
-th.sortable::after{content:"⇅";margin-left:8px;opacity:.3;font-size:.8em}
+th.sortable::after{content:"⇅";position:absolute;margin-left:6px;opacity:.3;font-size:.8em}
 th.sortable.sort-asc::after{content:"▲";opacity:1;color:var(--gold)}
 th.sortable.sort-desc::after{content:"▼";opacity:1;color:var(--gold)}
+th.sortable[data-sort="donated"]::after,
+th.sortable[data-sort="xp"]::after{margin-left:0;right:4px}
 
 /* ---------- pagination ---------- */
 .roster-pagination{display:flex;align-items:center;justify-content:center;gap:8px;padding:20px 0 6px;font-family:"Jersey 15",monospace;font-size:18px}
