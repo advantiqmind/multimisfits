@@ -55,7 +55,7 @@ const rosterState = {
   all: [],
   search: "",
   filter: "",
-  sort: "rank",
+  sort: "xp",
   sortDesc: true,
   page: 1,
 };
