@@ -188,7 +188,7 @@ table.roster .ign{font-family:"Jersey 15";font-size:17px;color:var(--parchment)}
 table.roster .ign a{color:var(--parchment)}
 table.roster .ign a:hover{color:var(--gold)}
 .roster-msg{color:var(--muted);font-family:"Jersey 15";font-size:15px;padding:10px 8px}
-.rank-num{font-family:"Jersey 15",monospace;color:var(--muted);text-align:center;width:36px;white-space:nowrap}
+.rank-num{font-family:"Jersey 15",monospace;color:var(--muted);text-align:center;width:56px;white-space:nowrap}
 
 .faq-body h3{margin:16px 0 4px}
 .faq-body h3:first-child{margin-top:0}
@@ -252,11 +252,11 @@ table.roster.roster-full th[data-sort="rank"]{width:180px}
 
 /* ---------- donated column ---------- */
 th[data-sort="donated"]{text-align:right;width:120px}
-.donated-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--gold);text-align:right;white-space:nowrap;width:120px}
+.donated-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--gold);text-align:right;white-space:nowrap}
 
 /* ---------- xp column ---------- */
 th[data-sort="xp"]{text-align:right;width:140px}
-.xp-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--xp);text-align:right;white-space:nowrap;width:140px}
+.xp-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--xp);text-align:right;white-space:nowrap}
 
 /* ---------- sortable headers ---------- */
 th.sortable{cursor:pointer;user-select:none;transition:color .15s;position:relative}
