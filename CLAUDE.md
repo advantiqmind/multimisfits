@@ -322,9 +322,11 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - Emoji-prefixed date lines supported (e.g. calendar emoji before When:).
 - Discord forum tags (e.g. Entry, PVM, Loot Value) resolved from channel available_tags
   and included in each event's `tags` array.
-- Winner detected via trophy emoji (U+1F3C6) in thread messages, same logic as giveaways:
-  @mention > text after trophy (greeting words stripped, max 3 words) > message author.
-  Auto-capitalized. API response `winner` field: null when no trophy, or the winner's name.
+- Multi-winner support: all messages and lines with trophy emoji (U+1F3C6) are scanned,
+  collecting unique winners. Per-line priority: @mention > text after trophy (greeting
+  words stripped, max 3 words) > message author. Auto-capitalized, deduplicated.
+  API response: `winner` (first winner, backward compat) and `winners` (full array).
+  Both null when no trophy. Frontend shows comma-separated names with pluralized labels.
   Shown on completed event cards (gold text) and in featured/modal views (spotlight banner).
   Silent until activated: no trophy emoji = no winner display.
 
