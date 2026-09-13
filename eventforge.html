@@ -471,6 +471,7 @@ CRITICAL RULES:
 - Medal emoji (🥇🥈🥉) are allowed exclusively in prize item lines.
 - Do NOT add an RSVP line, RSVP block, or "React with checkmark" text anywhere. EventForge handles RSVP automatically.
 - Always set "rsvp": true and "rsvpEmoji": "✅" in the event.
+- Always set "condition": "always" on every block. Never use "competition", "pk", or any other condition value.
 
 FORMATTING RULES:
 - The JSON must match the EventForge template format exactly.
@@ -577,7 +578,7 @@ Common block fields (all blocks have these):
 - visible: true (set false to hide a block)
 - showLabel: true (set false to hide the section heading)
 - open: false
-- condition: "always"
+- condition: "always" (ALWAYS set this to "always". Never use "competition", "pk", or any other value.)
 
 REMEMBER: Return ONLY the JSON object. No text, no explanation, no code fences.`
 }
