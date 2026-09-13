@@ -432,7 +432,7 @@ function newsCard(item) {
   return `<div class="news-item">${pin}<div><h3>${item.titleHtml}</h3>${time}${body}${img}</div></div>`;
 }
 
-const NEWS_PAGE_SIZE = 5;
+const NEWS_PAGE_SIZE = 2;
 const newsState = { items: [], page: 1 };
 
 function renderNewsPagination() {
@@ -479,6 +479,31 @@ async function loadNews() {
     var nb = document.getElementById("news-badge");
     if (nb) nb.classList.add("badge-offline");
   }
+}
+
+/* ---- clan coffer ---- */
+async function loadClanCoffer() {
+  var el = document.getElementById("clan-coffer");
+  if (!el) return;
+  try {
+    var r = await fetch("/api/giveaway", { headers: { accept: "application/json" } });
+    if (!r.ok) return;
+    var data = await r.json();
+    var rounds = data && Array.isArray(data.rounds) ? data.rounds : [];
+    var total = 0;
+    for (var i = 0; i < rounds.length; i++) {
+      var round = rounds[i];
+      var rate = round.gpPerEntry || 0;
+      var entries = Array.isArray(round.entries) ? round.entries : [];
+      for (var j = 0; j < entries.length; j++) {
+        var e = entries[j];
+        total += e.gp !== undefined ? e.gp : e.count * rate;
+      }
+    }
+    if (total <= 0) return;
+    el.innerHTML = '<div class="coffer-label">Clan Coffer</div><div class="coffer-amount">' + total + 'M GP</div>';
+    el.classList.add("loaded");
+  } catch {}
 }
 
 /* ---- achievements ---- */
@@ -2155,6 +2180,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadRoster();
   wireGallery();
   loadNews();
+  loadClanCoffer();
   loadEvents();
   loadAchievements();
   loadGallery();

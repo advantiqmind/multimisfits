@@ -128,6 +128,12 @@ main{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
 .hero .tagline{position:relative;z-index:1;font-family:"Jersey 15";font-size:clamp(18px,2.6vw,24px);color:var(--gold-dim);margin-top:6px}
 .hero p.desc{position:relative;z-index:1;max-width:620px;margin:16px auto 22px;color:var(--parchment)}
 .hero .cta{position:relative;z-index:1;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.coffer{position:absolute;top:16px;right:20px;z-index:2;font-family:"Jersey 15",monospace;font-size:18px;color:var(--gold);
+  background:linear-gradient(180deg,rgba(90,74,47,.6),rgba(58,47,30,.7));border:1px solid rgba(255,203,47,.25);
+  border-radius:6px;padding:8px 14px;text-align:center;line-height:1.3;opacity:0;transition:opacity .3s}
+.coffer.loaded{opacity:1}
+.coffer-label{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.coffer-amount{font-size:26px;color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.5)}
 
 /* ---------- news ---------- */
 .news-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed rgba(255,203,47,.18)}
@@ -240,10 +246,10 @@ table.roster.roster-full .ign a{font-size:24px}
 .roster-full .chev{border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid var(--gold-dim)}
 
 /* ---------- donated column ---------- */
-.donated-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--gold);text-align:right;white-space:nowrap}
+.donated-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--gold);text-align:right;white-space:nowrap;width:120px}
 
 /* ---------- xp column ---------- */
-.xp-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--xp);text-align:right;white-space:nowrap}
+.xp-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--xp);text-align:right;white-space:nowrap;width:140px}
 
 /* ---------- sortable headers ---------- */
 th.sortable{cursor:pointer;user-select:none;transition:color .15s;position:relative}
@@ -438,6 +444,7 @@ nav.main a[href="/ge.html"]{display:none}
   .bar{flex-wrap:wrap}
   .actions{order:2;margin-left:auto}
   .actions .btn:not(.join){display:none}
+  .coffer{position:static;margin:0 auto 12px;display:inline-block}
   .grid{grid-template-columns:1fr}
   .col-2{grid-column:span 1}
   .shots{grid-template-columns:repeat(2,1fr)}
