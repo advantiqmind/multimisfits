@@ -996,13 +996,9 @@ document.getElementById('efVer').textContent='v'+EF_VERSION;
   var MONTHS=['January','February','March','April','May','June',
     'July','August','September','October','November','December'];
 
-  var conflictDates=null;
-  var conflictFetchedAt=0;
   var fetchingConflicts=false;
-  var CONFLICT_TTL=5*60*1000;
 
   function fetchConflicts(cb){
-    if(conflictDates&&(Date.now()-conflictFetchedAt<CONFLICT_TTL)){cb(conflictDates);return}
     if(fetchingConflicts)return;
     fetchingConflicts=true;
     var dates=new Set();
@@ -1026,8 +1022,6 @@ document.getElementById('efVer').textContent='v'+EF_VERSION;
           addRange(dates,sd,ed);
         });
       }
-      conflictDates=dates;
-      conflictFetchedAt=Date.now();
       fetchingConflicts=false;
       cb(dates);
     });
@@ -1216,7 +1210,6 @@ document.getElementById('efVer').textContent='v'+EF_VERSION;
 `;
   document.head.appendChild(dpStyle);
 
-  window.__efClearConflictCache=function(){conflictDates=null;fetchingConflicts=false};
 })();
 </script>
 

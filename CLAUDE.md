@@ -393,7 +393,7 @@ to the Loot Value leaderboard but for GP contributions.
 - Custom date picker: Start Date and End Date inputs on the Create view use a custom
   calendar dropdown instead of the native date picker. Red dots on dates that already
   have events scheduled (from /api/events and /api/ideaboard?fields=calendar). Purely
-  visual indicator, does not block date selection. Conflict data cached 5 minutes.
+  visual indicator, does not block date selection. Conflict data fetched fresh every time the picker opens.
   Native date inputs made readonly; clicks open the custom picker. Quick date buttons
   and programmatic value changes still work normally.
 
