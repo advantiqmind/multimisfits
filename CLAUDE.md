@@ -231,7 +231,8 @@ to the Loot Value leaderboard but for GP contributions.
 - POST /api/ideaboard: actions "move" (column, requires leader code), "dismiss" (leader),
   "restore" (leader), "hold" (leader, sets held flag), "unhold" (leader, clears held flag),
   "add_note" (leader or member code), "validate" (check code validity),
-  "schedule" (leader, sets scheduled_date/scheduled_end_date, auto-updates template JSON dates).
+  "schedule" (leader, sets scheduled_date/scheduled_end_date, auto-updates template JSON dates,
+  auto-moves to Completed on schedule, back to Final Approval on unschedule).
   All write actions require access_code in request body.
 - Two-tier access control: IDEABOARD_LEADER_CODE = full access (move, dismiss, restore, comment).
   IDEABOARD_MEMBER_CODE = comment only. No code = read-only view. If neither env var set,
@@ -393,24 +394,30 @@ to the Loot Value leaderboard but for GP contributions.
 ### Event Calendar
 - calendar.js: month-grid calendar overlay for Idea Board.
 - Self-contained IIFE that injects its own CSS. Entry point: `window.openEventCalendar(options)`.
-- Data sources: GET /api/ideaboard?fields=calendar (Final Approval ideas with schedule data),
-  GET /api/events (live Discord events). Final Approval items are draggable; live events display-only.
-- `?fields=calendar` returns only onhold (Final Approval) ideas with id, title, tags, author,
-  hasTemplate, scheduledDate, scheduledEndDate. Separate cache key from the normal ideaboard list.
+- Data sources: GET /api/ideaboard?fields=calendar (Final Approval + scheduled ideas),
+  GET /api/events (Discord events). Final Approval items are draggable; Discord events display-only.
+- `?fields=calendar` returns onhold (Final Approval) ideas and any idea with a scheduled_date,
+  with id, title, tags, author, hasTemplate, scheduledDate, scheduledEndDate.
+  Separate cache key from the normal ideaboard list.
 - Sidebar: unscheduled Final Approval items shown as draggable pills in a sidebar next to the grid.
   Drag from sidebar to a cell opens a popover to set start date and optional end date (multi-day).
-- On-grid items: already-scheduled Final Approval ideas. Drag to another cell moves the dates
+- On-grid items: already-scheduled ideas. Drag to another cell moves the dates
   (preserves multi-day duration). Click opens popover with editable dates and unschedule option.
-- Scheduling auto-updates: POST /api/ideaboard action "schedule" sets scheduled_date and
-  scheduled_end_date on idea_positions, AND auto-updates the template JSON's date/endDate/multiDay
-  fields so the copy button always has the correct dates.
+- Scheduling auto-moves: setting a date auto-moves the idea to Completed (used column).
+  Unscheduling (clearing dates) auto-moves it back to Final Approval (onhold column).
+  Template JSON date fields auto-update on schedule.
 - D1 columns: idea_positions.scheduled_date, idea_positions.scheduled_end_date (added via ALTER TABLE).
 - Cards with no template show dimmed pills (no-template class).
-- Filter buttons: All / Final Approval / Live.
+- Discord event status: three visual states based on dates vs current time.
+  Upcoming (green pill, start date in the future), Live (blinking red pill, currently happening),
+  Ended (grey dimmed pill, end date has passed or thread archived).
+  computeLiveStatus() compares startDate/endDate/startTime/endTime against Date.now().
+- Filter buttons: All / Final Approval / Events.
+- Legend: Final Approval (amber, draggable) / Upcoming (green) / Live (red) / Ended (grey).
 - Access code read from localStorage key "mm-ideaboard-code" (Idea Board leader code).
 - Idea Board: calendar button in the header actions row.
 - EventForge: no longer connected to the calendar (button removed).
-- Final Approval cards show "DATE SET" (green) or "DATE NOT SET" (amber) badge.
+- Ideas with a scheduledDate show "DATE SET" (green) badge on Idea Board cards (any column).
 
 ### Loot Wheel
 - wheel.html: client-side prize wheel ported from the 1BOX wheel (1box.online copy untouched).

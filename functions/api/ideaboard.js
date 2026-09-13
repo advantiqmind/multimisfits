@@ -197,7 +197,7 @@ async function handleCalendarGet(context) {
   if (db) {
     await ensureTable(db);
     const result = await db
-      .prepare("SELECT message_id, column_name, template_json, scheduled_date, scheduled_end_date FROM idea_positions WHERE column_name = 'onhold' AND dismissed = 0")
+      .prepare("SELECT message_id, column_name, template_json, scheduled_date, scheduled_end_date FROM idea_positions WHERE dismissed = 0 AND (column_name = 'onhold' OR (scheduled_date IS NOT NULL AND scheduled_date != ''))")
       .all();
     const posMap = new Map();
     for (const row of result.results) posMap.set(row.message_id, row);
@@ -457,6 +457,8 @@ async function handlePost(context) {
       .run();
   } else if (action === "schedule") {
     const { scheduled_date, scheduled_end_date } = body;
+    const isScheduling = scheduled_date && scheduled_date !== "";
+    const targetColumn = isScheduling ? "used" : "onhold";
 
     const existing = await db
       .prepare("SELECT template_json FROM idea_positions WHERE message_id = ?")
@@ -464,7 +466,7 @@ async function handlePost(context) {
       .first();
 
     let updatedTemplate = existing?.template_json || null;
-    if (updatedTemplate && scheduled_date) {
+    if (updatedTemplate && isScheduling) {
       try {
         const parsed = JSON.parse(updatedTemplate);
         const target = (parsed.eventforge && Array.isArray(parsed.events) && parsed.events[0]) ? parsed.events[0] : parsed;
@@ -483,14 +485,15 @@ async function handlePost(context) {
     await db
       .prepare(
         `INSERT INTO idea_positions (message_id, column_name, scheduled_date, scheduled_end_date, template_json, updated_at)
-         VALUES (?, 'onhold', ?, ?, ?, ?)
+         VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(message_id) DO UPDATE SET
+           column_name = excluded.column_name,
            scheduled_date = excluded.scheduled_date,
            scheduled_end_date = excluded.scheduled_end_date,
            template_json = CASE WHEN excluded.scheduled_date IS NOT NULL AND excluded.scheduled_date != '' THEN excluded.template_json ELSE idea_positions.template_json END,
            updated_at = excluded.updated_at`
       )
-      .bind(message_id, scheduled_date || null, scheduled_end_date || null, updatedTemplate, now)
+      .bind(message_id, targetColumn, scheduled_date || null, scheduled_end_date || null, updatedTemplate, now)
       .run();
 
     const cache2 = caches.default;

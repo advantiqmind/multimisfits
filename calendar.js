@@ -69,7 +69,10 @@
 .cal-pill.draft[draggable="true"]{cursor:grab}
 .cal-pill.draft.selected{border-style:solid;background:#261f0f;box-shadow:0 0 0 2px #ffcb2f}
 .cal-pill.draft.no-template{border-color:#5a4d30;color:#8a7449}
-.cal-pill.live{background:#1a2a1a;border:1px solid #2a5a2a;color:#4ad04a}
+.cal-pill.upcoming{background:#1a2a1a;border:1px solid #2a5a2a;color:#4ad04a}
+.cal-pill.live{background:#2a1010;border:1px solid #8a2020;color:#f04040;animation:cal-live-pulse 1.8s ease-in-out infinite}
+.cal-pill.ended{background:#1a1a1a;border:1px solid #3a3a3a;color:#7a7a7a;opacity:.65}
+@keyframes cal-live-pulse{0%,100%{border-color:#8a2020;box-shadow:none}50%{border-color:#e04040;box-shadow:0 0 6px rgba(224,64,64,.35)}}
 .cal-pill.dragging{opacity:.4}
 .cal-conflict{position:absolute;top:2px;right:4px;font-size:10px;font-weight:800;color:#f7c76d;background:#3a2e1a;border-radius:99px;padding:1px 5px}
 .cal-popover{position:fixed;z-index:210;width:min(320px,calc(100vw - 32px));background:#1e1809;border:1px solid #3a2e1a;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);padding:14px;display:none}
@@ -85,12 +88,16 @@
 .cal-popover .cal-pop-btn.gold{background:linear-gradient(#ffcb2f,#c9a227);color:#0d0b08;border-color:#f0d860}
 .cal-popover .cal-pop-type{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px}
 .cal-popover .cal-pop-type.draft{background:#1a1305;color:#c9a227;border:1px dashed #6b5836}
-.cal-popover .cal-pop-type.live{background:#1a2a1a;color:#4ad04a;border:1px solid #2a5a2a}
+.cal-popover .cal-pop-type.upcoming{background:#1a2a1a;color:#4ad04a;border:1px solid #2a5a2a}
+.cal-popover .cal-pop-type.live{background:#2a1010;color:#f04040;border:1px solid #8a2020}
+.cal-popover .cal-pop-type.ended{background:#1a1a1a;color:#7a7a7a;border:1px solid #3a3a3a}
 .cal-popover .cal-pop-hint{font-size:11px;color:#7a6c4a;margin-top:6px}
 .cal-legend{padding:4px 16px 12px;display:flex;gap:16px;font-size:11px;color:#7a6c4a}
 .cal-legend span{display:flex;align-items:center;gap:4px}
 .cal-legend .cal-leg-draft{width:14px;height:10px;border:1px dashed #6b5836;border-radius:3px;background:#1a1305}
-.cal-legend .cal-leg-live{width:14px;height:10px;border:1px solid #2a5a2a;border-radius:3px;background:#1a2a1a}
+.cal-legend .cal-leg-upcoming{width:14px;height:10px;border:1px solid #2a5a2a;border-radius:3px;background:#1a2a1a}
+.cal-legend .cal-leg-live{width:14px;height:10px;border:1px solid #8a2020;border-radius:3px;background:#2a1010}
+.cal-legend .cal-leg-ended{width:14px;height:10px;border:1px solid #3a3a3a;border-radius:3px;background:#1a1a1a;opacity:.65}
 .cal-loading{padding:40px;text-align:center;color:#7a6c4a}
 .cal-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:#1a1305;border:1px solid #3a2e1a;border-radius:10px;padding:10px 14px;opacity:0;pointer-events:none;transition:.2s;z-index:220;color:#e6d9b8;font-size:13px}
 .cal-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -151,6 +158,22 @@
     const da = new Date(a + "T00:00:00");
     const db = new Date(b + "T00:00:00");
     return Math.round((db - da) / 86400000);
+  }
+
+  function computeLiveStatus(ev) {
+    if (ev.status === "completed") return "ended";
+    const now = Date.now();
+    let startMs = null;
+    if (ev.startDate) {
+      startMs = new Date(ev.startDate + "T" + (ev.startTime || "00:00") + ":00").getTime();
+    }
+    let endMs = null;
+    if (ev.endDate) {
+      endMs = new Date(ev.endDate + "T" + (ev.endTime || "23:59") + ":00").getTime();
+    }
+    if (endMs && now > endMs) return "ended";
+    if (startMs && now >= startMs) return "live";
+    return "upcoming";
   }
 
   function getMonthGrid(year, month) {
@@ -262,17 +285,21 @@
     if (eventsRes.status === "fulfilled" && eventsRes.value.events) {
       calState.live = eventsRes.value.events
         .filter((e) => e.startTime)
-        .map((e) => ({
-          id: e.id,
-          name: e.name,
-          startDate: localDate(e.startTime),
-          startTime: localTime(e.startTime),
-          endDate: e.endTime ? localDate(e.endTime) : "",
-          endTime: e.endTime ? localTime(e.endTime) : "",
-          status: e.status,
-          tags: e.tags || [],
-          type: "live",
-        }));
+        .map((e) => {
+          const item = {
+            id: e.id,
+            name: e.name,
+            startDate: localDate(e.startTime),
+            startTime: localTime(e.startTime),
+            endDate: e.endTime ? localDate(e.endTime) : "",
+            endTime: e.endTime ? localTime(e.endTime) : "",
+            status: e.status,
+            tags: e.tags || [],
+            type: "live",
+          };
+          item.liveStatus = computeLiveStatus(item);
+          return item;
+        });
     }
 
     calState.loading = false;
@@ -361,7 +388,8 @@
         const isDraft = ev.type === "draft";
         const isSelected = calState.selected && calState.selected.id === ev.id;
         const noTpl = isDraft && !ev.hasTemplate ? " no-template" : "";
-        html += `<div class="cal-pill ${isDraft ? "draft" : "live"}${noTpl} ${isSelected ? "selected" : ""}" ${isDraft ? 'draggable="true"' : ""} data-id="${esc(ev.id)}" data-type="${ev.type}" data-src="grid" title="${esc(ev.name)}">${esc(ev.name)}</div>`;
+        const pillClass = isDraft ? "draft" : (ev.liveStatus || "upcoming");
+        html += `<div class="cal-pill ${pillClass}${noTpl} ${isSelected ? "selected" : ""}" ${isDraft ? 'draggable="true"' : ""} data-id="${esc(ev.id)}" data-type="${ev.type}" data-src="grid" title="${esc(ev.name)}">${esc(ev.name)}</div>`;
       }
       html += "</div>";
     }
@@ -574,7 +602,10 @@
     if (!pop) return;
 
     const isDraft = ev.type === "draft";
-    let html = `<h4>${esc(ev.name)} <span class="cal-pop-type ${ev.type}">${isDraft ? "Final Approval" : "Live"}</span></h4>`;
+    const statusLabels = { upcoming: "Upcoming", live: "LIVE", ended: "Ended" };
+    const statusClass = isDraft ? "draft" : (ev.liveStatus || "upcoming");
+    const statusLabel = isDraft ? "Final Approval" : (statusLabels[ev.liveStatus] || "Event");
+    let html = `<h4>${esc(ev.name)} <span class="cal-pop-type ${statusClass}">${statusLabel}</span></h4>`;
 
     if (isDraft) {
       html += `
@@ -662,7 +693,7 @@
         <div class="cal-filters">
           <button class="cal-fbtn ${calState.filter === "all" ? "active" : ""}" data-f="all">All</button>
           <button class="cal-fbtn ${calState.filter === "draft" ? "active" : ""}" data-f="draft">Final Approval</button>
-          <button class="cal-fbtn ${calState.filter === "live" ? "active" : ""}" data-f="live">Live</button>
+          <button class="cal-fbtn ${calState.filter === "live" ? "active" : ""}" data-f="live">Events</button>
         </div>
         <div class="cal-nav">
           <button id="calPrev" title="Previous month">&#9664;</button>
@@ -678,7 +709,9 @@
         </div>
         <div class="cal-legend">
           <span><span class="cal-leg-draft"></span> Final Approval (draggable)</span>
-          <span><span class="cal-leg-live"></span> Live (posted)</span>
+          <span><span class="cal-leg-upcoming"></span> Upcoming</span>
+          <span><span class="cal-leg-live"></span> Live</span>
+          <span><span class="cal-leg-ended"></span> Ended</span>
         </div>
       </div>
       <div class="cal-popover" id="calPopover"></div>
