@@ -122,7 +122,19 @@
 .cal-pub-input:focus{border-color:#6b5836;outline:none;box-shadow:0 0 0 2px rgba(255,203,47,.12)}
 .cal-pub-dates{font-size:13px;color:#a99b78;line-height:1.8}
 .cal-pub-dates strong{color:#e6d9b8}
-.cal-pub-preview{background:#0d0b08;border:1px solid #3a2e1a;border-radius:8px;padding:12px;max-height:240px;overflow-y:auto;font-size:12px;white-space:pre-wrap;word-break:break-word;line-height:1.6;color:#a99b78;font-family:monospace}
+.cal-pub-preview{background:#313338;border:1px solid #3a2e1a;border-radius:8px;padding:16px;max-height:300px;overflow-y:auto;font-size:14px;word-break:break-word;line-height:1.375;color:#dbdee1;font-family:'gg sans','Noto Sans','Helvetica Neue',Helvetica,Arial,sans-serif}
+.cal-pub-preview h1{font-size:24px;font-weight:700;margin:8px 0 4px;line-height:1.2;color:#f2f3f5}
+.cal-pub-preview h2{font-size:20px;font-weight:700;margin:8px 0 4px;line-height:1.2;color:#f2f3f5}
+.cal-pub-preview h3{font-size:16px;font-weight:700;margin:8px 0 4px;line-height:1.2;color:#f2f3f5}
+.cal-pub-preview p{margin:0 0 4px}
+.cal-pub-preview strong{color:#f2f3f5;font-weight:700}
+.cal-pub-preview em{font-style:italic}
+.cal-pub-preview .dc-ts{background:rgba(88,101,242,.15);color:#e0e1e5;padding:1px 4px;border-radius:3px;font-size:13px;white-space:nowrap}
+.cal-pub-preview .dc-divider{border:0;border-top:1px solid #4e5058;margin:8px 0}
+.cal-pub-preview .dc-spacer{height:12px}
+.cal-pub-charcount{margin-top:6px;font-size:11px;text-align:right;color:#7a6c4a}
+.cal-pub-charcount.warn{color:#e8a832}
+.cal-pub-charcount.over{color:#b23a30;font-weight:700}
 .cal-pub-media{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:flex-start}
 .cal-pub-thumb{position:relative;display:inline-block}
 .cal-pub-thumb img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #3a2e1a}
@@ -985,7 +997,64 @@
 
   // --- Publish overlay ---
 
-  var pubState = { draft: null, startDate: "", endDate: "", images: [], uploadedImages: [], posting: false };
+  function discordToHtml(raw) {
+    if (!raw) return "";
+    var paras = raw.split(/\n\n+/);
+    var out = [];
+    paras.forEach(function(p) {
+      p = p.trim();
+      if (!p) return;
+      if (/^─{3,}/.test(p)) { out.push('<hr class="dc-divider">'); return; }
+      var lines = p.split("\n");
+      var html = [];
+      lines.forEach(function(ln) {
+        if (ln.trim() === "") { html.push('<div class="dc-spacer"></div>'); return; }
+        var h = ln.match(/^(#{1,3})\s+(.+)/);
+        if (h) {
+          var lvl = h[1].length;
+          var txt = fmtInline(h[2]);
+          html.push("<h" + lvl + ">" + txt + "</h" + lvl + ">");
+          return;
+        }
+        html.push("<p>" + fmtInline(ln) + "</p>");
+      });
+      out.push(html.join(""));
+    });
+    return out.join('<div class="dc-spacer"></div>');
+  }
+
+  function fmtInline(s) {
+    s = esc(s);
+    s = s.replace(/&lt;t:(\d+)(?::([tTdDfFR]))?&gt;/g, function(_, epoch, flag) {
+      var d = new Date(parseInt(epoch) * 1000);
+      if (isNaN(d.getTime())) return '<span class="dc-ts">&lt;invalid date&gt;</span>';
+      var txt = "";
+      var fl = flag || "f";
+      if (fl === "R") {
+        var diff = Math.round((d - Date.now()) / 1000);
+        var abs = Math.abs(diff);
+        if (abs < 60) txt = "in a few seconds";
+        else if (abs < 3600) txt = (diff > 0 ? "in " : "") + Math.round(abs/60) + " minutes" + (diff < 0 ? " ago" : "");
+        else if (abs < 86400) txt = (diff > 0 ? "in " : "") + Math.round(abs/3600) + " hours" + (diff < 0 ? " ago" : "");
+        else txt = (diff > 0 ? "in " : "") + Math.round(abs/86400) + " days" + (diff < 0 ? " ago" : "");
+      } else if (fl === "D" || fl === "d") {
+        txt = d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+      } else if (fl === "t") {
+        txt = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      } else if (fl === "T") {
+        txt = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", second: "2-digit" });
+      } else {
+        txt = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }) +
+              " at " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      }
+      return '<span class="dc-ts">' + txt + '</span>';
+    });
+    s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    return s;
+  }
+
+  var pubState = { draft: null, startDate: "", endDate: "", images: [], uploadedImages: [], posting: false, charCount: 0 };
 
   function ensurePubOverlays() {
     if (!document.getElementById("calPubOverlay")) {
@@ -1011,7 +1080,10 @@
     pubState.uploadedImages = [];
     pubState.posting = false;
 
-    var preview = pubTemplateToPreview(draft.templateJson, startDate, endDate) || "(Could not generate preview)";
+    var rawPreview = pubTemplateToPreview(draft.templateJson, startDate, endDate) || "(Could not generate preview)";
+    pubState.charCount = rawPreview.length;
+    var charClass = pubState.charCount > 2000 ? "cal-pub-charcount over" : pubState.charCount > 1800 ? "cal-pub-charcount warn" : "cal-pub-charcount";
+    var htmlPreview = discordToHtml(rawPreview);
 
     var dateDisplay = "<strong>" + esc(startDate) + "</strong>";
     if (endDate) dateDisplay += " to <strong>" + esc(endDate) + "</strong>";
@@ -1030,7 +1102,8 @@
         '</div>' +
         '<div class="cal-pub-section">' +
           '<label class="cal-pub-label">Post Preview</label>' +
-          '<div class="cal-pub-preview" id="calPubPreview">' + esc(preview) + '</div>' +
+          '<div class="cal-pub-preview" id="calPubPreview">' + htmlPreview + '</div>' +
+          '<div class="' + charClass + '" id="calPubCharCount">' + pubState.charCount + ' / 2,000' + (pubState.charCount > 2000 ? ' (too long for bot to post)' : '') + '</div>' +
         '</div>' +
         '<div class="cal-pub-section">' +
           '<label class="cal-pub-label">Media <span class="cal-pub-req">* at least 1 image</span></label>' +
@@ -1073,6 +1146,7 @@
     document.getElementById("calPubPostBtn").onclick = function() {
       var title = document.getElementById("calPubTitle").value.trim();
       if (!title) { showPubError("Title is required"); return; }
+      if (pubState.charCount > 2000) { showPubError("Post body is " + pubState.charCount + " chars. Discord limit is 2,000 for non-Nitro bots. Shorten the event template first."); return; }
       var totalImages = pubState.images.length + pubState.uploadedImages.length;
       if (totalImages === 0) { showPubError("At least one image is required"); return; }
       showConfirmOverlay(title);
