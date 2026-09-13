@@ -196,9 +196,10 @@ function capitalizeName(name) {
 
 export function parseWinner(messages, threadId, nickMap) {
   if (!Array.isArray(messages) || !messages.length) return null;
+  const sorted = [...messages].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const winners = [];
   const seen = new Set();
-  for (const m of messages) {
+  for (const m of sorted) {
     if (m.id === threadId) continue;
     const c = (m.content || "");
     if (!c.includes("\u{1F3C6}")) continue;
