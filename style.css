@@ -245,10 +245,16 @@ table.roster.roster-full .ign a{font-size:24px}
 .roster-full .rank-icon{width:28px;height:28px}
 .roster-full .chev{border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid var(--gold-dim)}
 
+/* ---------- rank column ---------- */
+th[data-sort="rank"],td .rank{white-space:nowrap}
+table.roster.roster-full th[data-sort="rank"]{width:180px}
+
 /* ---------- donated column ---------- */
+th[data-sort="donated"]{text-align:right;width:120px}
 .donated-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--gold);text-align:right;white-space:nowrap;width:120px}
 
 /* ---------- xp column ---------- */
+th[data-sort="xp"]{text-align:right;width:140px}
 .xp-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--xp);text-align:right;white-space:nowrap;width:140px}
 
 /* ---------- sortable headers ---------- */
@@ -463,8 +469,11 @@ nav.main a[href="/ge.html"]{display:none}
   .roster-full .rank{font-size:14px;gap:6px}
   .roster-full .rank-icon{width:20px;height:20px}
   .roster-full .chev{border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid var(--gold-dim)}
-  .donated-cell{font-size:16px}
-  .xp-cell{font-size:16px}
+  table.roster.roster-full th[data-sort="rank"]{width:auto}
+  th[data-sort="donated"]{width:70px}
+  .donated-cell{font-size:16px;width:70px}
+  th[data-sort="xp"]{width:90px}
+  .xp-cell{font-size:16px;width:90px}
   .roster-controls{gap:8px}
   .roster-search,.roster-filter{font-size:16px;padding:10px 12px}
   .roster-filter{min-width:120px}
