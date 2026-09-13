@@ -181,7 +181,7 @@ table.roster .ign{font-family:"Jersey 15";font-size:17px;color:var(--parchment)}
 table.roster .ign a{color:var(--parchment)}
 table.roster .ign a:hover{color:var(--gold)}
 .roster-msg{color:var(--muted);font-family:"Jersey 15";font-size:15px;padding:10px 8px}
-.rank-num{font-family:"Jersey 15",monospace;color:var(--muted);text-align:center;width:36px;white-space:nowrap}
+.rank-num{font-family:"Jersey 15",monospace;color:var(--muted);text-align:center;width:56px;white-space:nowrap}
 
 .faq-body h3{margin:16px 0 4px}
 .faq-body h3:first-child{margin-top:0}
@@ -240,17 +240,21 @@ table.roster.roster-full .ign a{font-size:24px}
 .roster-full .chev{border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid var(--gold-dim)}
 
 /* ---------- donated column ---------- */
+th[data-sort="donated"]{text-align:right}
 .donated-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--gold);text-align:right;white-space:nowrap}
 
 /* ---------- xp column ---------- */
+th[data-sort="xp"]{text-align:right}
 .xp-cell{font-family:"Jersey 15",monospace;font-size:22px;color:var(--xp);text-align:right;white-space:nowrap}
 
 /* ---------- sortable headers ---------- */
 th.sortable{cursor:pointer;user-select:none;transition:color .15s;position:relative}
 th.sortable:hover{color:var(--gold)}
-th.sortable::after{content:"⇅";margin-left:8px;opacity:.3;font-size:.8em}
+th.sortable::after{content:"⇅";position:absolute;margin-left:6px;opacity:.3;font-size:.8em}
 th.sortable.sort-asc::after{content:"▲";opacity:1;color:var(--gold)}
 th.sortable.sort-desc::after{content:"▼";opacity:1;color:var(--gold)}
+th.sortable[data-sort="donated"]::after,
+th.sortable[data-sort="xp"]::after{margin-left:0;right:4px}
 
 /* ---------- pagination ---------- */
 .roster-pagination{display:flex;align-items:center;justify-content:center;gap:8px;padding:20px 0 6px;font-family:"Jersey 15",monospace;font-size:18px}
