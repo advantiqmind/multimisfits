@@ -196,29 +196,44 @@ function capitalizeName(name) {
 
 export function parseWinner(messages, threadId, nickMap) {
   if (!Array.isArray(messages) || !messages.length) return null;
+  const winners = [];
+  const seen = new Set();
   for (const m of messages) {
     if (m.id === threadId) continue;
     const c = (m.content || "");
-    const hasTrophy = c.includes("\u{1F3C6}");
-    if (!hasTrophy) continue;
-    const mentioned = Array.isArray(m.mentions) && m.mentions.length
-      ? m.mentions[0] : null;
-    let winnerName;
-    if (mentioned) {
-      winnerName = resolveName(mentioned, nickMap);
-    } else {
-      let afterTrophy = c.split("\u{1F3C6}").pop().split("\n")[0]
-        .replace(/[!.,;:]+$/g, "").trim();
-      afterTrophy = afterTrophy.replace(/^(?:congratulations|congrats|winner|grats)[!.,;:]*\s*/i, "")
-        .replace(/[!.,;:]+$/g, "").trim();
-      const wordCount = afterTrophy.split(/\s+/).length;
-      winnerName = afterTrophy.length > 0 && afterTrophy.length < 40 && wordCount <= 3
-        ? afterTrophy
-        : resolveName(m.author, nickMap);
+    if (!c.includes("\u{1F3C6}")) continue;
+    const mentions = Array.isArray(m.mentions) ? m.mentions : [];
+    const lines = c.split("\n");
+    let usedMentions = 0;
+    for (const line of lines) {
+      if (!line.includes("\u{1F3C6}")) continue;
+      const mentionMatch = line.match(/<@!?(\d+)>/);
+      let mentioned = mentionMatch
+        ? mentions.find(u => u.id === mentionMatch[1]) || null
+        : null;
+      if (!mentioned && mentions.length > usedMentions) {
+        mentioned = mentions[usedMentions];
+      }
+      if (mentioned) usedMentions++;
+      let winnerName;
+      if (mentioned) {
+        winnerName = resolveName(mentioned, nickMap);
+      } else {
+        let afterTrophy = line.split("\u{1F3C6}").pop()
+          .replace(/[!.,;:]+$/g, "").trim();
+        afterTrophy = afterTrophy.replace(/^(?:congratulations|congrats|winner|grats)[!.,;:]*\s*/i, "")
+          .replace(/[!.,;:]+$/g, "").trim();
+        const wordCount = afterTrophy.split(/\s+/).length;
+        winnerName = afterTrophy.length > 0 && afterTrophy.length < 40 && wordCount <= 3
+          ? afterTrophy
+          : resolveName(m.author, nickMap);
+      }
+      const name = capitalizeName(winnerName);
+      const key = name.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); winners.push(name); }
     }
-    return capitalizeName(winnerName);
   }
-  return null;
+  return winners.length ? winners : null;
 }
 
 export function transformThreads(threads, openingMessages, tagMap, threadMessages, threadReactors, nickMap) {
@@ -255,7 +270,7 @@ export function transformThreads(threads, openingMessages, tagMap, threadMessage
     const teams = allMsgs ? parseTeams(allMsgs, nickMap) : null;
     const reactors = threadReactors && threadReactors.get(t.id);
     const participants = (allMsgs || reactors) ? parseParticipants(allMsgs, reactors, nickMap) : null;
-    const winner = allMsgs ? parseWinner(allMsgs, t.id, nickMap) : null;
+    const winners = allMsgs ? parseWinner(allMsgs, t.id, nickMap) : null;
 
     events.push({
       id: t.id,
@@ -270,7 +285,8 @@ export function transformThreads(threads, openingMessages, tagMap, threadMessage
       tags,
       teams,
       participants,
-      winner,
+      winner: winners ? winners[0] : null,
+      winners,
     });
   }
 

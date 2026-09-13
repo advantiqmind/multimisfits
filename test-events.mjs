@@ -568,23 +568,51 @@ ok.push(["parseWinner: null for no trophy", parseWinner([
 ok.push(["parseWinner: skips opening message", parseWinner([
   { id: "t1", content: "\u{1F3C6} Flash" },
 ], "t1") === null]);
-ok.push(["parseWinner: extracts from @mention", parseWinner([
-  { id: "m1", content: "\u{1F3C6} congrats!", mentions: [{ id: "u1", global_name: "mr flsh", username: "mrflsh" }] },
-], "t1") === "Mr Flsh"]);
-ok.push(["parseWinner: extracts from text after trophy", parseWinner([
-  { id: "m1", content: "\u{1F3C6} jackson", mentions: [] },
-], "t1") === "Jackson"]);
-ok.push(["parseWinner: strips greeting words", parseWinner([
-  { id: "m1", content: "\u{1F3C6} Congratulations flash!", mentions: [], author: { global_name: "Admin", username: "admin" } },
-], "t1") === "Flash"]);
-ok.push(["parseWinner: falls back to author", parseWinner([
-  { id: "m1", content: "\u{1F3C6} this is a really long message about the event and who won it all", mentions: [], author: { global_name: "koi", username: "koi" } },
-], "t1") === "Koi"]);
-ok.push(["parseWinner: returns first trophy only", parseWinner([
-  { id: "m1", content: "Hello", mentions: [] },
-  { id: "m2", content: "\u{1F3C6} Alpha", mentions: [] },
-  { id: "m3", content: "\u{1F3C6} Beta", mentions: [] },
-], "t1") === "Alpha"]);
+ok.push(["parseWinner: extracts from @mention", (() => {
+  const r = parseWinner([
+    { id: "m1", content: "\u{1F3C6} congrats!", mentions: [{ id: "u1", global_name: "mr flsh", username: "mrflsh" }] },
+  ], "t1");
+  return Array.isArray(r) && r[0] === "Mr Flsh";
+})()]);
+ok.push(["parseWinner: extracts from text after trophy", (() => {
+  const r = parseWinner([
+    { id: "m1", content: "\u{1F3C6} jackson", mentions: [] },
+  ], "t1");
+  return Array.isArray(r) && r[0] === "Jackson";
+})()]);
+ok.push(["parseWinner: strips greeting words", (() => {
+  const r = parseWinner([
+    { id: "m1", content: "\u{1F3C6} Congratulations flash!", mentions: [], author: { global_name: "Admin", username: "admin" } },
+  ], "t1");
+  return Array.isArray(r) && r[0] === "Flash";
+})()]);
+ok.push(["parseWinner: falls back to author", (() => {
+  const r = parseWinner([
+    { id: "m1", content: "\u{1F3C6} this is a really long message about the event and who won it all", mentions: [], author: { global_name: "koi", username: "koi" } },
+  ], "t1");
+  return Array.isArray(r) && r[0] === "Koi";
+})()]);
+ok.push(["parseWinner: returns all trophy messages", (() => {
+  const r = parseWinner([
+    { id: "m1", content: "Hello", mentions: [] },
+    { id: "m2", content: "\u{1F3C6} Alpha", mentions: [] },
+    { id: "m3", content: "\u{1F3C6} Beta", mentions: [] },
+  ], "t1");
+  return Array.isArray(r) && r.length === 2 && r[0] === "Alpha" && r[1] === "Beta";
+})()]);
+ok.push(["parseWinner: multi-line trophies in one message", (() => {
+  const r = parseWinner([
+    { id: "m1", content: "\u{1F3C6} Alpha\n\u{1F3C6} Beta\n\u{1F3C6} Charlie", mentions: [] },
+  ], "t1");
+  return Array.isArray(r) && r.length === 3 && r[0] === "Alpha" && r[1] === "Beta" && r[2] === "Charlie";
+})()]);
+ok.push(["parseWinner: deduplicates same name", (() => {
+  const r = parseWinner([
+    { id: "m2", content: "\u{1F3C6} Alpha", mentions: [] },
+    { id: "m3", content: "\u{1F3C6} alpha", mentions: [] },
+  ], "t1");
+  return Array.isArray(r) && r.length === 1 && r[0] === "Alpha";
+})()]);
 
 /* ---- transformThreads winner field ---- */
 
@@ -599,12 +627,23 @@ ok.push(["transformThreads: winner field populated", (() => {
   return result[0].winner === "Mr Flsh";
 })()]);
 
+ok.push(["transformThreads: winners array populated", (() => {
+  const t = [{ id: "7001", name: "Test Event", parent_id: "9999", message_count: 2, thread_metadata: { archived: true, create_timestamp: "2026-01-01T00:00:00Z" } }];
+  const m = [{ id: "7001", content: "When: Jan 1 2026", attachments: [] }];
+  const tm = new Map([["7001", [
+    { id: "7001", content: "When: Jan 1 2026" },
+    { id: "m1", content: "\u{1F3C6} Alpha\n\u{1F3C6} Beta", mentions: [] },
+  ]]]);
+  const result = transformThreads(t, m, null, tm, null);
+  return result[0].winner === "Alpha" && Array.isArray(result[0].winners) && result[0].winners.length === 2 && result[0].winners[1] === "Beta";
+})()]);
+
 ok.push(["transformThreads: winner null when no trophy", (() => {
   const t = [{ id: "7002", name: "No Winner Event", parent_id: "9999", message_count: 1, thread_metadata: { archived: true, create_timestamp: "2026-01-01T00:00:00Z" } }];
   const m = [{ id: "7002", content: "Just a regular event", attachments: [] }];
   const tm = new Map([["7002", [{ id: "7002", content: "Just a regular event" }]]]);
   const result = transformThreads(t, m, null, tm, null);
-  return result[0].winner === null;
+  return result[0].winner === null && result[0].winners === null;
 })()]);
 
 console.log("\nchecks:");

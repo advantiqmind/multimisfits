@@ -1144,8 +1144,9 @@ function eventCard(ev) {
   var teamDots = teamDotsHtml(ev.teams);
   var partCount = ev.participants && ev.participants.length ? ev.participants.length + " joined" : "";
   var metaParts = [liveText || timeStr, interested, partCount].filter(Boolean).join(" · ");
-  var winnerLine = ev.winner && effStatus === "completed"
-    ? `<div class="ev-card-winner">&#127942; ${esc(ev.winner)}</div>` : "";
+  var winnerNames = ev.winners && ev.winners.length ? ev.winners : ev.winner ? [ev.winner] : [];
+  var winnerLine = winnerNames.length && effStatus === "completed"
+    ? `<div class="ev-card-winner">&#127942; ${winnerNames.map(esc).join(", ")}</div>` : "";
   return `<div class="ev-card ev-clickable${liveClass}${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${bgStyle}>
     <div class="ev-card-date${ev.hasParsedDate ? "" : " date-tba"}"><div class="d">${day}</div><div class="m">${esc(month)}</div></div>
     <div class="ev-card-info">
@@ -1183,17 +1184,19 @@ function renderEvents(events, { cached } = {}) {
   var remainingLive = featured && computeEventStatus(featured) === "live" ? live.slice(1) : live;
   var remainingUpcoming = featured && computeEventStatus(featured) === "scheduled" ? upcoming.slice(1) : upcoming;
 
-  var prevWinner = null;
+  var prevWinners = null;
   var prevWinnerEvent = "";
   for (var i = 0; i < past.length; i++) {
-    if (past[i].winner) { prevWinner = past[i].winner; prevWinnerEvent = past[i].name || ""; break; }
+    var pw = past[i].winners && past[i].winners.length ? past[i].winners : past[i].winner ? [past[i].winner] : null;
+    if (pw) { prevWinners = pw; prevWinnerEvent = past[i].name || ""; break; }
   }
 
   var evWinnerWrap = document.getElementById("ev-prev-winner-wrap");
   if (evWinnerWrap) {
-    var winnerName = prevWinner ? esc(prevWinner) : "TBA";
+    var winnerName = prevWinners ? prevWinners.map(esc).join(", ") : "TBA";
+    var winnerLabel = prevWinners && prevWinners.length > 1 ? "Prev. Winners" : "Prev. Winner";
     var evEventHtml = prevWinnerEvent ? '<span class="ev-winner-dot">&#8226;</span><span class="ev-winner-event">' + esc(prevWinnerEvent) + '</span>' : "";
-    evWinnerWrap.innerHTML = '<div class="ev-winner-bar"><img class="ev-winner-bar-icon" src="/assets/bracket-trophy-mm.png" alt="Trophy" height="35" width="34"><div class="ev-winner-bar-main"><span class="ev-winner-bar-label">Prev. Winner</span><span class="ev-winner-bar-name">' + winnerName + '</span>' + evEventHtml + '</div></div>';
+    evWinnerWrap.innerHTML = '<div class="ev-winner-bar"><img class="ev-winner-bar-icon" src="/assets/bracket-trophy-mm.png" alt="Trophy" height="35" width="34"><div class="ev-winner-bar-main"><span class="ev-winner-bar-label">' + winnerLabel + '</span><span class="ev-winner-bar-name">' + winnerName + '</span>' + evEventHtml + '</div></div>';
     evWinnerWrap.style.display = "";
   }
 
@@ -1309,8 +1312,9 @@ function wireEventModals() {
     var teamRoster = teamRosterHtml(ev.teams);
     var theme = eventThemeClass(ev);
     var partBtn = participantBtnHtml(ev.participants, ev.id, theme);
-    var winnerHtml = ev.winner
-      ? '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">Winner</div><div class="ev-winner-name">' + esc(ev.winner) + '</div></div></div>'
+    var modalWinners = ev.winners && ev.winners.length ? ev.winners : ev.winner ? [ev.winner] : [];
+    var winnerHtml = modalWinners.length
+      ? '<div class="ev-winner-spotlight"><span class="ev-winner-icon">&#127942;</span><div class="ev-winner-content"><div class="ev-winner-label">' + (modalWinners.length > 1 ? "Winners" : "Winner") + '</div><div class="ev-winner-name">' + modalWinners.map(esc).join(", ") + '</div></div></div>'
       : '';
     body.innerHTML =
       '<div class="ev-modal-header"><h3>' + esc(cleanName(ev.name)) + '</h3>' + lvTag + wsTag + teamBadge + badge + '</div>' +
