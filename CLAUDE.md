@@ -390,6 +390,12 @@ to the Loot Value leaderboard but for GP contributions.
   to make it!" as a custom block. Emphasizes JSON-only output (no code fences, no explanation).
   Import handles wrapped template format, bare events, strips markdown code fences, assigns
   fresh UIDs.
+- Custom date picker: Start Date and End Date inputs on the Create view use a custom
+  calendar dropdown instead of the native date picker. Red dots on dates that already
+  have events scheduled (from /api/events and /api/ideaboard?fields=calendar). Purely
+  visual indicator, does not block date selection. Conflict data cached 5 minutes.
+  Native date inputs made readonly; clicks open the custom picker. Quick date buttons
+  and programmatic value changes still work normally.
 
 ### Event Calendar
 - calendar.js: month-grid calendar overlay for Idea Board.
@@ -397,12 +403,13 @@ to the Loot Value leaderboard but for GP contributions.
 - Data sources: GET /api/ideaboard?fields=calendar (Final Approval + scheduled ideas),
   GET /api/events (Discord events). Final Approval items are draggable; Discord events display-only.
 - `?fields=calendar` returns onhold (Final Approval) ideas and any idea with a scheduled_date,
-  with id, title, tags, author, hasTemplate, scheduledDate, scheduledEndDate.
+  with id, title, tags, author, hasTemplate, templateJson, scheduledDate, scheduledEndDate.
   Separate cache key from the normal ideaboard list.
 - Sidebar: unscheduled Final Approval items shown as draggable pills in a sidebar next to the grid.
   Drag from sidebar to a cell opens a popover to set start date and optional end date (multi-day).
-- On-grid items: already-scheduled ideas. Drag to another cell moves the dates
-  (preserves multi-day duration). Click opens popover with editable dates and unschedule option.
+- On-grid items: already-scheduled ideas. Drag to another cell shows a confirmation
+  popover (From/To dates, Confirm Move/Cancel) before saving. Click opens popover with
+  editable dates, unschedule option, and Copy JSON + Download buttons (when template exists).
 - Scheduling auto-moves: setting a date auto-moves the idea to Completed (used column).
   Unscheduling (clearing dates) auto-moves it back to Final Approval (onhold column).
   Template JSON date fields auto-update on schedule.
@@ -416,6 +423,10 @@ to the Loot Value leaderboard but for GP contributions.
 - Legend: Final Approval (amber, draggable) / Upcoming (green) / Live (red) / Ended (grey).
 - Access code read from localStorage key "mm-ideaboard-code" (Idea Board leader code).
 - Idea Board: calendar button in the header actions row.
+- Copy JSON button: copies template JSON to clipboard (with toast). Download button: saves
+  template as .json file named after the event title. Both only shown on draft items with templates.
+- Drag-move confirmation: dragging a scheduled item to a new date (desktop or mobile tap-to-move)
+  opens a confirmation popover showing old and new dates. No date changes without explicit confirm.
 - EventForge: no longer connected to the calendar (button removed).
 - Ideas with a scheduledDate show "DATE SET" (green) badge on Idea Board cards (any column).
 

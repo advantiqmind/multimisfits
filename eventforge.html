@@ -984,6 +984,241 @@ document.getElementById('efVer').textContent='v'+EF_VERSION;
   },true);
 })();
 </script>
+<script>
+/* ============================================================
+   EventForge Custom Date Picker with conflict markers
+   Replaces native date input click with a custom calendar grid.
+   Shows red dots on dates that already have events scheduled
+   (from /api/events and /api/ideaboard?fields=calendar).
+   ============================================================ */
+(function(){
+  var DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var MONTHS=['January','February','March','April','May','June',
+    'July','August','September','October','November','December'];
+
+  var conflictDates=null;
+  var conflictFetchedAt=0;
+  var fetchingConflicts=false;
+  var CONFLICT_TTL=5*60*1000;
+
+  function fetchConflicts(cb){
+    if(conflictDates&&(Date.now()-conflictFetchedAt<CONFLICT_TTL)){cb(conflictDates);return}
+    if(fetchingConflicts)return;
+    fetchingConflicts=true;
+    var dates=new Set();
+    Promise.allSettled([
+      fetch('/api/events').then(function(r){return r.json()}),
+      fetch('/api/ideaboard?fields=calendar').then(function(r){return r.json()})
+    ]).then(function(results){
+      if(results[0].status==='fulfilled'&&results[0].value.events){
+        results[0].value.events.forEach(function(ev){
+          if(!ev.startTime)return;
+          var sd=ev.startTime.slice(0,10);
+          var ed=ev.endTime?ev.endTime.slice(0,10):sd;
+          addRange(dates,sd,ed);
+        });
+      }
+      if(results[1].status==='fulfilled'&&results[1].value.ideas){
+        results[1].value.ideas.forEach(function(idea){
+          if(!idea.scheduledDate)return;
+          var sd=idea.scheduledDate;
+          var ed=idea.scheduledEndDate||sd;
+          addRange(dates,sd,ed);
+        });
+      }
+      conflictDates=dates;
+      conflictFetchedAt=Date.now();
+      fetchingConflicts=false;
+      cb(dates);
+    });
+  }
+
+  function addRange(set,start,end){
+    if(!start)return;
+    if(!end||end<=start){set.add(start);return}
+    var d=new Date(start+'T00:00:00');
+    var endD=new Date(end+'T00:00:00');
+    while(d<=endD){
+      set.add(toISO(d));
+      d.setDate(d.getDate()+1);
+    }
+  }
+
+  function toISO(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  function showPicker(input){
+    closePicker();
+    var val=input.value||toISO(new Date());
+    var parts=val.split('-');
+    var curYear=parseInt(parts[0],10);
+    var curMonth=parseInt(parts[1],10)-1;
+
+    var wrap=document.createElement('div');
+    wrap.className='ef-dp';
+    wrap.innerHTML=buildGrid(curYear,curMonth,input.value,null);
+
+    var rect=input.getBoundingClientRect();
+    var left=rect.left;
+    var top=rect.bottom+4;
+    if(left+290>window.innerWidth-12)left=window.innerWidth-290-12;
+    if(left<12)left=12;
+    if(top+320>window.innerHeight)top=rect.top-324;
+    if(top<12)top=12;
+    wrap.style.left=left+'px';
+    wrap.style.top=top+'px';
+    document.body.appendChild(wrap);
+
+    fetchConflicts(function(dates){
+      if(!document.body.contains(wrap))return;
+      wrap.innerHTML=buildGrid(curYear,curMonth,input.value,dates);
+      bindGrid(wrap,input,{year:curYear,month:curMonth},dates);
+    });
+
+    bindGrid(wrap,input,{year:curYear,month:curMonth},null);
+
+    setTimeout(function(){
+      document.addEventListener('pointerdown',outsideClose);
+    },0);
+
+    function outsideClose(e){
+      if(wrap.contains(e.target)||e.target===input)return;
+      closePicker();
+      document.removeEventListener('pointerdown',outsideClose);
+    }
+  }
+
+  function buildGrid(year,month,selected,conflicts){
+    var today=toISO(new Date());
+    var first=new Date(year,month,1);
+    var dow=(first.getDay()+6)%7;
+    var dim=new Date(year,month+1,0).getDate();
+    var prevDim=new Date(year,month,0).getDate();
+
+    var h='<div class="ef-dp-head">';
+    h+='<button class="ef-dp-nav" data-dir="-1">&#9664;</button>';
+    h+='<span class="ef-dp-title">'+MONTHS[month]+' '+year+'</span>';
+    h+='<button class="ef-dp-nav" data-dir="1">&#9654;</button>';
+    h+='</div>';
+    h+='<div class="ef-dp-days">';
+    DAYS.forEach(function(d){h+='<span class="ef-dp-dh">'+d+'</span>'});
+
+    var pm=month-1<0?11:month-1;
+    var py=month-1<0?year-1:year;
+    for(var i=dow-1;i>=0;i--){
+      var pd=prevDim-i;
+      var piso=py+'-'+String(pm+1).padStart(2,'0')+'-'+String(pd).padStart(2,'0');
+      h+=cellHtml(piso,pd,true,today,selected,conflicts);
+    }
+    for(var d=1;d<=dim;d++){
+      var iso=year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      h+=cellHtml(iso,d,false,today,selected,conflicts);
+    }
+    var total=dow+dim;
+    var rem=7-(total%7);
+    if(rem<7){
+      var nm=month+1>11?0:month+1;
+      var ny=month+1>11?year+1:year;
+      for(var d2=1;d2<=rem;d2++){
+        var niso=ny+'-'+String(nm+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
+        h+=cellHtml(niso,d2,true,today,selected,conflicts);
+      }
+    }
+    h+='</div>';
+    return h;
+  }
+
+  function cellHtml(iso,day,other,today,selected,conflicts){
+    var cls='ef-dp-cell';
+    if(other)cls+=' other';
+    if(iso===today)cls+=' today';
+    if(iso===selected)cls+=' selected';
+    var dot='';
+    if(conflicts&&conflicts.has(iso))dot='<span class="ef-dp-dot"></span>';
+    return '<button class="'+cls+'" data-date="'+iso+'">'+day+dot+'</button>';
+  }
+
+  function bindGrid(wrap,input,nav,conflicts){
+    wrap.querySelectorAll('.ef-dp-nav').forEach(function(btn){
+      btn.onclick=function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var dir=parseInt(btn.dataset.dir,10);
+        nav.month+=dir;
+        if(nav.month<0){nav.month=11;nav.year--}
+        if(nav.month>11){nav.month=0;nav.year++}
+        wrap.innerHTML=buildGrid(nav.year,nav.month,input.value,conflicts);
+        bindGrid(wrap,input,nav,conflicts);
+      };
+    });
+    wrap.querySelectorAll('.ef-dp-cell').forEach(function(cell){
+      cell.onclick=function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        input.value=cell.dataset.date;
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+        closePicker();
+      };
+    });
+  }
+
+  function closePicker(){
+    var old=document.querySelector('.ef-dp');
+    if(old)old.remove();
+  }
+
+  var app=document.getElementById('app');
+  if(!app)return;
+
+  function interceptDateInput(el){
+    if(el.__dpPatched)return;
+    el.__dpPatched=true;
+    el.readOnly=true;
+    el.style.cursor='pointer';
+  }
+
+  function patchDateInputs(){
+    var d=document.getElementById('date');
+    var ed=document.getElementById('endDate');
+    if(d)interceptDateInput(d);
+    if(ed)interceptDateInput(ed);
+  }
+
+  var obs2=new MutationObserver(function(){requestAnimationFrame(patchDateInputs)});
+  obs2.observe(app,{childList:true,subtree:true});
+  patchDateInputs();
+
+  app.addEventListener('click',function(e){
+    var el=e.target;
+    if(el.tagName!=='INPUT')return;
+    if(el.id!=='date'&&el.id!=='endDate')return;
+    if(!el.__dpPatched)return;
+    e.preventDefault();
+    showPicker(el);
+  });
+
+  var dpStyle=document.createElement('style');
+  dpStyle.textContent=`
+.ef-dp{position:fixed;z-index:60;width:282px;background:#1e1809;border:1px solid #3a2e1a;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);padding:10px;font-family:inherit}
+.ef-dp-head{display:flex;align-items:center;gap:8px;padding:4px 2px 8px}
+.ef-dp-title{flex:1;text-align:center;font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:#e6d9b8}
+.ef-dp-nav{border:1px solid #3a2e1a;background:#110e07;color:#a99b78;border-radius:7px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.ef-dp-nav:hover{border-color:#6b5836;color:#ffcb2f}
+.ef-dp-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.ef-dp-dh{text-align:center;font-size:10px;font-weight:800;color:#7a6c4a;text-transform:uppercase;padding:4px 0}
+.ef-dp-cell{position:relative;border:1px solid transparent;background:#110e07;color:#e6d9b8;border-radius:6px;padding:6px 2px;font-size:12px;font-weight:600;text-align:center;cursor:pointer}
+.ef-dp-cell:hover{border-color:#6b5836;background:#1a1305}
+.ef-dp-cell.other{color:#5a4d30}
+.ef-dp-cell.today{border-color:#6b5836;color:#ffcb2f}
+.ef-dp-cell.selected{background:#261f0f;border-color:#ffcb2f;color:#ffcb2f;font-weight:800}
+.ef-dp-dot{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#b23a30}
+`;
+  document.head.appendChild(dpStyle);
+
+  window.__efClearConflictCache=function(){conflictDates=null;fetchingConflicts=false};
+})();
+</script>
 
 <footer class="ef-footer">
   <div class="foot-links">

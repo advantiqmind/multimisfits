@@ -211,6 +211,7 @@ async function handleCalendarGet(context) {
         tags: idea.tags,
         author: idea.author,
         hasTemplate: !!pos.template_json,
+        templateJson: pos.template_json || null,
         scheduledDate: pos.scheduled_date || null,
         scheduledEndDate: pos.scheduled_end_date || null,
       });

@@ -269,6 +269,7 @@
           startDate: idea.scheduledDate || "",
           endDate: idea.scheduledEndDate || "",
           hasTemplate: idea.hasTemplate,
+          templateJson: idea.templateJson || null,
           tags: idea.tags || [],
           author: idea.author || "",
           type: "draft",
@@ -487,12 +488,11 @@
           return;
         }
 
-        // From grid (already scheduled, moving)
+        // From grid (already scheduled, moving) -- show confirmation
         const draft = calState.drafts.find((d) => d.id === id);
         if (!draft) return;
         if (newDate === draft.startDate) return;
-        const ok = await moveDraft(draft, newDate);
-        if (ok) await fetchCalendarData();
+        showMoveConfirmPopover(draft, newDate, cell);
       });
 
       // Mobile tap-to-move
@@ -513,9 +513,10 @@
           renderCalendar();
           return;
         }
-        const ok = await moveDraft(calState.selected, newDate);
+        const movingDraft = calState.selected;
         calState.selected = null;
-        if (ok) await fetchCalendarData();
+        renderCalendar();
+        showMoveConfirmPopover(movingDraft, newDate, cell);
       });
     });
 
@@ -596,6 +597,46 @@
     };
   }
 
+  function showMoveConfirmPopover(draft, newDate, anchor) {
+    closePopover();
+    const pop = document.getElementById("calPopover");
+    if (!pop) return;
+
+    const offset = daysBetween(draft.startDate, newDate);
+    const newEnd = draft.endDate ? addDays(draft.endDate, offset) : "";
+
+    let html = `<h4>${esc(draft.name)} <span class="cal-pop-type draft">Move</span></h4>`;
+    html += `<div class="cal-pop-row"><span class="cal-pop-label">From</span><span>${esc(draft.startDate)}${draft.endDate ? " to " + esc(draft.endDate) : ""}</span></div>`;
+    html += `<div class="cal-pop-row"><span class="cal-pop-label">To</span><span>${esc(newDate)}${newEnd ? " to " + esc(newEnd) : ""}</span></div>`;
+    html += `<div class="cal-pop-actions">
+      <button class="cal-pop-btn gold" id="calPopConfirmMove">Confirm Move</button>
+      <button class="cal-pop-btn" id="calPopClose">Cancel</button>
+    </div>`;
+
+    pop.innerHTML = html;
+    pop.classList.add("open");
+
+    const rect = anchor.getBoundingClientRect();
+    const pw = 320;
+    let left = rect.left;
+    let top = rect.bottom + 6;
+    if (left + pw > window.innerWidth - 16) left = window.innerWidth - pw - 16;
+    if (left < 16) left = 16;
+    if (top + 200 > window.innerHeight) top = rect.top - 220;
+    if (top < 16) top = 16;
+    pop.style.left = left + "px";
+    pop.style.top = top + "px";
+
+    document.getElementById("calPopClose").onclick = closePopover;
+    document.getElementById("calPopConfirmMove").onclick = async () => {
+      const ok = await moveDraft(draft, newDate);
+      if (ok) {
+        closePopover();
+        await fetchCalendarData();
+      }
+    };
+  }
+
   function showPopover(ev, anchor) {
     closePopover();
     const pop = document.getElementById("calPopover");
@@ -615,6 +656,7 @@
         <div class="cal-pop-actions">
           <button class="cal-pop-btn gold" id="calPopSave">Save</button>
           <button class="cal-pop-btn" id="calPopUnschedule">Unschedule</button>
+          ${ev.hasTemplate ? '<button class="cal-pop-btn" id="calPopCopyJson" title="Copy template JSON">Copy JSON</button><button class="cal-pop-btn" id="calPopDownload" title="Download template JSON">Download</button>' : ""}
           <button class="cal-pop-btn" id="calPopClose">Cancel</button>
         </div>`;
     } else {
@@ -652,6 +694,38 @@
           await fetchCalendarData();
         }
       };
+      const copyJsonBtn = document.getElementById("calPopCopyJson");
+      if (copyJsonBtn) {
+        copyJsonBtn.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(ev.templateJson);
+            calToast("Template JSON copied");
+          } catch {
+            const ta = document.createElement("textarea");
+            ta.value = ev.templateJson;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+            calToast("Template JSON copied");
+          }
+        };
+      }
+      const dlBtn = document.getElementById("calPopDownload");
+      if (dlBtn) {
+        dlBtn.onclick = () => {
+          const slug = ev.name.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "template";
+          const blob = new Blob([ev.templateJson], { type: "application/json" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = slug + ".json";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(a.href);
+          calToast("Template downloaded");
+        };
+      }
       const unschedBtn = document.getElementById("calPopUnschedule");
       if (unschedBtn) {
         unschedBtn.onclick = async () => {
