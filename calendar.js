@@ -1172,7 +1172,8 @@
     var copyBtn = document.getElementById("calPubCopyBtn");
     if (copyBtn) {
       copyBtn.onclick = function() {
-        var text = pubState.rawPreview;
+        var title = (document.getElementById("calPubTitle").value || "").trim();
+        var text = (title ? "TITLE: " + title + "\n\n" : "") + pubState.rawPreview;
         if (navigator.clipboard) {
           navigator.clipboard.writeText(text).then(function() {
             copyBtn.textContent = "Copied!";
