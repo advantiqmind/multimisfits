@@ -237,7 +237,7 @@ table.roster .ign a:hover{color:var(--gold)}
 .roster-filter:focus{border-color:var(--gold-dim)}
 
 /* ---------- full roster table (bigger) ---------- */
-table.roster.roster-full{font-size:18px}
+table.roster.roster-full{font-size:18px;table-layout:fixed;width:100%}
 table.roster.roster-full th{font-size:18px;padding:14px 18px}
 table.roster.roster-full td{padding:16px 18px}
 table.roster.roster-full .ign{font-size:24px}
@@ -247,7 +247,7 @@ table.roster.roster-full .ign a{font-size:24px}
 .roster-full .chev{border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid var(--gold-dim)}
 
 /* ---------- rank column ---------- */
-th[data-sort="rank"],td .rank{white-space:nowrap}
+th[data-sort="rank"],td .rank{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 table.roster.roster-full th[data-sort="rank"]{width:180px}
 
 /* ---------- donated column ---------- */
@@ -470,7 +470,7 @@ nav.main a[href="/ge.html"]{display:none}
   .roster-full .rank{font-size:14px;gap:6px}
   .roster-full .rank-icon{width:20px;height:20px}
   .roster-full .chev{border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid var(--gold-dim)}
-  table.roster.roster-full th[data-sort="rank"]{width:auto}
+  table.roster.roster-full th[data-sort="rank"]{width:120px}
   th[data-sort="donated"]{width:70px}
   .donated-cell{font-size:16px;width:70px}
   th[data-sort="xp"]{width:90px}
