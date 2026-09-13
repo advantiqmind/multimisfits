@@ -51,7 +51,7 @@
 </header>
 
 <main>
-<section class="hero" style="padding:26px 20px;position:relative"><h1 style="font-size:clamp(30px,6vw,52px)" id="lb-hero-title">Leaderboard</h1><div class="tagline" id="lb-hero-tag">Live from Wise Old Man</div><p style="position:absolute;bottom:8px;right:16px;z-index:2;color:var(--muted);font-size:12px;margin:0;max-width:300px;text-align:right;line-height:1.3">Set your Discord nickname to your RSN for donations and event tracking to work.</p></section>
+<section class="hero" style="padding:26px 20px;position:relative"><div class="coffer" id="clan-coffer"></div><h1 style="font-size:clamp(30px,6vw,52px)" id="lb-hero-title">Leaderboard</h1><div class="tagline" id="lb-hero-tag">Live from Wise Old Man</div><p style="position:absolute;bottom:8px;right:16px;z-index:2;color:var(--muted);font-size:12px;margin:0;max-width:300px;text-align:right;line-height:1.3">Set your Discord nickname to your RSN for donations and event tracking to work.</p></section>
   <div class="grid"><section class="panel col-2" id="roster">
     <div class="ev-tabs" id="lb-tabs">
       <button class="ev-tab active" data-tab="clan">Clan Leaderboard</button>
@@ -69,9 +69,9 @@
         <table class="roster roster-full"><thead><tr>
           <th class="rank-num">#</th>
           <th class="sortable" data-sort="name">Player</th>
-          <th class="sortable sort-desc" data-sort="rank">Rank</th>
+          <th class="sortable" data-sort="rank">Rank</th>
           <th class="sortable" data-sort="donated">Donated</th>
-          <th class="sortable" data-sort="xp">Total XP</th>
+          <th class="sortable sort-desc" data-sort="xp">Total XP</th>
         </tr></thead>
         <tbody id="roster-body" data-full="1"><tr><td colspan="5" class="roster-msg">Loading roster&#x2026;</td></tr></tbody></table>
         <div class="roster-pagination" id="roster-pagination"></div>
