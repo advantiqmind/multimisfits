@@ -150,6 +150,13 @@ const COMMANDS = [
         min_value: -5,
         max_value: 5,
       },
+      {
+        name: "gp",
+        description: "GP donated in millions (defaults to entries * rate)",
+        type: 4,
+        required: false,
+        min_value: 0,
+      },
     ],
   },
   {
@@ -1285,8 +1292,10 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
   const options = (interaction.data && interaction.data.options) || [];
   const playerOpt = options.find((o) => o.name === "player");
   const entriesOpt = options.find((o) => o.name === "entries");
+  const gpOpt = options.find((o) => o.name === "gp");
   let player = playerOpt ? playerOpt.value.trim() : "";
   const entryCount = entriesOpt ? entriesOpt.value : 1;
+  const gpValue = gpOpt ? gpOpt.value : null;
 
   if (!player) {
     return patchFollowup(appId, interaction.token, {
@@ -1337,6 +1346,9 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
     { name: "Entries", value: String(displayCount), inline: true },
     { name: isRemoval ? "Removed by" : "Added by", value: addedBy, inline: true },
   ];
+  if (gpValue !== null) {
+    fields.push({ name: "GP", value: String(gpValue), inline: true });
+  }
 
   const postRes = await fetch(
     `https://discord.com/api/v10/channels/${interaction.channel_id}/messages`,
@@ -1359,9 +1371,10 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
   }
 
   const entryWord = displayCount === 1 ? "entry" : "entries";
+  const gpNote = gpValue !== null ? ` (${gpValue}M GP)` : "";
   const msg = isRemoval
-    ? `Removed **${displayCount}** ${entryWord} from **${player}**.`
-    : `Added **${displayCount}** ${entryWord} for **${player}**.`;
+    ? `Removed **${displayCount}** ${entryWord} from **${player}**${gpNote}.`
+    : `Added **${displayCount}** ${entryWord} for **${player}**${gpNote}.`;
   await patchFollowup(appId, interaction.token, { content: msg, flags: 64 });
 }
 

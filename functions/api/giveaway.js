@@ -109,16 +109,23 @@ export function extractBotEntry(message) {
   var playerField = fields.find(function (f) { return f.name === "Player"; });
   if (!playerField) return null;
   var entriesField = fields.find(function (f) { return f.name === "Entries"; });
+  var gpField = fields.find(function (f) { return f.name === "GP"; });
+  var gpVal = gpField ? parseInt(gpField.value, 10) : null;
+  if (gpVal !== null && isNaN(gpVal)) gpVal = null;
   if (title === "Entry Removed") {
     var removeCount = entriesField ? parseInt(entriesField.value, 10) : MAX_ENTRIES_PER_PERSON;
     if (isNaN(removeCount) || removeCount < 1) removeCount = MAX_ENTRIES_PER_PERSON;
-    return { player: playerField.value.trim(), count: -Math.min(removeCount, MAX_ENTRIES_PER_PERSON) };
+    var result = { player: playerField.value.trim(), count: -Math.min(removeCount, MAX_ENTRIES_PER_PERSON) };
+    if (gpVal !== null) result.gp = -gpVal;
+    return result;
   }
   var count = entriesField ? parseInt(entriesField.value, 10) : 1;
-  return {
+  var entry = {
     player: playerField.value.trim(),
     count: isNaN(count) ? 1 : Math.min(Math.max(count, 1), MAX_ENTRIES_PER_PERSON),
   };
+  if (gpVal !== null) entry.gp = gpVal;
+  return entry;
 }
 
 function resolveMentions(text, mentions, nickMap) {
@@ -162,7 +169,7 @@ export function transformGiveawayData(threads, threadMessages, nickMap) {
     function getParticipant(key) {
       let p = participants.get(key);
       if (!p) {
-        p = { name: null, playerId: null, reactionCount: 0, manualSum: 0, timestamp: null };
+        p = { name: null, playerId: null, reactionCount: 0, manualSum: 0, gpSum: null, timestamp: null };
         participants.set(key, p);
       }
       return p;
@@ -175,6 +182,10 @@ export function transformGiveawayData(threads, threadMessages, nickMap) {
       if (botEntry) {
         const p = getParticipant(botEntry.player.toLowerCase());
         p.manualSum += botEntry.count;
+        if (botEntry.gp !== undefined) {
+          if (p.gpSum === null) p.gpSum = 0;
+          p.gpSum += botEntry.gp;
+        }
         if (!p.name) p.name = botEntry.player;
         continue;
       }
@@ -203,7 +214,12 @@ export function transformGiveawayData(threads, threadMessages, nickMap) {
 
     const totalEntries = entries.reduce((sum, e) => sum + e.count, 0);
     const totalParticipants = entries.length;
-    const gpRaised = totalEntries * gpPerEntry;
+    let gpRaised = 0;
+    for (const [, p] of participants) {
+      const total = Math.min(Math.max(p.reactionCount + p.manualSum, 0), MAX_ENTRIES_PER_PERSON);
+      if (total <= 0) continue;
+      gpRaised += p.gpSum !== null ? Math.max(p.gpSum, 0) : total * gpPerEntry;
+    }
 
     const winners = [];
     for (const m of messages) {

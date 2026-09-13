@@ -127,10 +127,9 @@ Planned for later, after the slot machine is done.
 
 
 ### Giveaway Donation Leaderboard
-Add optional `gp` parameter to /giveaway-entry slash command (defaults to gpPerEntry rate,
-leaders can override for bonus donations). Bot embed stores GP amount per entry. Backend
-sums GP per player. Frontend shows "Top Donors" ranking on giveaway cards. Similar pattern
-to the Loot Value leaderboard but for GP contributions.
+GP tracking via /giveaway-entry `gp` parameter is built (backend sums explicit GP per player,
+falls back to entries * rate). Frontend "Top Donors" ranking on giveaway cards not yet built.
+Similar pattern to the Loot Value leaderboard but for GP contributions.
 
 ### WOM Event Scoring System (planned extensions)
 - Team events: team score = sum of member scores using existing team assignment system.
@@ -173,18 +172,22 @@ to the Loot Value leaderboard but for GP contributions.
 - Each round = one forum thread. Leaders react with 1/2 keycap emoji on member
   screenshots to confirm entries (max 2 per person).
 - /giveaway-entry slash command: leaders add or subtract entries (-5 to +5).
-  Posts "Entry Added" or "Entry Removed" embed. Restricted to leader role via
-  Discord Integrations. Accumulation mode: all bot embeds for a player are summed,
-  final total clamped to [0, MAX_ENTRIES_PER_PERSON].
+  Optional `gp` parameter (integer, min 0) tracks actual GP donated in millions.
+  When omitted, GP defaults to effective entries * rate. When set, overrides the
+  default (e.g. entries:2 gp:3 = 2 entries, 3M GP; entries:1 gp:0 = free entry).
+  Posts "Entry Added" or "Entry Removed" embed with optional GP field.
+  Restricted to leader role via Discord Integrations. Accumulation mode: all bot
+  embeds for a player are summed, final total clamped to [0, MAX_ENTRIES_PER_PERSON].
 - /giveaway-check slash command: look up a player's entry count in the current
   giveaway. Open to all members (no Discord Integrations override needed).
-- Bot embeds parsed by extractBotEntry(): Player + Entries fields, accumulation
-  with sum-then-clamp. "Entry Removed" returns negative count for subtraction.
+- Bot embeds parsed by extractBotEntry(): Player + Entries + optional GP fields,
+  accumulation with sum-then-clamp. "Entry Removed" returns negative count/gp for subtraction.
 - Reaction entries and manual bot entries merge per person by lowercase player
   name (Discord display name vs Player field), one row each, combined total
   clamped to [0, MAX_ENTRIES_PER_PERSON]. Leaders must type the name as shown
   on Discord (case does not matter) for the merge to apply.
-- Stats auto-calculated: total entries, participants, GP raised.
+- Stats auto-calculated: total entries, participants, GP raised. GP raised sums
+  explicit GP values per player when available, falls back to entries * rate otherwise.
 - Winner detected via trophy emoji in message: @mention > text after trophy
   (greeting words stripped, max 3 words) > message author. Pinned messages as fallback.
 - Winner names are auto-capitalized (jackson -> Jackson).

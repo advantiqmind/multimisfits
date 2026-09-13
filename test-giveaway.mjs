@@ -689,6 +689,109 @@ const overSubRounds = transformGiveawayData([THREAD_ACTIVE], overSubMessages);
 check("subtract with no prior add = 0 entries", overSubRounds[0].totalEntries === 0);
 check("player not in entries list", overSubRounds[0].entries.length === 0);
 
+// ---- extractBotEntry: GP field ----
+console.log("\n== extractBotEntry: GP field ==");
+const beWithGp = extractBotEntry({
+  embeds: [{ title: "Entry Added", fields: [
+    { name: "Player", value: "TestPlayer" },
+    { name: "Entries", value: "2" },
+    { name: "Added by", value: "mr flsh" },
+    { name: "GP", value: "3" },
+  ]}],
+});
+check("extracts gp value", beWithGp && beWithGp.gp === 3);
+check("entry count unaffected by gp", beWithGp && beWithGp.count === 2);
+
+const beNoGp = extractBotEntry({
+  embeds: [{ title: "Entry Added", fields: [
+    { name: "Player", value: "TestPlayer" },
+    { name: "Entries", value: "2" },
+  ]}],
+});
+check("no GP field -> gp undefined", beNoGp && beNoGp.gp === undefined);
+
+const beGpZero = extractBotEntry({
+  embeds: [{ title: "Entry Added", fields: [
+    { name: "Player", value: "TestPlayer" },
+    { name: "Entries", value: "1" },
+    { name: "GP", value: "0" },
+  ]}],
+});
+check("gp:0 is valid (free entry)", beGpZero && beGpZero.gp === 0);
+
+const beRemovedGp = extractBotEntry({
+  embeds: [{ title: "Entry Removed", fields: [
+    { name: "Player", value: "TestPlayer" },
+    { name: "Entries", value: "2" },
+    { name: "Removed by", value: "Leader" },
+    { name: "GP", value: "3" },
+  ]}],
+});
+check("Entry Removed with GP returns negative gp", beRemovedGp && beRemovedGp.gp === -3);
+
+// ---- gpRaised with explicit GP values ----
+console.log("\n== gpRaised: explicit GP in bot entries ==");
+const gpExplicitMessages = buildMessages("2001", [
+  OPENING_MSG,
+  {
+    id: "8001",
+    content: "",
+    author: { id: "999", global_name: "Bot", username: "bot" },
+    embeds: [{ title: "Entry Added", fields: [
+      { name: "Player", value: "Vilence", inline: true },
+      { name: "Entries", value: "2", inline: true },
+      { name: "Added by", value: "mr flsh", inline: true },
+      { name: "GP", value: "3", inline: true },
+    ]}],
+    mentions: [], attachments: [], reactions: [],
+  },
+]);
+const gpExplicitRounds = transformGiveawayData([THREAD_ACTIVE], gpExplicitMessages);
+check("gpRaised uses explicit GP (3M not 2M)", gpExplicitRounds[0].gpRaised === 3);
+check("entries still 2", gpExplicitRounds[0].totalEntries === 2);
+
+console.log("\n== gpRaised: gp:0 free entry ==");
+const gpFreeMessages = buildMessages("2001", [
+  OPENING_MSG,
+  {
+    id: "8002",
+    content: "",
+    author: { id: "999", global_name: "Bot", username: "bot" },
+    embeds: [{ title: "Entry Added", fields: [
+      { name: "Player", value: "FreeWinner", inline: true },
+      { name: "Entries", value: "1", inline: true },
+      { name: "Added by", value: "mr flsh", inline: true },
+      { name: "GP", value: "0", inline: true },
+    ]}],
+    mentions: [], attachments: [], reactions: [],
+  },
+]);
+const gpFreeRounds = transformGiveawayData([THREAD_ACTIVE], gpFreeMessages);
+check("gpRaised is 0 for free entry", gpFreeRounds[0].gpRaised === 0);
+check("free entry still counts as 1 entry", gpFreeRounds[0].totalEntries === 1);
+
+console.log("\n== gpRaised: mixed explicit and default GP ==");
+const gpMixedMessages = buildMessages("2001", [
+  OPENING_MSG,
+  SCREENSHOT_1_ENTRY,
+  {
+    id: "8003",
+    content: "",
+    author: { id: "999", global_name: "Bot", username: "bot" },
+    embeds: [{ title: "Entry Added", fields: [
+      { name: "Player", value: "Artolux", inline: true },
+      { name: "Entries", value: "2", inline: true },
+      { name: "Added by", value: "mr flsh", inline: true },
+      { name: "GP", value: "5", inline: true },
+    ]}],
+    mentions: [], attachments: [], reactions: [],
+  },
+]);
+const gpMixedRounds = transformGiveawayData([THREAD_ACTIVE], gpMixedMessages);
+check("mixed: Vilence 1 entry default GP (1M)", true);
+check("mixed: Artolux 2 entries explicit GP (5M)", true);
+check("mixed gpRaised = 1 (default) + 5 (explicit) = 6", gpMixedRounds[0].gpRaised === 6);
+
 console.log(`\n${pass + fail} checks: ${pass} passed, ${fail} failed`);
 if (fail) {
   console.log("SOME TESTS FAILED");
