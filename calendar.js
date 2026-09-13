@@ -135,6 +135,14 @@
 .cal-pub-charcount{margin-top:6px;font-size:11px;text-align:right;color:#7a6c4a}
 .cal-pub-charcount.warn{color:#e8a832}
 .cal-pub-charcount.over{color:#b23a30;font-weight:700}
+.cal-pub-overlimit{background:#1a1008;border:1px solid #3a2e1a;border-radius:8px;padding:12px;margin-top:12px}
+.cal-pub-overlimit p{margin:0 0 10px;font-size:12px;color:#a99b78;line-height:1.5}
+.cal-pub-overlimit-actions{display:flex;gap:8px;flex-wrap:wrap}
+.cal-pub-copy{padding:8px 14px;border:1px solid #6b5836;border-radius:8px;background:#1e1809;color:#ffcb2f;font-size:12px;font-weight:700;cursor:pointer}
+.cal-pub-copy:hover{border-color:#ffcb2f;background:#261f0f}
+.cal-pub-schedule{padding:8px 14px;border:1px solid #3a2e1a;border-radius:8px;background:#1e1809;color:#a99b78;font-size:12px;font-weight:700;cursor:pointer}
+.cal-pub-schedule:hover{border-color:#6b5836;color:#e6d9b8}
+.cal-pop-btn.disabled{opacity:.4;cursor:not-allowed}
 .cal-pub-media{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:flex-start}
 .cal-pub-thumb{position:relative;display:inline-block}
 .cal-pub-thumb img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #3a2e1a}
@@ -1054,7 +1062,7 @@
     return s;
   }
 
-  var pubState = { draft: null, startDate: "", endDate: "", images: [], uploadedImages: [], posting: false, charCount: 0 };
+  var pubState = { draft: null, startDate: "", endDate: "", images: [], uploadedImages: [], posting: false, charCount: 0, rawPreview: "" };
 
   function ensurePubOverlays() {
     if (!document.getElementById("calPubOverlay")) {
@@ -1081,6 +1089,7 @@
     pubState.posting = false;
 
     var rawPreview = pubTemplateToPreview(draft.templateJson, startDate, endDate) || "(Could not generate preview)";
+    pubState.rawPreview = rawPreview;
     pubState.charCount = rawPreview.length;
     var charClass = pubState.charCount > 2000 ? "cal-pub-charcount over" : pubState.charCount > 1800 ? "cal-pub-charcount warn" : "cal-pub-charcount";
     var htmlPreview = discordToHtml(rawPreview);
@@ -1112,9 +1121,17 @@
           '<input type="file" id="calPubFileInput" accept="image/*" style="display:none">' +
           '<div class="cal-pub-error" id="calPubError" style="display:none"></div>' +
         '</div>' +
+        (pubState.charCount > 2000 ?
+          '<div class="cal-pub-overlimit">' +
+            '<p>Post is ' + pubState.charCount + ' chars, over Discord\'s 2,000 limit for bots. Copy the post and paste it manually with Nitro (4,000 char limit), then mark as scheduled.</p>' +
+            '<div class="cal-pub-overlimit-actions">' +
+              '<button class="cal-pub-copy" id="calPubCopyBtn">Copy Post</button>' +
+              '<button class="cal-pub-schedule" id="calPubScheduleBtn">Schedule Only</button>' +
+            '</div>' +
+          '</div>' : '') +
         '<div class="cal-pub-actions">' +
           '<button class="cal-pop-btn" id="calPubCancelBtn">Cancel</button>' +
-          '<button class="cal-pop-btn gold" id="calPubPostBtn">Post to Discord</button>' +
+          '<button class="cal-pop-btn gold' + (pubState.charCount > 2000 ? ' disabled' : '') + '" id="calPubPostBtn"' + (pubState.charCount > 2000 ? ' disabled' : '') + '>Post to Discord</button>' +
         '</div>' +
       '</div></div>';
 
@@ -1144,13 +1161,53 @@
     };
 
     document.getElementById("calPubPostBtn").onclick = function() {
+      if (pubState.charCount > 2000) return;
       var title = document.getElementById("calPubTitle").value.trim();
       if (!title) { showPubError("Title is required"); return; }
-      if (pubState.charCount > 2000) { showPubError("Post body is " + pubState.charCount + " chars. Discord limit is 2,000 for non-Nitro bots. Shorten the event template first."); return; }
       var totalImages = pubState.images.length + pubState.uploadedImages.length;
       if (totalImages === 0) { showPubError("At least one image is required"); return; }
       showConfirmOverlay(title);
     };
+
+    var copyBtn = document.getElementById("calPubCopyBtn");
+    if (copyBtn) {
+      copyBtn.onclick = function() {
+        var text = pubState.rawPreview;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(function() {
+            copyBtn.textContent = "Copied!";
+            setTimeout(function() { copyBtn.textContent = "Copy Post"; }, 2000);
+          });
+        } else {
+          var ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          copyBtn.textContent = "Copied!";
+          setTimeout(function() { copyBtn.textContent = "Copy Post"; }, 2000);
+        }
+        calToast("Post copied to clipboard");
+      };
+    }
+
+    var schedBtn = document.getElementById("calPubScheduleBtn");
+    if (schedBtn) {
+      schedBtn.onclick = async function() {
+        schedBtn.textContent = "Scheduling...";
+        schedBtn.disabled = true;
+        var ok = await scheduleDraft(pubState.draft, pubState.startDate, pubState.endDate || null);
+        if (ok) {
+          closePublishOverlay();
+          calToast("Scheduled (post manually via Discord)");
+          fetchCalendarData();
+        } else {
+          schedBtn.textContent = "Schedule Only";
+          schedBtn.disabled = false;
+        }
+      };
+    }
   }
 
   function renderPubMedia() {
