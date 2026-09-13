@@ -230,13 +230,14 @@ to the Loot Value leaderboard but for GP contributions.
   comments. Cached 30s.
 - POST /api/ideaboard: actions "move" (column, requires leader code), "dismiss" (leader),
   "restore" (leader), "hold" (leader, sets held flag), "unhold" (leader, clears held flag),
-  "add_note" (leader or member code), "validate" (check code validity).
+  "add_note" (leader or member code), "validate" (check code validity),
+  "schedule" (leader, sets scheduled_date/scheduled_end_date, auto-updates template JSON dates).
   All write actions require access_code in request body.
 - Two-tier access control: IDEABOARD_LEADER_CODE = full access (move, dismiss, restore, comment).
   IDEABOARD_MEMBER_CODE = comment only. No code = read-only view. If neither env var set,
   everyone gets leader access (backwards compatible). Frontend stores code in localStorage
   (mm-ideaboard-code), auto-validates on page load, shows access badge (Leader/Member/View Only).
-- D1 table `idea_positions`: message_id (PK), column_name, dismissed, dismissed_by, moved_by, held, held_by, updated_at.
+- D1 table `idea_positions`: message_id (PK), column_name, dismissed, dismissed_by, moved_by, held, held_by, template_json, scheduled_date, scheduled_end_date, updated_at.
 - D1 table `idea_notes`: id (autoincrement), message_id, author, text, created_at.
 - Frontend: kanban board with 5 columns (In Review, Approved, Created and Shared, Final Approval, Completed).
   Drag-and-drop moves cards between columns (leader only, optimistic UI, reverts on API error).
@@ -390,24 +391,26 @@ to the Loot Value leaderboard but for GP contributions.
   fresh UIDs.
 
 ### Event Calendar
-- calendar.js: shared month-grid calendar overlay used by both EventForge and Idea Board.
+- calendar.js: month-grid calendar overlay for Idea Board.
 - Self-contained IIFE that injects its own CSS. Entry point: `window.openEventCalendar(options)`.
-- Data sources: GET /api/eventforge?fields=calendar (draft saves with date fields extracted),
-  GET /api/events (live Discord events). Drafts are draggable; live events are display-only.
-- `?fields=calendar` API parameter extracts date, time, endDate, endTime, timezone from the
-  data JSON blob without returning the full blob. Separate cache key from the normal list.
-- Drag-and-drop: HTML5 drag API for desktop. Mobile: tap pill to select (highlighted),
-  tap destination cell to place. Rescheduling updates dates via PUT /api/eventforge with
-  optimistic locking (version field).
-- Click popover: shows event details. Draft popovers have editable date/time fields and
-  "Open in EventForge" link. Live events show read-only info.
-- Search bar filters events by name. Filter buttons: All / Drafts / Live.
-- Month navigation with prev/next arrows and "Today" button.
-- Conflict badge: shows count when 2+ events share the same day.
-- Legend at bottom: Draft (draggable) / Live (posted).
-- Access code read from localStorage key "mm-eventforge-access" (same as EventForge).
-- EventForge: calendar button in nav bar (next to Timestamp and AI Assist).
+- Data sources: GET /api/ideaboard?fields=calendar (Final Approval ideas with schedule data),
+  GET /api/events (live Discord events). Final Approval items are draggable; live events display-only.
+- `?fields=calendar` returns only onhold (Final Approval) ideas with id, title, tags, author,
+  hasTemplate, scheduledDate, scheduledEndDate. Separate cache key from the normal ideaboard list.
+- Sidebar: unscheduled Final Approval items shown as draggable pills in a sidebar next to the grid.
+  Drag from sidebar to a cell opens a popover to set start date and optional end date (multi-day).
+- On-grid items: already-scheduled Final Approval ideas. Drag to another cell moves the dates
+  (preserves multi-day duration). Click opens popover with editable dates and unschedule option.
+- Scheduling auto-updates: POST /api/ideaboard action "schedule" sets scheduled_date and
+  scheduled_end_date on idea_positions, AND auto-updates the template JSON's date/endDate/multiDay
+  fields so the copy button always has the correct dates.
+- D1 columns: idea_positions.scheduled_date, idea_positions.scheduled_end_date (added via ALTER TABLE).
+- Cards with no template show dimmed pills (no-template class).
+- Filter buttons: All / Final Approval / Live.
+- Access code read from localStorage key "mm-ideaboard-code" (Idea Board leader code).
 - Idea Board: calendar button in the header actions row.
+- EventForge: no longer connected to the calendar (button removed).
+- Final Approval cards show "DATE SET" (green) or "DATE NOT SET" (amber) badge.
 
 ### Loot Wheel
 - wheel.html: client-side prize wheel ported from the 1BOX wheel (1box.online copy untouched).

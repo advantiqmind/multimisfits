@@ -760,6 +760,10 @@ body {
 .card-template-remove { display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(224,80,80,0.4); background: rgba(224,80,80,0.1); color: #c06060; cursor: pointer; font-size: 11px; font-weight: bold; line-height: 1; padding: 1px 4px; margin-left: 2px; vertical-align: middle; transition: all 0.15s; }
 .card-template-remove:hover { background: rgba(224,80,80,0.25); color: #e05050; border-color: #e05050; }
 
+.card-date-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 800; padding: 1px 7px; margin-left: 4px; vertical-align: middle; letter-spacing: .5px; font-family: 'Cinzel', serif; }
+.card-date-badge.date-set { border: 1px solid #2a8a40; background: rgba(42,138,64,0.15); color: #50e870; }
+.card-date-badge.date-not-set { border: 1px dashed #8a6020; background: rgba(138,96,32,0.1); color: #c9a227; }
+
 /* Template overlay */
 .ib-template-overlay {
   position: fixed;
@@ -1431,7 +1435,7 @@ body {
   <p>Post ideas in Discord. Drag cards to organize. Click a card's notes to expand.</p>
   <div class="ib-actions">
     <a class="ib-btn ib-btn-primary" id="discordLink" href="#" target="_blank" rel="noopener">+ Post in Discord</a>
-    <button class="ib-btn ib-btn-sm" id="calendarBtn" onclick="window.openEventCalendar({accessCode:localStorage.getItem('mm-eventforge-access')||''})">📅 Calendar</button>
+    <button class="ib-btn ib-btn-sm" id="calendarBtn" onclick="window.openEventCalendar({accessCode:localStorage.getItem('mm-ideaboard-code')||''})">📅 Calendar</button>
     <button class="ib-btn ib-btn-sm" id="dismissToggle" onclick="toggleDismissed()">Show Dismissed (0)</button>
   </div>
   <div class="ib-user" id="userBar">
@@ -2024,6 +2028,15 @@ function buildCard(idea, col) {
     }
   }
 
+  var dateBadge = '';
+  if (col === 'onhold') {
+    if (idea.scheduledDate) {
+      dateBadge = '<span class="card-date-badge date-set" title="' + esc(idea.scheduledDate) + '">DATE SET</span>';
+    } else {
+      dateBadge = '<span class="card-date-badge date-not-set">DATE NOT SET</span>';
+    }
+  }
+
   var moveBtn = '';
   if (isLeader) {
     moveBtn = '<button class="card-move-btn" onclick="toggleMoveDropdown(event,this)">Move to...</button>' +
@@ -2066,7 +2079,7 @@ function buildCard(idea, col) {
     '</div>' +
     (col === 'review'
       ? authorIdHtml + '<div class="card-meta">' + dateStr + ' ' + ageHtml + '</div>'
-      : '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + ' ' + copyBtn + templateBtn + '</div>') +
+      : '<div class="card-meta">by ' + esc(idea.author) + ' &middot; ' + dateStr + ' ' + ageHtml + ' ' + copyBtn + templateBtn + dateBadge + '</div>') +
     notesHtml +
     mediaHtml +
     commentsHtml +
@@ -2796,6 +2809,13 @@ function openCardModal(ideaId) {
         '<button class="card-template-remove" onclick="modalRemoveTemplate(\'' + ideaId + '\')" title="Remove template">&times;</button>');
     } else {
       actions.push('<button class="card-template-add" onclick="closeCardModal();promptTemplate(event,\'' + ideaId + '\')">+ TEMPLATE</button>');
+    }
+  }
+  if (col === 'onhold') {
+    if (idea.scheduledDate) {
+      actions.push('<span class="card-date-badge date-set" title="' + esc(idea.scheduledDate) + (idea.scheduledEndDate ? ' to ' + esc(idea.scheduledEndDate) : '') + '">DATE SET: ' + esc(idea.scheduledDate) + '</span>');
+    } else {
+      actions.push('<span class="card-date-badge date-not-set">DATE NOT SET</span>');
     }
   }
   if (isLeader) {

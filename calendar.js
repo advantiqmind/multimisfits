@@ -1,6 +1,6 @@
-// calendar.js -- Shared event calendar overlay for EventForge + Idea Board
-// Shows EventForge draft saves (draggable) and live Discord events (display-only)
-// in a month grid. Drag drafts to reschedule; click to edit date/time or open in EventForge.
+// calendar.js -- Event Calendar overlay for Idea Board + live Discord events
+// Shows Final Approval ideas (draggable, schedulable) and live Discord events (display-only)
+// in a month grid with a sidebar for unscheduled items.
 
 (function () {
   const CAL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -13,10 +13,11 @@
     year: new Date().getFullYear(),
     month: new Date().getMonth(),
     drafts: [],
+    unscheduled: [],
     live: [],
     filter: "all",
     search: "",
-    selected: null, // for mobile tap-to-move
+    selected: null,
     popover: null,
     loading: false,
     accessCode: "",
@@ -31,7 +32,7 @@
     s.textContent = `
 .cal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;place-items:center;padding:16px}
 .cal-overlay.open{display:grid}
-.cal-modal{width:min(960px,calc(100% - 32px));max-height:90vh;overflow-y:auto;overflow-x:hidden;background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;box-shadow:0 20px 60px #000;padding:0;color:#e6d9b8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px}
+.cal-modal{width:min(1080px,calc(100% - 32px));max-height:90vh;overflow-y:auto;overflow-x:hidden;background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;box-shadow:0 20px 60px #000;padding:0;color:#e6d9b8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px}
 .cal-head{padding:14px 16px;border-bottom:1px solid #3a2e1a;display:flex;align-items:center;gap:10px}
 .cal-head h3{margin:0;font-family:'Cinzel',serif;font-size:16px;letter-spacing:.04em}
 .cal-close{border:0;background:transparent;color:#a99b78;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px;margin-left:auto}
@@ -47,7 +48,14 @@
 .cal-nav button:hover{border-color:#6b5836;color:#ffcb2f}
 .cal-nav .cal-month-label{font-family:'Cinzel',serif;font-size:15px;font-weight:700;min-width:180px;text-align:center}
 .cal-nav .cal-today{margin-left:auto;font-size:12px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto;grid-auto-rows:90px;padding:0 16px 16px;gap:1px}
+.cal-body-wrap{display:flex;gap:0;padding:0 16px 0}
+.cal-sidebar{width:200px;min-width:200px;border-right:1px solid #2a2010;padding:8px 10px 12px 0;max-height:500px;overflow-y:auto}
+.cal-sidebar-head{font-size:11px;font-weight:800;color:#7a6c4a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px}
+.cal-sidebar-empty{font-size:12px;color:#5a4d30;padding:8px 4px;font-style:italic}
+.cal-sidebar .cal-pill{margin:3px 0;cursor:grab}
+.cal-sidebar .cal-pill.selected{border-style:solid;background:#261f0f;box-shadow:0 0 0 2px #ffcb2f}
+.cal-grid-wrap{flex:1;min-width:0;padding:0 0 0 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto;grid-auto-rows:90px;padding:0 0 16px;gap:1px}
 .cal-day-head{padding:8px 4px;text-align:center;font-size:11px;font-weight:800;color:#7a6c4a;text-transform:uppercase;letter-spacing:.06em}
 .cal-cell{background:#110e07;border:1px solid #2a2010;padding:4px;position:relative;transition:background .15s;overflow:hidden;box-sizing:border-box;min-height:0}
 .cal-cell.other-month{opacity:.35}
@@ -60,6 +68,7 @@
 .cal-pill.draft{background:#1a1305;border:1px dashed #6b5836;color:#c9a227}
 .cal-pill.draft[draggable="true"]{cursor:grab}
 .cal-pill.draft.selected{border-style:solid;background:#261f0f;box-shadow:0 0 0 2px #ffcb2f}
+.cal-pill.draft.no-template{border-color:#5a4d30;color:#8a7449}
 .cal-pill.live{background:#1a2a1a;border:1px solid #2a5a2a;color:#4ad04a}
 .cal-pill.dragging{opacity:.4}
 .cal-conflict{position:absolute;top:2px;right:4px;font-size:10px;font-weight:800;color:#f7c76d;background:#3a2e1a;border-radius:99px;padding:1px 5px}
@@ -77,6 +86,7 @@
 .cal-popover .cal-pop-type{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px}
 .cal-popover .cal-pop-type.draft{background:#1a1305;color:#c9a227;border:1px dashed #6b5836}
 .cal-popover .cal-pop-type.live{background:#1a2a1a;color:#4ad04a;border:1px solid #2a5a2a}
+.cal-popover .cal-pop-hint{font-size:11px;color:#7a6c4a;margin-top:6px}
 .cal-legend{padding:4px 16px 12px;display:flex;gap:16px;font-size:11px;color:#7a6c4a}
 .cal-legend span{display:flex;align-items:center;gap:4px}
 .cal-legend .cal-leg-draft{width:14px;height:10px;border:1px dashed #6b5836;border-radius:3px;background:#1a1305}
@@ -85,6 +95,9 @@
 .cal-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:#1a1305;border:1px solid #3a2e1a;border-radius:10px;padding:10px 14px;opacity:0;pointer-events:none;transition:.2s;z-index:220;color:#e6d9b8;font-size:13px}
 .cal-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(max-width:600px){
+  .cal-body-wrap{flex-direction:column}
+  .cal-sidebar{width:100%;min-width:0;border-right:0;border-bottom:1px solid #2a2010;max-height:120px;padding:8px 0;display:flex;flex-wrap:wrap;gap:4px;overflow-x:auto}
+  .cal-sidebar-head{width:100%;margin-bottom:4px}
   .cal-grid{grid-auto-rows:64px}
   .cal-pill{font-size:10px;padding:2px 4px}
   .cal-month-label{font-size:13px!important;min-width:140px!important}
@@ -111,10 +124,6 @@
     t.classList.add("show");
     clearTimeout(t._tid);
     t._tid = setTimeout(() => t.classList.remove("show"), 2500);
-  }
-
-  function dateKey(dateStr) {
-    return dateStr || "";
   }
 
   function localDate(isoStr) {
@@ -144,46 +153,36 @@
     return Math.round((db - da) / 86400000);
   }
 
-  // Build calendar grid days for a given month
   function getMonthGrid(year, month) {
     const first = new Date(year, month, 1);
-    const dow = (first.getDay() + 6) % 7; // Mon=0
+    const dow = (first.getDay() + 6) % 7;
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const cells = [];
-    // Leading days from previous month
     const prevMonthDays = new Date(year, month, 0).getDate();
     for (let i = dow - 1; i >= 0; i--) {
       const d = prevMonthDays - i;
       const m = month - 1 < 0 ? 11 : month - 1;
       const y = month - 1 < 0 ? year - 1 : year;
       cells.push({
-        day: d,
-        month: m,
-        year: y,
+        day: d, month: m, year: y,
         iso: `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
         other: true,
       });
     }
-    // Current month
     for (let d = 1; d <= daysInMonth; d++) {
       cells.push({
-        day: d,
-        month,
-        year,
+        day: d, month, year,
         iso: `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
         other: false,
       });
     }
-    // Trailing days
     const rem = 7 - (cells.length % 7);
     if (rem < 7) {
       const nm = month + 1 > 11 ? 0 : month + 1;
       const ny = month + 1 > 11 ? year + 1 : year;
       for (let d = 1; d <= rem; d++) {
         cells.push({
-          day: d,
-          month: nm,
-          year: ny,
+          day: d, month: nm, year: ny,
           iso: `${ny}-${String(nm + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
           other: true,
         });
@@ -218,32 +217,45 @@
     return all;
   }
 
+  function getFilteredUnscheduled() {
+    let items = calState.unscheduled;
+    if (calState.filter === "live") return [];
+    if (calState.search) {
+      const q = calState.search.toLowerCase();
+      items = items.filter((e) => e.name.toLowerCase().includes(q));
+    }
+    return items;
+  }
+
   async function fetchCalendarData() {
     calState.loading = true;
     renderCalendar();
 
-    const [draftsRes, eventsRes] = await Promise.allSettled([
-      fetch("/api/eventforge?fields=calendar").then((r) => r.json()),
+    const [ideasRes, eventsRes] = await Promise.allSettled([
+      fetch("/api/ideaboard?fields=calendar").then((r) => r.json()),
       fetch("/api/events").then((r) => r.json()),
     ]);
 
     calState.drafts = [];
-    if (draftsRes.status === "fulfilled" && draftsRes.value.saves) {
-      calState.drafts = draftsRes.value.saves
-        .filter((s) => s.type === "event" && s.date)
-        .map((s) => ({
-          id: s.id,
-          name: s.name,
-          startDate: s.date,
-          startTime: s.time || "",
-          endDate: s.endDate || "",
-          endTime: s.endTime || "",
-          timezone: s.timezone || "",
-          category: s.category,
-          version: s.version,
-          updatedBy: s.updated_by,
+    calState.unscheduled = [];
+    if (ideasRes.status === "fulfilled" && ideasRes.value.ideas) {
+      for (const idea of ideasRes.value.ideas) {
+        const item = {
+          id: idea.id,
+          name: idea.title,
+          startDate: idea.scheduledDate || "",
+          endDate: idea.scheduledEndDate || "",
+          hasTemplate: idea.hasTemplate,
+          tags: idea.tags || [],
+          author: idea.author || "",
           type: "draft",
-        }));
+        };
+        if (idea.scheduledDate) {
+          calState.drafts.push(item);
+        } else {
+          calState.unscheduled.push(item);
+        }
+      }
     }
 
     calState.live = [];
@@ -267,137 +279,51 @@
     renderCalendar();
   }
 
-  async function updateDraftDate(draft, newStartDate) {
+  async function scheduleDraft(draft, newStartDate, newEndDate) {
     const code =
       calState.accessCode ||
-      (typeof localStorage !== "undefined" && localStorage.getItem("mm-eventforge-access")) ||
+      (typeof localStorage !== "undefined" && localStorage.getItem("mm-ideaboard-code")) ||
       "";
     if (!code) {
-      calToast("Access code required to move events");
+      calToast("Leader access code required");
       return false;
     }
 
-    // Fetch the full save to get its data blob
-    let fullSave;
     try {
-      const r = await fetch(`/api/eventforge?id=${draft.id}`);
-      if (!r.ok) throw new Error("fetch failed");
-      fullSave = await r.json();
-    } catch {
-      calToast("Failed to load event data");
-      return false;
-    }
-
-    const data = fullSave.data;
-    const offset = daysBetween(draft.startDate, newStartDate);
-    data.date = newStartDate;
-    if (data.endDate) {
-      data.endDate = addDays(data.endDate, offset);
-    }
-
-    const user =
-      (typeof localStorage !== "undefined" && localStorage.getItem("mm-eventforge-user")) || "Calendar";
-
-    try {
-      const r = await fetch("/api/eventforge", {
-        method: "PUT",
+      const r = await fetch("/api/ideaboard", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: draft.id,
-          version: fullSave.version,
-          user,
-          data,
+          action: "schedule",
+          message_id: draft.id,
+          scheduled_date: newStartDate,
+          scheduled_end_date: newEndDate || null,
           access_code: code,
         }),
       });
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));
-        if (err.error === "conflict") {
-          calToast("Conflict: someone else updated this event. Refreshing...");
-          await fetchCalendarData();
+        if (err.error === "invalid access code" || err.error === "leader access required") {
+          calToast("Invalid or insufficient access code");
           return false;
         }
-        if (err.error === "invalid access code") {
-          calToast("Invalid access code");
-          return false;
-        }
-        calToast("Failed to update: " + (err.error || r.status));
+        calToast("Failed to schedule: " + (err.error || r.status));
         return false;
       }
-      // Update local state
       draft.startDate = newStartDate;
-      if (draft.endDate) {
-        draft.endDate = addDays(draft.endDate, offset);
-      }
-      const result = await r.json();
-      draft.version = result.version;
-      calToast("Event moved to " + newStartDate);
-      return true;
-    } catch {
-      calToast("Network error updating event");
-      return false;
-    }
-  }
-
-  async function updateDraftDateTime(draft, newDate, newTime, newEndDate, newEndTime) {
-    const code =
-      calState.accessCode ||
-      (typeof localStorage !== "undefined" && localStorage.getItem("mm-eventforge-access")) ||
-      "";
-    if (!code) {
-      calToast("Access code required");
-      return false;
-    }
-
-    let fullSave;
-    try {
-      const r = await fetch(`/api/eventforge?id=${draft.id}`);
-      if (!r.ok) throw new Error("fetch failed");
-      fullSave = await r.json();
-    } catch {
-      calToast("Failed to load event data");
-      return false;
-    }
-
-    const data = fullSave.data;
-    if (newDate) data.date = newDate;
-    if (newTime !== undefined) data.time = newTime;
-    if (newEndDate !== undefined) data.endDate = newEndDate;
-    if (newEndTime !== undefined) data.endTime = newEndTime;
-
-    const user =
-      (typeof localStorage !== "undefined" && localStorage.getItem("mm-eventforge-user")) || "Calendar";
-
-    try {
-      const r = await fetch("/api/eventforge", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: draft.id,
-          version: fullSave.version,
-          user,
-          data,
-          access_code: code,
-        }),
-      });
-      if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        calToast(err.error === "conflict" ? "Conflict. Refreshing..." : "Update failed");
-        if (err.error === "conflict") await fetchCalendarData();
-        return false;
-      }
-      const result = await r.json();
-      draft.startDate = data.date;
-      draft.startTime = data.time || "";
-      draft.endDate = data.endDate || "";
-      draft.endTime = data.endTime || "";
-      draft.version = result.version;
-      calToast("Event updated");
+      draft.endDate = newEndDate || "";
+      calToast("Scheduled for " + newStartDate);
       return true;
     } catch {
       calToast("Network error");
       return false;
     }
+  }
+
+  async function moveDraft(draft, newStartDate) {
+    const offset = daysBetween(draft.startDate, newStartDate);
+    const newEndDate = draft.endDate ? addDays(draft.endDate, offset) : "";
+    return scheduleDraft(draft, newStartDate, newEndDate);
   }
 
   function renderCalendar() {
@@ -406,6 +332,8 @@
 
     if (calState.loading) {
       container.innerHTML = '<div class="cal-loading">Loading events...</div>';
+      const sidebar = document.getElementById("calSidebar");
+      if (sidebar) sidebar.innerHTML = '<div class="cal-loading" style="padding:12px">...</div>';
       return;
     }
 
@@ -414,11 +342,9 @@
     const todayISO = localDate(new Date().toISOString());
 
     let html = "";
-    // Day headers
     for (const d of CAL_DAYS) {
       html += `<div class="cal-day-head">${d}</div>`;
     }
-    // Cells
     for (const cell of cells) {
       const isToday = cell.iso === todayISO;
       const events = eventsOnDate(cell.iso);
@@ -434,23 +360,74 @@
       for (const ev of events) {
         const isDraft = ev.type === "draft";
         const isSelected = calState.selected && calState.selected.id === ev.id;
-        html += `<div class="cal-pill ${isDraft ? "draft" : "live"} ${isSelected ? "selected" : ""}" ${isDraft ? 'draggable="true"' : ""} data-id="${esc(ev.id)}" data-type="${ev.type}" title="${esc(ev.name)}">${esc(ev.name)}</div>`;
+        const noTpl = isDraft && !ev.hasTemplate ? " no-template" : "";
+        html += `<div class="cal-pill ${isDraft ? "draft" : "live"}${noTpl} ${isSelected ? "selected" : ""}" ${isDraft ? 'draggable="true"' : ""} data-id="${esc(ev.id)}" data-type="${ev.type}" data-src="grid" title="${esc(ev.name)}">${esc(ev.name)}</div>`;
       }
       html += "</div>";
     }
 
     container.innerHTML = html;
+
+    // Render sidebar
+    const sidebar = document.getElementById("calSidebar");
+    if (sidebar) {
+      const unsched = getFilteredUnscheduled();
+      let shtml = '<div class="cal-sidebar-head">Unscheduled (' + unsched.length + ')</div>';
+      if (!unsched.length) {
+        shtml += '<div class="cal-sidebar-empty">All items scheduled</div>';
+      }
+      for (const ev of unsched) {
+        const isSelected = calState.selected && calState.selected.id === ev.id;
+        const noTpl = !ev.hasTemplate ? " no-template" : "";
+        shtml += `<div class="cal-pill draft${noTpl} ${isSelected ? "selected" : ""}" draggable="true" data-id="${esc(ev.id)}" data-type="draft" data-src="sidebar" title="${esc(ev.name)}">${esc(ev.name)}</div>`;
+      }
+      sidebar.innerHTML = shtml;
+      bindSidebar();
+    }
+
     bindGrid();
+  }
+
+  function bindSidebar() {
+    const sidebar = document.getElementById("calSidebar");
+    if (!sidebar) return;
+
+    sidebar.querySelectorAll('.cal-pill[draggable="true"]').forEach((pill) => {
+      pill.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", pill.dataset.id);
+        e.dataTransfer.setData("cal-src", "sidebar");
+        e.dataTransfer.effectAllowed = "move";
+        pill.classList.add("dragging");
+      });
+      pill.addEventListener("dragend", () => {
+        pill.classList.remove("dragging");
+        document.querySelectorAll(".drop-target").forEach((c) => c.classList.remove("drop-target"));
+      });
+      pill.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = pill.dataset.id;
+        const ev = calState.unscheduled.find((d) => d.id === id);
+        if (!ev) return;
+        if (calState.selected && calState.selected.id === ev.id) {
+          calState.selected = null;
+        } else {
+          calState.selected = ev;
+          calState.selected._fromSidebar = true;
+        }
+        closePopover();
+        renderCalendar();
+      });
+    });
   }
 
   function bindGrid() {
     const container = document.getElementById("calBody");
     if (!container) return;
 
-    // Drag and drop (desktop)
     container.querySelectorAll('.cal-pill[draggable="true"]').forEach((pill) => {
       pill.addEventListener("dragstart", (e) => {
         e.dataTransfer.setData("text/plain", pill.dataset.id);
+        e.dataTransfer.setData("cal-src", "grid");
         e.dataTransfer.effectAllowed = "move";
         pill.classList.add("dragging");
       });
@@ -473,27 +450,44 @@
         e.preventDefault();
         cell.classList.remove("drop-target");
         const id = e.dataTransfer.getData("text/plain");
+        const newDate = cell.dataset.date;
+
+        // Check if from sidebar (unscheduled)
+        const fromSidebar = calState.unscheduled.find((d) => d.id === id);
+        if (fromSidebar) {
+          showSchedulePopover(fromSidebar, newDate, cell);
+          return;
+        }
+
+        // From grid (already scheduled, moving)
         const draft = calState.drafts.find((d) => d.id === id);
         if (!draft) return;
-        const newDate = cell.dataset.date;
         if (newDate === draft.startDate) return;
-        await updateDraftDate(draft, newDate);
-        renderCalendar();
+        const ok = await moveDraft(draft, newDate);
+        if (ok) await fetchCalendarData();
       });
 
-      // Mobile tap-to-move: tap a cell when an event is selected
+      // Mobile tap-to-move
       cell.addEventListener("click", async (e) => {
-        if (e.target.closest(".cal-pill")) return; // handled by pill click
+        if (e.target.closest(".cal-pill")) return;
         if (!calState.selected) return;
         const newDate = cell.dataset.date;
+
+        if (calState.selected._fromSidebar) {
+          const ev = calState.selected;
+          calState.selected = null;
+          showSchedulePopover(ev, newDate, cell);
+          return;
+        }
+
         if (newDate === calState.selected.startDate) {
           calState.selected = null;
           renderCalendar();
           return;
         }
-        const ok = await updateDraftDate(calState.selected, newDate);
+        const ok = await moveDraft(calState.selected, newDate);
         calState.selected = null;
-        renderCalendar();
+        if (ok) await fetchCalendarData();
       });
     });
 
@@ -509,12 +503,12 @@
             : calState.live.find((d) => d.id === id);
         if (!ev) return;
 
-        // On narrow screens, use tap-to-select for drafts
         if (ev.type === "draft" && window.innerWidth <= 600) {
           if (calState.selected && calState.selected.id === ev.id) {
             calState.selected = null;
           } else {
             calState.selected = ev;
+            calState.selected._fromSidebar = false;
           }
           closePopover();
           renderCalendar();
@@ -526,27 +520,76 @@
     });
   }
 
+  function showSchedulePopover(ev, dateStr, anchor) {
+    closePopover();
+    const pop = document.getElementById("calPopover");
+    if (!pop) return;
+
+    let html = `<h4>${esc(ev.name)} <span class="cal-pop-type draft">Final Approval</span></h4>`;
+    html += `
+      <div class="cal-pop-row"><span class="cal-pop-label">Start</span><input type="date" id="calPopDate" value="${esc(dateStr)}"></div>
+      <div class="cal-pop-row"><span class="cal-pop-label">End</span><input type="date" id="calPopEndDate" value=""><span style="font-size:11px;color:#5a4d30;margin-left:4px">optional, for multi-day</span></div>
+      ${!ev.hasTemplate ? '<div class="cal-pop-hint">No template attached to this card</div>' : ""}
+      <div class="cal-pop-actions">
+        <button class="cal-pop-btn gold" id="calPopSave">Schedule</button>
+        <button class="cal-pop-btn" id="calPopClose">Cancel</button>
+      </div>`;
+
+    pop.innerHTML = html;
+    pop.classList.add("open");
+
+    const rect = anchor.getBoundingClientRect();
+    const pw = 320;
+    let left = rect.left;
+    let top = rect.bottom + 6;
+    if (left + pw > window.innerWidth - 16) left = window.innerWidth - pw - 16;
+    if (left < 16) left = 16;
+    if (top + 200 > window.innerHeight) top = rect.top - 220;
+    if (top < 16) top = 16;
+    pop.style.left = left + "px";
+    pop.style.top = top + "px";
+
+    document.getElementById("calPopClose").onclick = closePopover;
+    document.getElementById("calPopSave").onclick = async () => {
+      const d = document.getElementById("calPopDate").value;
+      const ed = document.getElementById("calPopEndDate").value;
+      if (!d) { calToast("Start date is required"); return; }
+      const ok = await scheduleDraft(ev, d, ed || null);
+      if (ok) {
+        closePopover();
+        // Move from unscheduled to scheduled
+        const idx = calState.unscheduled.indexOf(ev);
+        if (idx >= 0) calState.unscheduled.splice(idx, 1);
+        ev.startDate = d;
+        ev.endDate = ed || "";
+        calState.drafts.push(ev);
+        renderCalendar();
+      }
+    };
+  }
+
   function showPopover(ev, anchor) {
     closePopover();
     const pop = document.getElementById("calPopover");
     if (!pop) return;
 
     const isDraft = ev.type === "draft";
-    let html = `<h4>${esc(ev.name)} <span class="cal-pop-type ${ev.type}">${isDraft ? "Draft" : "Live"}</span></h4>`;
+    let html = `<h4>${esc(ev.name)} <span class="cal-pop-type ${ev.type}">${isDraft ? "Final Approval" : "Live"}</span></h4>`;
 
     if (isDraft) {
       html += `
-        <div class="cal-pop-row"><span class="cal-pop-label">Start</span><input type="date" id="calPopDate" value="${esc(ev.startDate)}"><input type="time" id="calPopTime" value="${esc(ev.startTime)}" style="width:100px"></div>
-        <div class="cal-pop-row"><span class="cal-pop-label">End</span><input type="date" id="calPopEndDate" value="${esc(ev.endDate)}"><input type="time" id="calPopEndTime" value="${esc(ev.endTime)}" style="width:100px"></div>
+        <div class="cal-pop-row"><span class="cal-pop-label">Start</span><input type="date" id="calPopDate" value="${esc(ev.startDate)}"></div>
+        <div class="cal-pop-row"><span class="cal-pop-label">End</span><input type="date" id="calPopEndDate" value="${esc(ev.endDate)}"></div>
+        ${!ev.hasTemplate ? '<div class="cal-pop-hint">No template attached to this card</div>' : '<div class="cal-pop-hint">Template dates will auto-update</div>'}
         <div class="cal-pop-actions">
           <button class="cal-pop-btn gold" id="calPopSave">Save</button>
-          <button class="cal-pop-btn" id="calPopOpen">Open in EventForge</button>
+          <button class="cal-pop-btn" id="calPopUnschedule">Unschedule</button>
           <button class="cal-pop-btn" id="calPopClose">Cancel</button>
         </div>`;
     } else {
       html += `
-        <div class="cal-pop-row"><span class="cal-pop-label">Start</span><span>${esc(ev.startDate)} ${esc(ev.startTime)}</span></div>
-        ${ev.endDate ? `<div class="cal-pop-row"><span class="cal-pop-label">End</span><span>${esc(ev.endDate)} ${esc(ev.endTime)}</span></div>` : ""}
+        <div class="cal-pop-row"><span class="cal-pop-label">Start</span><span>${esc(ev.startDate)} ${esc(ev.startTime || "")}</span></div>
+        ${ev.endDate ? `<div class="cal-pop-row"><span class="cal-pop-label">End</span><span>${esc(ev.endDate)} ${esc(ev.endTime || "")}</span></div>` : ""}
         <div class="cal-pop-row"><span class="cal-pop-label">Status</span><span>${esc(ev.status || "")}</span></div>
         <div class="cal-pop-actions"><button class="cal-pop-btn" id="calPopClose">Close</button></div>`;
     }
@@ -554,7 +597,6 @@
     pop.innerHTML = html;
     pop.classList.add("open");
 
-    // Position near anchor
     const rect = anchor.getBoundingClientRect();
     const pw = 320;
     let left = rect.left;
@@ -571,20 +613,28 @@
     if (isDraft) {
       document.getElementById("calPopSave").onclick = async () => {
         const d = document.getElementById("calPopDate").value;
-        const t = document.getElementById("calPopTime").value;
         const ed = document.getElementById("calPopEndDate").value;
-        const et = document.getElementById("calPopEndTime").value;
-        const ok = await updateDraftDateTime(ev, d, t, ed, et);
+        if (!d) { calToast("Start date is required"); return; }
+        const ok = await scheduleDraft(ev, d, ed || null);
         if (ok) {
           closePopover();
-          renderCalendar();
+          await fetchCalendarData();
         }
       };
-      const openBtn = document.getElementById("calPopOpen");
-      if (openBtn) {
-        openBtn.onclick = () => {
-          window.open("/eventforge.html", "_blank");
-          closePopover();
+      const unschedBtn = document.getElementById("calPopUnschedule");
+      if (unschedBtn) {
+        unschedBtn.onclick = async () => {
+          const ok = await scheduleDraft(ev, "", "");
+          if (ok) {
+            closePopover();
+            // Move from scheduled to unscheduled
+            const idx = calState.drafts.indexOf(ev);
+            if (idx >= 0) calState.drafts.splice(idx, 1);
+            ev.startDate = "";
+            ev.endDate = "";
+            calState.unscheduled.push(ev);
+            renderCalendar();
+          }
         };
       }
     }
@@ -611,7 +661,7 @@
         </div>
         <div class="cal-filters">
           <button class="cal-fbtn ${calState.filter === "all" ? "active" : ""}" data-f="all">All</button>
-          <button class="cal-fbtn ${calState.filter === "draft" ? "active" : ""}" data-f="draft">Drafts</button>
+          <button class="cal-fbtn ${calState.filter === "draft" ? "active" : ""}" data-f="draft">Final Approval</button>
           <button class="cal-fbtn ${calState.filter === "live" ? "active" : ""}" data-f="live">Live</button>
         </div>
         <div class="cal-nav">
@@ -620,16 +670,20 @@
           <button id="calNext" title="Next month">&#9654;</button>
           <button class="cal-today" id="calToday">Today</button>
         </div>
-        <div class="cal-grid" id="calBody"></div>
+        <div class="cal-body-wrap">
+          <div class="cal-sidebar" id="calSidebar"></div>
+          <div class="cal-grid-wrap">
+            <div class="cal-grid" id="calBody"></div>
+          </div>
+        </div>
         <div class="cal-legend">
-          <span><span class="cal-leg-draft"></span> Draft (draggable)</span>
+          <span><span class="cal-leg-draft"></span> Final Approval (draggable)</span>
           <span><span class="cal-leg-live"></span> Live (posted)</span>
         </div>
       </div>
       <div class="cal-popover" id="calPopover"></div>
     `;
 
-    // Bind controls
     document.getElementById("calCloseBtn").onclick = closeCalendar;
     ov.onclick = (e) => {
       if (e.target === ov) closeCalendar();
@@ -648,31 +702,22 @@
     });
     document.getElementById("calPrev").onclick = () => {
       calState.month--;
-      if (calState.month < 0) {
-        calState.month = 11;
-        calState.year--;
-      }
+      if (calState.month < 0) { calState.month = 11; calState.year--; }
       renderCalendar();
-      document.querySelector(".cal-month-label").textContent =
-        CAL_MONTHS[calState.month] + " " + calState.year;
+      document.querySelector(".cal-month-label").textContent = CAL_MONTHS[calState.month] + " " + calState.year;
     };
     document.getElementById("calNext").onclick = () => {
       calState.month++;
-      if (calState.month > 11) {
-        calState.month = 0;
-        calState.year++;
-      }
+      if (calState.month > 11) { calState.month = 0; calState.year++; }
       renderCalendar();
-      document.querySelector(".cal-month-label").textContent =
-        CAL_MONTHS[calState.month] + " " + calState.year;
+      document.querySelector(".cal-month-label").textContent = CAL_MONTHS[calState.month] + " " + calState.year;
     };
     document.getElementById("calToday").onclick = () => {
       const now = new Date();
       calState.year = now.getFullYear();
       calState.month = now.getMonth();
       renderCalendar();
-      document.querySelector(".cal-month-label").textContent =
-        CAL_MONTHS[calState.month] + " " + calState.year;
+      document.querySelector(".cal-month-label").textContent = CAL_MONTHS[calState.month] + " " + calState.year;
     };
 
     renderCalendar();
@@ -685,14 +730,12 @@
     calState.selected = null;
   }
 
-  // Public entry point
   window.openEventCalendar = function (options) {
     options = options || {};
     injectStyles();
 
     if (options.accessCode) calState.accessCode = options.accessCode;
 
-    // Reset view state
     const now = new Date();
     calState.year = now.getFullYear();
     calState.month = now.getMonth();
@@ -701,7 +744,6 @@
     calState.selected = null;
     calState.popover = null;
 
-    // Create or reuse overlay
     let ov = document.getElementById("calOverlay");
     if (!ov) {
       ov = document.createElement("div");

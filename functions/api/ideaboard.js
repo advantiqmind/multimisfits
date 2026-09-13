@@ -40,6 +40,12 @@ async function ensureTable(db) {
   try {
     await db.prepare("ALTER TABLE idea_positions ADD COLUMN held_by TEXT").run();
   } catch (_) {}
+  try {
+    await db.prepare("ALTER TABLE idea_positions ADD COLUMN scheduled_date TEXT").run();
+  } catch (_) {}
+  try {
+    await db.prepare("ALTER TABLE idea_positions ADD COLUMN scheduled_end_date TEXT").run();
+  } catch (_) {}
   _tableReady = true;
 }
 
@@ -145,6 +151,81 @@ function parseIdea(msg, nickMap, channelMap) {
   };
 }
 
+async function handleCalendarGet(context) {
+  const url = new URL(context.request.url);
+  const cache = caches.default;
+  const cacheKey = new Request(url.origin + "/api/ideaboard?fields=calendar", { method: "GET" });
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
+
+  const token = context.env.DISCORD_BOT_TOKEN;
+  const threadId = context.env.IDEABOARD_THREAD_ID;
+  const guildId = context.env.DISCORD_GUILD_ID;
+
+  if (!token || !threadId) {
+    return json({ configured: false, ideas: [] }, 200, { "Cache-Control": "public, max-age=60" });
+  }
+
+  const headers = {
+    Authorization: `Bot ${token}`,
+    "User-Agent": "Multi-Misfits clan website",
+  };
+
+  let messages = [];
+  let before;
+  for (let i = 0; i < 5; i++) {
+    let murl = `${BASE}/channels/${threadId}/messages?limit=100`;
+    if (before) murl += `&before=${before}`;
+    const res = await fetch(murl, { headers });
+    if (!res.ok) break;
+    const batch = await res.json();
+    if (!batch.length) break;
+    messages.push(...batch);
+    if (batch.length < 100) break;
+    before = batch[batch.length - 1].id;
+  }
+
+  const nickMap = guildId ? await fetchNickMap(guildId, headers) : new Map();
+
+  const ideas = messages
+    .filter((m) => !m.author?.bot && m.type === 0)
+    .map((m) => parseIdea(m, nickMap, new Map()))
+    .filter(Boolean);
+
+  const db = context.env.DB;
+  const calendarIdeas = [];
+  if (db) {
+    await ensureTable(db);
+    const result = await db
+      .prepare("SELECT message_id, column_name, template_json, scheduled_date, scheduled_end_date FROM idea_positions WHERE column_name = 'onhold' AND dismissed = 0")
+      .all();
+    const posMap = new Map();
+    for (const row of result.results) posMap.set(row.message_id, row);
+
+    for (const idea of ideas) {
+      const pos = posMap.get(idea.id);
+      if (!pos) continue;
+      calendarIdeas.push({
+        id: idea.id,
+        title: idea.title,
+        tags: idea.tags,
+        author: idea.author,
+        hasTemplate: !!pos.template_json,
+        scheduledDate: pos.scheduled_date || null,
+        scheduledEndDate: pos.scheduled_end_date || null,
+      });
+    }
+  }
+
+  const res = json(
+    { configured: true, ideas: calendarIdeas },
+    200,
+    { "Cache-Control": `public, max-age=${CACHE_TTL}` }
+  );
+  context.waitUntil(cache.put(cacheKey, res.clone()));
+  return res;
+}
+
 async function handleGet(context) {
   const cache = caches.default;
   const cacheKey = new Request(
@@ -201,7 +282,7 @@ async function handleGet(context) {
     await ensureTable(db);
     const result = await db
       .prepare(
-        "SELECT message_id, column_name, dismissed, dismissed_by, moved_by, updated_at, template_json, held, held_by FROM idea_positions"
+        "SELECT message_id, column_name, dismissed, dismissed_by, moved_by, updated_at, template_json, held, held_by, scheduled_date, scheduled_end_date FROM idea_positions"
       )
       .all();
     for (const row of result.results) {
@@ -236,6 +317,8 @@ async function handleGet(context) {
       templateJson: pos?.template_json || null,
       held: pos ? !!pos.held : false,
       heldBy: pos?.held_by || null,
+      scheduledDate: pos?.scheduled_date || null,
+      scheduledEndDate: pos?.scheduled_end_date || null,
       comments: notesMap.get(idea.id) || [],
     };
   });
@@ -286,7 +369,7 @@ async function handlePost(context) {
 
   const level = checkAccess(context.env, access_code);
 
-  if (action === "move" || action === "dismiss" || action === "restore" || action === "set_template" || action === "hold" || action === "unhold") {
+  if (action === "move" || action === "dismiss" || action === "restore" || action === "set_template" || action === "hold" || action === "unhold" || action === "schedule") {
     if (level !== "leader") return json({ error: "leader access required" }, 403);
   } else if (action === "add_note") {
     if (!level) return json({ error: "access code required" }, 403);
@@ -372,21 +455,68 @@ async function handlePost(context) {
       )
       .bind(now, message_id)
       .run();
+  } else if (action === "schedule") {
+    const { scheduled_date, scheduled_end_date } = body;
+
+    const existing = await db
+      .prepare("SELECT template_json FROM idea_positions WHERE message_id = ?")
+      .bind(message_id)
+      .first();
+
+    let updatedTemplate = existing?.template_json || null;
+    if (updatedTemplate && scheduled_date) {
+      try {
+        const parsed = JSON.parse(updatedTemplate);
+        const target = (parsed.eventforge && Array.isArray(parsed.events) && parsed.events[0]) ? parsed.events[0] : parsed;
+        target.date = scheduled_date;
+        if (scheduled_end_date && scheduled_end_date !== scheduled_date) {
+          target.endDate = scheduled_end_date;
+          target.multiDay = true;
+        } else {
+          target.endDate = "";
+          target.multiDay = false;
+        }
+        updatedTemplate = JSON.stringify(parsed);
+      } catch (_) {}
+    }
+
+    await db
+      .prepare(
+        `INSERT INTO idea_positions (message_id, column_name, scheduled_date, scheduled_end_date, template_json, updated_at)
+         VALUES (?, 'onhold', ?, ?, ?, ?)
+         ON CONFLICT(message_id) DO UPDATE SET
+           scheduled_date = excluded.scheduled_date,
+           scheduled_end_date = excluded.scheduled_end_date,
+           template_json = CASE WHEN excluded.scheduled_date IS NOT NULL AND excluded.scheduled_date != '' THEN excluded.template_json ELSE idea_positions.template_json END,
+           updated_at = excluded.updated_at`
+      )
+      .bind(message_id, scheduled_date || null, scheduled_end_date || null, updatedTemplate, now)
+      .run();
+
+    const cache2 = caches.default;
+    const calCacheKey = new Request(
+      new URL(context.request.url).origin + "/api/ideaboard?fields=calendar",
+      { method: "GET" }
+    );
+    context.waitUntil(cache2.delete(calCacheKey));
+
+    return json({ ok: true, templateJson: updatedTemplate });
   } else {
     return json({ error: "invalid action" }, 400);
   }
 
   const cache = caches.default;
-  const cacheKey = new Request(
-    new URL(context.request.url).origin + "/api/ideaboard",
-    { method: "GET" }
-  );
-  context.waitUntil(cache.delete(cacheKey));
+  const origin = new URL(context.request.url).origin;
+  const cacheKey = new Request(origin + "/api/ideaboard", { method: "GET" });
+  const calCacheKey = new Request(origin + "/api/ideaboard?fields=calendar", { method: "GET" });
+  context.waitUntil(Promise.all([cache.delete(cacheKey), cache.delete(calCacheKey)]));
 
   return json({ ok: true });
 }
 
 export async function onRequest(context) {
   if (context.request.method === "POST") return handlePost(context);
+  const url = new URL(context.request.url);
+  if (url.searchParams.get("fields") === "calendar") return handleCalendarGet(context);
   return handleGet(context);
 }
