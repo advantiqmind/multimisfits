@@ -109,6 +109,41 @@
   .cal-pill{font-size:10px;padding:2px 4px}
   .cal-month-label{font-size:13px!important;min-width:140px!important}
 }
+.cal-pub{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:250;display:none;place-items:center;padding:16px}
+.cal-pub.open{display:grid}
+.cal-pub-modal{width:min(600px,calc(100% - 32px));max-height:90vh;overflow-y:auto;background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;box-shadow:0 20px 60px #000;color:#e6d9b8;font-size:14px}
+.cal-pub-head{padding:14px 16px;border-bottom:1px solid #3a2e1a;display:flex;align-items:center;gap:10px}
+.cal-pub-head h3{margin:0;font-family:'Cinzel',serif;font-size:16px;letter-spacing:.04em;color:#ffcb2f}
+.cal-pub-body{padding:16px}
+.cal-pub-section{margin-bottom:16px}
+.cal-pub-label{display:block;font-size:11px;font-weight:800;color:#7a6c4a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.cal-pub-req{color:#b23a30;font-weight:700;font-size:10px}
+.cal-pub-input{width:100%;background:#0d0b08;color:#e6d9b8;border:1px solid #3a2e1a;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;box-sizing:border-box}
+.cal-pub-input:focus{border-color:#6b5836;outline:none;box-shadow:0 0 0 2px rgba(255,203,47,.12)}
+.cal-pub-dates{font-size:13px;color:#a99b78;line-height:1.8}
+.cal-pub-dates strong{color:#e6d9b8}
+.cal-pub-preview{background:#0d0b08;border:1px solid #3a2e1a;border-radius:8px;padding:12px;max-height:240px;overflow-y:auto;font-size:12px;white-space:pre-wrap;word-break:break-word;line-height:1.6;color:#a99b78;font-family:monospace}
+.cal-pub-media{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:flex-start}
+.cal-pub-thumb{position:relative;display:inline-block}
+.cal-pub-thumb img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #3a2e1a}
+.cal-pub-thumb .cal-pub-remove{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:#b23a30;color:#fff;border:none;font-size:12px;line-height:18px;text-align:center;cursor:pointer;display:none}
+.cal-pub-thumb:hover .cal-pub-remove{display:block}
+.cal-pub-upload{padding:6px 12px;border:1px dashed #6b5836;border-radius:8px;background:#110e07;color:#a99b78;font-size:12px;cursor:pointer;font-weight:700}
+.cal-pub-upload:hover{border-color:#ffcb2f;color:#ffcb2f}
+.cal-pub-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+.cal-pub-error{color:#b23a30;font-size:12px;margin-top:8px}
+.cal-pub-posting{text-align:center;padding:20px;color:#7a6c4a}
+.cal-confirm{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:260;display:none;place-items:center;padding:16px}
+.cal-confirm.open{display:grid}
+.cal-confirm-inner{background:#1e1809;border:1px solid #3a2e1a;border-radius:14px;padding:20px;max-width:420px;width:calc(100% - 32px);color:#e6d9b8;text-align:center}
+.cal-confirm-inner h4{margin:0 0 12px;font-family:'Cinzel',serif;color:#ffcb2f;font-size:16px}
+.cal-confirm-inner p{margin:0 0 10px;font-size:13px;line-height:1.5;color:#a99b78}
+.cal-confirm-inner strong{color:#e6d9b8}
+.cal-confirm-actions{display:flex;gap:8px;justify-content:center;margin-top:16px}
+@media(max-width:600px){
+  .cal-pub-modal{width:calc(100% - 16px)}
+  .cal-pub-thumb img{width:60px;height:60px}
+}
 `;
     document.head.appendChild(s);
   }
@@ -270,6 +305,7 @@
           endDate: idea.scheduledEndDate || "",
           hasTemplate: idea.hasTemplate,
           templateJson: idea.templateJson || null,
+          images: idea.images || null,
           tags: idea.tags || [],
           author: idea.author || "",
           type: "draft",
@@ -560,7 +596,7 @@
       <div class="cal-pop-row"><span class="cal-pop-label">End</span><input type="date" id="calPopEndDate" value=""><span style="font-size:11px;color:#5a4d30;margin-left:4px">optional, for multi-day</span></div>
       ${!ev.hasTemplate ? '<div class="cal-pop-hint">No template attached to this card</div>' : ""}
       <div class="cal-pop-actions">
-        <button class="cal-pop-btn gold" id="calPopSave">Schedule</button>
+        <button class="cal-pop-btn gold" id="calPopSave">${ev.hasTemplate ? "Next: Review Post" : "Schedule"}</button>
         <button class="cal-pop-btn" id="calPopClose">Cancel</button>
       </div>`;
 
@@ -583,16 +619,20 @@
       const d = document.getElementById("calPopDate").value;
       const ed = document.getElementById("calPopEndDate").value;
       if (!d) { calToast("Start date is required"); return; }
-      const ok = await scheduleDraft(ev, d, ed || null);
-      if (ok) {
+      if (ev.hasTemplate) {
         closePopover();
-        // Move from unscheduled to scheduled
-        const idx = calState.unscheduled.indexOf(ev);
-        if (idx >= 0) calState.unscheduled.splice(idx, 1);
-        ev.startDate = d;
-        ev.endDate = ed || "";
-        calState.drafts.push(ev);
-        renderCalendar();
+        showPublishOverlay(ev, d, ed || null);
+      } else {
+        const ok = await scheduleDraft(ev, d, ed || null);
+        if (ok) {
+          closePopover();
+          const idx = calState.unscheduled.indexOf(ev);
+          if (idx >= 0) calState.unscheduled.splice(idx, 1);
+          ev.startDate = d;
+          ev.endDate = ed || "";
+          calState.drafts.push(ev);
+          renderCalendar();
+        }
       }
     };
   }
@@ -830,10 +870,333 @@
     renderCalendar();
   }
 
+  // --- Template-to-Discord converter (mirrors EventForge output) ---
+
+  function pubZonedUnix(date, time, tz) {
+    if (!date || !time) return null;
+    var p = date.split("-").map(Number), Y = p[0], M = p[1], D = p[2];
+    var t = time.split(":").map(Number), h = t[0], m = t[1];
+    var guess = Date.UTC(Y, M - 1, D, h, m, 0);
+    for (var k = 0; k < 3; k++) {
+      var parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz, year: "numeric", month: "2-digit",
+        day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+      }).formatToParts(new Date(guess));
+      var get = function(typ) { return +parts.find(function(pp) { return pp.type === typ; }).value; };
+      var asUTC = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"));
+      guess += Date.UTC(Y, M - 1, D, h, m) - asUTC;
+    }
+    return Math.floor(guess / 1000);
+  }
+
+  function pubTemplateToPreview(templateJson, startDate, endDate) {
+    var parsed;
+    try { parsed = JSON.parse(templateJson); } catch (_) { return null; }
+    var ev = (parsed.template && parsed.template.event)
+      ? parsed.template.event
+      : (parsed.eventforge && Array.isArray(parsed.events) && parsed.events[0])
+        ? parsed.events[0]
+        : parsed;
+    if (!ev || !ev.blocks) return null;
+
+    if (startDate) ev.date = startDate;
+    if (endDate && endDate !== startDate) { ev.endDate = endDate; ev.multiDay = true; }
+    else if (startDate) { ev.endDate = ""; ev.multiDay = false; }
+
+    var tz = ev.timezone || "America/New_York";
+    var EMOJI = { when: "\u{1F4C5}", starts: "⏳", ends: "\u{1F3C1}", world: "\u{1F30E}", meet: "\u{1F4CD}", host: "\u{1F451}", rsvp: "✅", scoring: "\u{1F4CA}", dink: "\u{1F4AC}" };
+    var lem = function(k) { var v = EMOJI[k]; return v ? v + " " : ""; };
+
+    function ipfx(b) {
+      if (!b.showLabel) return "";
+      var emo = b.emoji || "", title = (emo + " " + (b.label || "")).trim();
+      if (b.importance === "featured") return "# " + title;
+      if (b.importance === "medium") return "## " + title;
+      if (b.importance === "small") return (emo + " **" + (b.label || "") + ":**").trim();
+      return "### " + title;
+    }
+
+    function cok(b) {
+      if (!b.visible) return false;
+      if (!b.condition || b.condition === "always") return true;
+      if (b.condition === "hasPrize") return ev.blocks.some(function(x) { return x.kind === "prizes" && (x.items || []).some(function(i) { return i.trim(); }); });
+      if (b.condition === "hasEnd") return !!(ev.endDate || ev.endTime);
+      return true;
+    }
+
+    function btt(b) {
+      if (!cok(b)) return "";
+      if (b.kind === "spacer") return "\n";
+      if (b.kind === "divider") return "────────────";
+      var head = ipfx(b), content = "";
+      if (b.kind === "details") {
+        var lines = [];
+        if (b.world) lines.push(lem("world") + "**World:** " + b.world);
+        if (b.location) lines.push(lem("meet") + "**Meet:** " + b.location);
+        if (b.host) lines.push(lem("host") + "**Host:** " + b.host);
+        content = lines.join("\n");
+      } else if (b.kind === "requirements" || b.kind === "rules" || b.kind === "prizes") {
+        content = (b.items || []).filter(function(x) { return x.trim(); })
+          .map(function(x) { return x.trim().match(/^(\d+[.)]|[-•*])/) ? x : "• " + x; })
+          .join("\n");
+      } else if (b.kind === "gear") {
+        var gl = [];
+        if (b.provided) gl.push("**Provided by clan:** " + b.provided);
+        if (b.value) gl.push(b.value);
+        content = gl.join("\n");
+      } else if (b.kind === "training") {
+        var tl = [];
+        if (b.name && b.name !== b.label) tl.push("**" + b.name + "**");
+        var tu = pubZonedUnix(b.date, b.time, b.timezone || tz);
+        if (tu) tl.push(lem("when") + "<t:" + tu + ":F>\n" + lem("starts") + "<t:" + tu + ":R>");
+        if (b.world) tl.push(lem("world") + "**World:** " + b.world);
+        if (b.location) tl.push(lem("meet") + "**Meet:** " + b.location);
+        if (b.details) tl.push(b.details);
+        content = tl.join("\n");
+      } else {
+        content = b.value || "";
+      }
+      if (!head) return content;
+      if (b.importance === "small" && content && content.indexOf("\n") === -1) return head + " " + content;
+      return [head, content].filter(Boolean).join("\n");
+    }
+
+    var arr = [];
+    if (ev.name) arr.push("# " + ev.name);
+    var su = pubZonedUnix(ev.date, ev.time || "21:00", tz);
+    var multi = ev.endDate && ev.endDate !== ev.date;
+    var eu = (ev.endDate || ev.endTime) ? pubZonedUnix(ev.endDate || ev.date, ev.endTime || ev.time || "21:00", tz) : null;
+    if (su) {
+      if (multi && eu) arr.push(lem("when") + "**When:** <t:" + su + ":D> — <t:" + eu + ":D>\n" + lem("starts") + "**Starts:** <t:" + su + ":F> (<t:" + su + ":R>)");
+      else arr.push(lem("when") + "**When:** <t:" + su + ":F>\n" + lem("starts") + "**Starts:** <t:" + su + ":R>");
+    }
+    if (eu) arr.push(lem("ends") + "**Ends:** <t:" + eu + ":F>");
+    ev.blocks.forEach(function(b) { var t = btt(b); if (t) arr.push(t); });
+
+    var extras = [];
+    if (ev.bossFilter) { var bosses = ev.bossFilterBosses || []; extras.push("**Boss:** " + (bosses.length ? bosses.join(", ") : "any")); }
+    if (ev.scoring && ev.scoringConfig) extras.push(lem("scoring") + "**Scoring:** " + ev.scoringConfig);
+    if (ev.rsvp) extras.push(lem("rsvp") + "**React with " + (ev.rsvpEmoji || "✅") + " if you plan to make it!**");
+    if (ev.dinkNote) extras.push(lem("dink") + "*Running **Dink**? Keep it on so your drops and highlights post straight to Discord.*");
+    if (extras.length) arr.push(extras.join("\n"));
+
+    return arr.join("\n\n").trim();
+  }
+
+  // --- Publish overlay ---
+
+  var pubState = { draft: null, startDate: "", endDate: "", images: [], uploadedImages: [], posting: false };
+
+  function ensurePubOverlays() {
+    if (!document.getElementById("calPubOverlay")) {
+      var d = document.createElement("div");
+      d.id = "calPubOverlay";
+      d.className = "cal-pub";
+      document.body.appendChild(d);
+    }
+    if (!document.getElementById("calConfirmOverlay")) {
+      var c = document.createElement("div");
+      c.id = "calConfirmOverlay";
+      c.className = "cal-confirm";
+      document.body.appendChild(c);
+    }
+  }
+
+  function showPublishOverlay(draft, startDate, endDate) {
+    ensurePubOverlays();
+    pubState.draft = draft;
+    pubState.startDate = startDate;
+    pubState.endDate = endDate || "";
+    pubState.images = (draft.images || []).slice();
+    pubState.uploadedImages = [];
+    pubState.posting = false;
+
+    var preview = pubTemplateToPreview(draft.templateJson, startDate, endDate) || "(Could not generate preview)";
+
+    var dateDisplay = "<strong>" + esc(startDate) + "</strong>";
+    if (endDate) dateDisplay += " to <strong>" + esc(endDate) + "</strong>";
+
+    var ov = document.getElementById("calPubOverlay");
+    ov.innerHTML = '<div class="cal-pub-modal">' +
+      '<div class="cal-pub-head"><h3>Post to Discord</h3><button class="cal-close" id="calPubClose">&times;</button></div>' +
+      '<div class="cal-pub-body">' +
+        '<div class="cal-pub-section">' +
+          '<label class="cal-pub-label">Thread Title <span class="cal-pub-req">* required</span></label>' +
+          '<input type="text" class="cal-pub-input" id="calPubTitle" value="' + esc(draft.name) + '" placeholder="Enter event title...">' +
+        '</div>' +
+        '<div class="cal-pub-section">' +
+          '<label class="cal-pub-label">Dates</label>' +
+          '<div class="cal-pub-dates">' + dateDisplay + '</div>' +
+        '</div>' +
+        '<div class="cal-pub-section">' +
+          '<label class="cal-pub-label">Post Preview</label>' +
+          '<div class="cal-pub-preview" id="calPubPreview">' + esc(preview) + '</div>' +
+        '</div>' +
+        '<div class="cal-pub-section">' +
+          '<label class="cal-pub-label">Media <span class="cal-pub-req">* at least 1 image</span></label>' +
+          '<div class="cal-pub-media" id="calPubMedia"></div>' +
+          '<button class="cal-pub-upload" id="calPubUploadBtn">+ Upload Image</button>' +
+          '<input type="file" id="calPubFileInput" accept="image/*" style="display:none">' +
+          '<div class="cal-pub-error" id="calPubError" style="display:none"></div>' +
+        '</div>' +
+        '<div class="cal-pub-actions">' +
+          '<button class="cal-pop-btn" id="calPubCancelBtn">Cancel</button>' +
+          '<button class="cal-pop-btn gold" id="calPubPostBtn">Post to Discord</button>' +
+        '</div>' +
+      '</div></div>';
+
+    ov.classList.add("open");
+    renderPubMedia();
+
+    document.getElementById("calPubClose").onclick = closePublishOverlay;
+    document.getElementById("calPubCancelBtn").onclick = closePublishOverlay;
+    ov.onclick = function(e) { if (e.target === ov) closePublishOverlay(); };
+
+    document.getElementById("calPubUploadBtn").onclick = function() {
+      document.getElementById("calPubFileInput").click();
+    };
+    document.getElementById("calPubFileInput").onchange = function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) { calToast("Please select an image file"); return; }
+      if (file.size > 10 * 1024 * 1024) { calToast("Image must be under 10MB"); return; }
+      var reader = new FileReader();
+      reader.onload = function() {
+        var base64 = reader.result.split(",")[1];
+        pubState.uploadedImages.push({ name: file.name, type: file.type, data: base64, preview: reader.result });
+        renderPubMedia();
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
+    };
+
+    document.getElementById("calPubPostBtn").onclick = function() {
+      var title = document.getElementById("calPubTitle").value.trim();
+      if (!title) { showPubError("Title is required"); return; }
+      var totalImages = pubState.images.length + pubState.uploadedImages.length;
+      if (totalImages === 0) { showPubError("At least one image is required"); return; }
+      showConfirmOverlay(title);
+    };
+  }
+
+  function renderPubMedia() {
+    var container = document.getElementById("calPubMedia");
+    if (!container) return;
+    var html = "";
+    pubState.images.forEach(function(url, i) {
+      html += '<div class="cal-pub-thumb">' +
+        '<img src="' + esc(url) + '" alt="Media">' +
+        '<button class="cal-pub-remove" data-type="existing" data-idx="' + i + '">&times;</button>' +
+        '</div>';
+    });
+    pubState.uploadedImages.forEach(function(img, i) {
+      html += '<div class="cal-pub-thumb">' +
+        '<img src="' + esc(img.preview) + '" alt="' + esc(img.name) + '">' +
+        '<button class="cal-pub-remove" data-type="uploaded" data-idx="' + i + '">&times;</button>' +
+        '</div>';
+    });
+    container.innerHTML = html;
+    container.querySelectorAll(".cal-pub-remove").forEach(function(btn) {
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        var type = btn.dataset.type;
+        var idx = parseInt(btn.dataset.idx, 10);
+        if (type === "existing") pubState.images.splice(idx, 1);
+        else pubState.uploadedImages.splice(idx, 1);
+        renderPubMedia();
+      };
+    });
+  }
+
+  function showPubError(msg) {
+    var el = document.getElementById("calPubError");
+    if (el) { el.textContent = msg; el.style.display = "block"; }
+  }
+
+  function showConfirmOverlay(title) {
+    var ov = document.getElementById("calConfirmOverlay");
+    if (!ov) return;
+    ov.innerHTML = '<div class="cal-confirm-inner">' +
+      '<h4>Confirm Post</h4>' +
+      '<p>This will create a new thread in the <strong>#events</strong> channel on Discord.</p>' +
+      '<p><strong>Title:</strong> ' + esc(title) + '</p>' +
+      '<p style="color:#b23a30;font-weight:700">This action cannot be undone.</p>' +
+      '<div class="cal-confirm-actions">' +
+        '<button class="cal-pop-btn" id="calConfirmNo">Cancel</button>' +
+        '<button class="cal-pop-btn gold" id="calConfirmYes">Yes, Post It</button>' +
+      '</div></div>';
+    ov.classList.add("open");
+
+    document.getElementById("calConfirmNo").onclick = function() { ov.classList.remove("open"); };
+    ov.onclick = function(e) { if (e.target === ov) ov.classList.remove("open"); };
+    document.getElementById("calConfirmYes").onclick = function() {
+      ov.classList.remove("open");
+      executePublish(title);
+    };
+  }
+
+  async function executePublish(title) {
+    if (pubState.posting) return;
+    pubState.posting = true;
+    var postBtn = document.getElementById("calPubPostBtn");
+    if (postBtn) { postBtn.textContent = "Posting..."; postBtn.disabled = true; }
+
+    var code = calState.accessCode || localStorage.getItem("mm-ideaboard-code") || "";
+    var user = localStorage.getItem("mm-ideaboard-user") || "";
+    if (!user) {
+      user = prompt("Enter your name for attribution:");
+      if (!user) { pubState.posting = false; if (postBtn) { postBtn.textContent = "Post to Discord"; postBtn.disabled = false; } return; }
+      localStorage.setItem("mm-ideaboard-user", user);
+    }
+
+    var payload = {
+      action: "publish",
+      message_id: pubState.draft.id,
+      title: title,
+      scheduled_date: pubState.startDate,
+      scheduled_end_date: pubState.endDate || null,
+      include_idea_images: pubState.images.length > 0,
+      uploaded_images: pubState.uploadedImages.map(function(img) { return { name: img.name, type: img.type, data: img.data }; }),
+      user: user,
+      access_code: code,
+    };
+
+    try {
+      var res = await fetch("/api/ideaboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      var data = await res.json();
+      if (!res.ok || !data.ok) {
+        calToast(data.error || "Failed to publish");
+        pubState.posting = false;
+        if (postBtn) { postBtn.textContent = "Post to Discord"; postBtn.disabled = false; }
+        return;
+      }
+      closePublishOverlay();
+      calToast("Posted to Discord!");
+      fetchCalendarData();
+    } catch (err) {
+      calToast("Network error");
+      pubState.posting = false;
+      if (postBtn) { postBtn.textContent = "Post to Discord"; postBtn.disabled = false; }
+    }
+  }
+
+  function closePublishOverlay() {
+    var ov = document.getElementById("calPubOverlay");
+    if (ov) ov.classList.remove("open");
+    var cv = document.getElementById("calConfirmOverlay");
+    if (cv) cv.classList.remove("open");
+    pubState.posting = false;
+  }
+
   function closeCalendar() {
     const ov = document.getElementById("calOverlay");
     if (ov) ov.classList.remove("open");
     closePopover();
+    closePublishOverlay();
     calState.selected = null;
   }
 

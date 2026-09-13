@@ -210,6 +210,7 @@ async function handleCalendarGet(context) {
         title: idea.title,
         tags: idea.tags,
         author: idea.author,
+        images: idea.images,
         hasTemplate: !!pos.template_json,
         templateJson: pos.template_json || null,
         scheduledDate: pos.scheduled_date || null,
@@ -338,6 +339,132 @@ async function handleGet(context) {
   return res;
 }
 
+function zonedUnix(date, time, tz) {
+  if (!date || !time) return null;
+  const [Y, M, D] = date.split("-").map(Number);
+  const [h, m] = time.split(":").map(Number);
+  let guess = Date.UTC(Y, M - 1, D, h, m, 0);
+  for (let k = 0; k < 3; k++) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz, year: "numeric", month: "2-digit",
+      day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    }).formatToParts(new Date(guess));
+    const get = (t) => +parts.find((p) => p.type === t).value;
+    const asUTC = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"));
+    guess += Date.UTC(Y, M - 1, D, h, m) - asUTC;
+  }
+  return Math.floor(guess / 1000);
+}
+
+function templateToDiscord(templateJson, scheduledDate, scheduledEndDate) {
+  let parsed;
+  try { parsed = JSON.parse(templateJson); } catch (_) { return null; }
+
+  const event = parsed.template?.event
+    || (parsed.eventforge && Array.isArray(parsed.events) && parsed.events[0])
+    || parsed;
+  if (!event || !event.blocks) return null;
+
+  if (scheduledDate) event.date = scheduledDate;
+  if (scheduledEndDate && scheduledEndDate !== scheduledDate) {
+    event.endDate = scheduledEndDate;
+    event.multiDay = true;
+  } else if (scheduledDate) {
+    event.endDate = "";
+    event.multiDay = false;
+  }
+
+  const tz = event.timezone || "America/New_York";
+  const LINE_EMOJI = { when: "\u{1F4C5}", starts: "⏳", ends: "\u{1F3C1}", world: "\u{1F30E}", meet: "\u{1F4CD}", host: "\u{1F451}", repeat: "\u{1F501}", rsvp: "✅", dink: "\u{1F4AC}", scoring: "\u{1F4CA}" };
+  const lem = (k) => { const v = LINE_EMOJI[k]; return v ? v + " " : ""; };
+
+  function importancePrefix(b) {
+    if (!b.showLabel) return "";
+    const emo = b.emoji || "";
+    const title = `${emo} ${b.label || ""}`.trim();
+    if (b.importance === "featured") return `# ${title}`;
+    if (b.importance === "medium") return `## ${title}`;
+    if (b.importance === "small") return `${emo} **${b.label}:**`.trim();
+    return `### ${title}`;
+  }
+
+  function conditionOK(b) {
+    if (!b.visible) return false;
+    if (!b.condition || b.condition === "always") return true;
+    if (b.condition === "hasPrize") return event.blocks.some((x) => x.kind === "prizes" && (x.items || []).some((i) => i.trim()));
+    if (b.condition === "hasEnd") return !!(event.endDate || event.endTime);
+    return true;
+  }
+
+  function blockToText(b) {
+    if (!conditionOK(b)) return "";
+    if (b.kind === "spacer") return "\n";
+    if (b.kind === "divider") return "────────────";
+    const head = importancePrefix(b);
+    let content = "";
+    if (b.kind === "details") {
+      const lines = [];
+      if (b.world) lines.push(`${lem("world")}**World:** ${b.world}`);
+      if (b.location) lines.push(`${lem("meet")}**Meet:** ${b.location}`);
+      if (b.host) lines.push(`${lem("host")}**Host:** ${b.host}`);
+      content = lines.join("\n");
+    } else if (["requirements", "rules", "prizes"].includes(b.kind)) {
+      content = (b.items || []).filter((x) => x.trim())
+        .map((x) => x.trim().match(/^(\d+[.)]|[-•*])/) ? x : `• ${x}`)
+        .join("\n");
+    } else if (b.kind === "gear") {
+      const lines = [];
+      if (b.provided) lines.push(`**Provided by clan:** ${b.provided}`);
+      if (b.value) lines.push(b.value);
+      content = lines.join("\n");
+    } else if (b.kind === "training") {
+      const lines = [];
+      if (b.name && b.name !== b.label) lines.push(`**${b.name}**`);
+      const u = zonedUnix(b.date, b.time, b.timezone || tz);
+      if (u) lines.push(`${lem("when")}<t:${u}:F>\n${lem("starts")}<t:${u}:R>`);
+      if (b.world) lines.push(`${lem("world")}**World:** ${b.world}`);
+      if (b.location) lines.push(`${lem("meet")}**Meet:** ${b.location}`);
+      if (b.details) lines.push(b.details);
+      content = lines.join("\n");
+    } else {
+      content = b.value || "";
+    }
+    if (!head) return content;
+    if (b.importance === "small" && content && !content.includes("\n")) return `${head} ${content}`;
+    return [head, content].filter(Boolean).join("\n");
+  }
+
+  const arr = [];
+  if (event.name) arr.push(`# ${event.name}`);
+
+  const su = zonedUnix(event.date, event.time || "21:00", tz);
+  const multi = event.endDate && event.endDate !== event.date;
+  const eu = (event.endDate || event.endTime) ? zonedUnix(event.endDate || event.date, event.endTime || event.time || "21:00", tz) : null;
+
+  if (su) {
+    if (multi && eu) arr.push(`${lem("when")}**When:** <t:${su}:D> — <t:${eu}:D>\n${lem("starts")}**Starts:** <t:${su}:F> (<t:${su}:R>)`);
+    else arr.push(`${lem("when")}**When:** <t:${su}:F>\n${lem("starts")}**Starts:** <t:${su}:R>`);
+  }
+  if (eu) arr.push(`${lem("ends")}**Ends:** <t:${eu}:F>`);
+
+  for (const b of event.blocks) {
+    const t = blockToText(b);
+    if (t) arr.push(t);
+  }
+
+  const extras = [];
+  if (event.bossFilter) {
+    const bosses = event.bossFilterBosses || [];
+    extras.push(`**Boss:** ${bosses.length ? bosses.join(", ") : "any"}`);
+  }
+  if (event.scoring && event.scoringConfig) extras.push(`${lem("scoring")}**Scoring:** ${event.scoringConfig}`);
+  if (event.rsvp) extras.push(`${lem("rsvp")}**React with ${event.rsvpEmoji || "✅"} if you plan to make it!**`);
+  if (event.dinkNote) extras.push(`${lem("dink")}*Running **Dink**? Keep it on so your drops and highlights post straight to Discord.*`);
+  if (extras.length) arr.push(extras.join("\n"));
+
+  return arr.join("\n\n").trim();
+}
+
 function checkAccess(env, code) {
   const leaderCode = env.IDEABOARD_LEADER_CODE;
   const memberCode = env.IDEABOARD_MEMBER_CODE;
@@ -370,7 +497,7 @@ async function handlePost(context) {
 
   const level = checkAccess(context.env, access_code);
 
-  if (action === "move" || action === "dismiss" || action === "restore" || action === "set_template" || action === "hold" || action === "unhold" || action === "schedule") {
+  if (action === "move" || action === "dismiss" || action === "restore" || action === "set_template" || action === "hold" || action === "unhold" || action === "schedule" || action === "publish") {
     if (level !== "leader") return json({ error: "leader access required" }, 403);
   } else if (action === "add_note") {
     if (!level) return json({ error: "access code required" }, 403);
@@ -505,6 +632,138 @@ async function handlePost(context) {
     context.waitUntil(cache2.delete(calCacheKey));
 
     return json({ ok: true, templateJson: updatedTemplate });
+  } else if (action === "publish") {
+    if (!body.title || !body.title.trim()) return json({ error: "title required" }, 400);
+    if (!user) return json({ error: "user required" }, 400);
+
+    const eventsChannelId = context.env.EVENTS_CHANNEL_ID;
+    const token = context.env.DISCORD_BOT_TOKEN;
+    if (!eventsChannelId || !token) return json({ error: "events channel not configured" }, 500);
+
+    const authHeaders = {
+      Authorization: `Bot ${token}`,
+      "User-Agent": "Multi-Misfits clan website",
+    };
+
+    const { scheduled_date, scheduled_end_date } = body;
+    if (!scheduled_date) return json({ error: "scheduled_date required" }, 400);
+
+    const existing = await db
+      .prepare("SELECT template_json FROM idea_positions WHERE message_id = ?")
+      .bind(message_id)
+      .first();
+    if (!existing || !existing.template_json) return json({ error: "no template found for this idea" }, 400);
+
+    const discordBody = templateToDiscord(existing.template_json, scheduled_date, scheduled_end_date || null);
+    if (!discordBody) return json({ error: "failed to generate post content" }, 500);
+
+    const images = [];
+
+    if (body.include_idea_images !== false) {
+      const threadId = context.env.IDEABOARD_THREAD_ID;
+      if (threadId) {
+        try {
+          const msgRes = await fetch(`${BASE}/channels/${threadId}/messages/${message_id}`, { headers: authHeaders });
+          if (msgRes.ok) {
+            const msg = await msgRes.json();
+            for (const att of (msg.attachments || [])) {
+              if (att.content_type && att.content_type.startsWith("image/")) {
+                try {
+                  const imgRes = await fetch(att.url);
+                  if (imgRes.ok) {
+                    images.push({ name: att.filename, type: att.content_type, data: await imgRes.arrayBuffer() });
+                  }
+                } catch (_) {}
+              }
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    if (body.uploaded_images && Array.isArray(body.uploaded_images)) {
+      for (const img of body.uploaded_images) {
+        if (!img.name || !img.data) continue;
+        try {
+          const binary = Uint8Array.from(atob(img.data), (c) => c.charCodeAt(0));
+          images.push({ name: img.name, type: img.type || "image/png", data: binary.buffer });
+        } catch (_) {}
+      }
+    }
+
+    if (images.length === 0) return json({ error: "at least one image is required" }, 400);
+
+    const payload = {
+      name: body.title.trim().slice(0, 100),
+      message: {
+        content: discordBody,
+        attachments: images.map((img, i) => ({ id: i, filename: img.name })),
+      },
+    };
+    const form = new FormData();
+    form.append("payload_json", JSON.stringify(payload));
+    images.forEach((img, i) => {
+      form.append(`files[${i}]`, new Blob([img.data], { type: img.type }), img.name);
+    });
+
+    const threadRes = await fetch(`${BASE}/channels/${eventsChannelId}/threads`, {
+      method: "POST",
+      headers: authHeaders,
+      body: form,
+    });
+
+    if (!threadRes.ok) {
+      const errText = await threadRes.text();
+      return json({ error: `Discord API error (${threadRes.status})`, details: errText }, 502);
+    }
+
+    const thread = await threadRes.json();
+
+    let updatedTemplate = existing.template_json;
+    try {
+      const parsed = JSON.parse(updatedTemplate);
+      const target = parsed.template?.event
+        || (parsed.eventforge && Array.isArray(parsed.events) && parsed.events[0])
+        || parsed;
+      target.date = scheduled_date;
+      if (scheduled_end_date && scheduled_end_date !== scheduled_date) {
+        target.endDate = scheduled_end_date;
+        target.multiDay = true;
+      } else {
+        target.endDate = "";
+        target.multiDay = false;
+      }
+      updatedTemplate = JSON.stringify(parsed);
+    } catch (_) {}
+
+    await db
+      .prepare(
+        `INSERT INTO idea_positions (message_id, column_name, scheduled_date, scheduled_end_date, template_json, updated_at)
+         VALUES (?, 'used', ?, ?, ?, ?)
+         ON CONFLICT(message_id) DO UPDATE SET
+           column_name = 'used',
+           scheduled_date = excluded.scheduled_date,
+           scheduled_end_date = excluded.scheduled_end_date,
+           template_json = excluded.template_json,
+           updated_at = excluded.updated_at`
+      )
+      .bind(message_id, scheduled_date, scheduled_end_date || null, updatedTemplate, now)
+      .run();
+
+    const guildId = context.env.DISCORD_GUILD_ID;
+    const threadUrl = guildId
+      ? `https://discord.com/channels/${guildId}/${thread.id}`
+      : null;
+
+    const cache2 = caches.default;
+    const origin = new URL(context.request.url).origin;
+    context.waitUntil(Promise.all([
+      cache2.delete(new Request(origin + "/api/ideaboard", { method: "GET" })),
+      cache2.delete(new Request(origin + "/api/ideaboard?fields=calendar", { method: "GET" })),
+      cache2.delete(new Request(origin + "/api/events", { method: "GET" })),
+    ]));
+
+    return json({ ok: true, threadId: thread.id, threadUrl, publishedBy: user });
   } else {
     return json({ error: "invalid action" }, 400);
   }

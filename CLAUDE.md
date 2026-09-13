@@ -232,7 +232,8 @@ to the Loot Value leaderboard but for GP contributions.
   "restore" (leader), "hold" (leader, sets held flag), "unhold" (leader, clears held flag),
   "add_note" (leader or member code), "validate" (check code validity),
   "schedule" (leader, sets scheduled_date/scheduled_end_date, auto-updates template JSON dates,
-  auto-moves to Completed on schedule, back to Final Approval on unschedule).
+  auto-moves to Completed on schedule, back to Final Approval on unschedule),
+  "publish" (leader, creates Discord forum thread from template, requires title/dates/images).
   All write actions require access_code in request body.
 - Two-tier access control: IDEABOARD_LEADER_CODE = full access (move, dismiss, restore, comment).
   IDEABOARD_MEMBER_CODE = comment only. No code = read-only view. If neither env var set,
@@ -403,7 +404,7 @@ to the Loot Value leaderboard but for GP contributions.
 - Data sources: GET /api/ideaboard?fields=calendar (Final Approval + scheduled ideas),
   GET /api/events (Discord events). Final Approval items are draggable; Discord events display-only.
 - `?fields=calendar` returns onhold (Final Approval) ideas and any idea with a scheduled_date,
-  with id, title, tags, author, hasTemplate, templateJson, scheduledDate, scheduledEndDate.
+  with id, title, tags, author, hasTemplate, templateJson, scheduledDate, scheduledEndDate, images.
   Separate cache key from the normal ideaboard list.
 - Sidebar: unscheduled Final Approval items shown as draggable pills in a sidebar next to the grid.
   Drag from sidebar to a cell opens a popover to set start date and optional end date (multi-day).
@@ -429,6 +430,20 @@ to the Loot Value leaderboard but for GP contributions.
   opens a confirmation popover showing old and new dates. No date changes without explicit confirm.
 - EventForge: no longer connected to the calendar (button removed).
 - Ideas with a scheduledDate show "DATE SET" (green) badge on Idea Board cards (any column).
+- Publish to Discord: when scheduling a Final Approval idea that has a template, the calendar
+  opens a publish overlay instead of just saving dates. Flow: pick dates -> review overlay
+  (editable title, date display, Discord markdown preview, media thumbnails) -> Post to Discord
+  -> "Are you sure?" confirmation -> bot creates a new forum thread in EVENTS_CHANNEL_ID.
+  Title must be reviewed (pre-filled from idea name). Template JSON dates auto-update to match
+  selected calendar dates. At least one image required (existing Discord images carry over,
+  upload button for new images up to 10MB). Double confirmation before posting.
+  Backend: "publish" action on POST /api/ideaboard downloads original Discord images from the
+  idea message, accepts base64 uploaded images, builds multipart FormData with payload_json +
+  files[N], POSTs to Discord API to create forum thread. On success: updates template dates
+  in D1, moves idea to Completed (used), clears ideaboard + events caches.
+  Frontend: calendar.js contains pubTemplateToPreview() (template-to-Discord converter for
+  preview), showPublishOverlay(), showConfirmOverlay(), executePublish().
+  Items without a template schedule normally (no Discord post).
 
 ### Loot Wheel
 - wheel.html: client-side prize wheel ported from the 1BOX wheel (1box.online copy untouched).
