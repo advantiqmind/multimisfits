@@ -2147,9 +2147,10 @@ async function showWinnerToast() {
   } catch (e) {}
 }
 
+var DINK_FLOATER_VERSION = 1;
 function showDinkFloater() {
   if (location.pathname.indexOf("clandink") !== -1) return;
-  var key = "mm-dink-update-v1";
+  var key = "mm-dink-dismissed-v" + DINK_FLOATER_VERSION;
   try { if (localStorage.getItem(key)) return; } catch (e) {}
   var el = document.createElement("div");
   el.className = "dink-floater";
@@ -2173,6 +2174,9 @@ function showDinkFloater() {
   el.querySelector(".dink-dismiss").addEventListener("click", function() {
     el.style.display = "none";
     try { localStorage.setItem(key, "1"); } catch (e) {}
+  });
+  window.addEventListener("storage", function(e) {
+    if (e.key === key && e.newValue) el.style.display = "none";
   });
 }
 
