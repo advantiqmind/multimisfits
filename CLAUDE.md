@@ -58,6 +58,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
 - functions/api/eventforge.js  GET/POST/PUT/DELETE /api/eventforge -> shared EventForge saves CRUD, D1 storage, optimistic locking, cached 30s; writes require EVENTFORGE_ACCESS_CODE
 - functions/api/ideaboard.js   GET/POST /api/ideaboard -> reads Discord thread ideas, D1 column positions + dismiss tracking, two-tier access codes, cached 30s
+- functions/api/remind.js       POST /api/remind -> posts reminder messages to #announcements, replaces {{link:ID}} tokens with Discord URLs server-side, gated by EVENTFORGE_ACCESS_CODE
 - functions/api/announce-dink.js POST /api/announce-dink -> sends Dink update embed to #announcements, gated by DINK_ACCESS_CODE
 - functions/api/dink-auth.js   POST /api/dink-auth -> validates access code against DINK_ACCESS_CODE env var
 - functions/api/dink-config.js POST /api/dink-config -> returns dink-config.txt with secrets injected from env vars, gated by DINK_ACCESS_CODE
@@ -546,6 +547,21 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - User identity stored in localStorage (mm-filecabinet-user), prompted on first action.
 - Star/bookmark in localStorage (mm-filecabinet-stars).
 - Later: R2 for image uploads, Idea Board archive integration, EventForge archive integration.
+
+### Remind/Announce
+- Megaphone button on featured events, event modals, and featured giveaways (not on completed events).
+- Leaders enter the EventForge access code once (stored in localStorage as mm-remind-code).
+- Composer overlay with pre-filled template, character counter (2000 max), and cross-link checkboxes
+  (e.g. include giveaway link when reminding about an event, or vice versa).
+- Two-step confirmation: button changes to "Are you sure?" before posting.
+- Backend: POST /api/remind validates EVENTFORGE_ACCESS_CODE, replaces `{{link:THREAD_ID}}` tokens
+  with full Discord thread URLs using DISCORD_GUILD_ID from env (no secrets in client code),
+  posts plain text to #announcements via bot token.
+- Templates: live events get "happening NOW" text, upcoming events get "don't forget" with checkmark
+  reminder, giveaways get days-until-drawing countdown with entry rate info.
+- Cross-linking: event reminders can include the active giveaway link, giveaway reminders can
+  include the next upcoming event link. Appended as `{{link:ID}}` which auto-embeds in Discord.
+- HTML: remind overlay in events.html. CSS: .remind-* classes in style.css. JS: in app.js.
 
 ### Discord invite lock
 - Site is fully public (no auth gate). Middleware passes all requests through.
