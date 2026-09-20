@@ -775,6 +775,7 @@ function formatDiscord(text) {
 }
 
 let _eventsData = [];
+let _giveawayRounds = [];
 
 function formatEventDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
@@ -950,6 +951,7 @@ function featuredEventHtml(ev) {
   var wsStandingsBtn = isWomScoredEvent(ev)
     ? '<a class="btn lv-standings-btn ws-standings-btn" href="/roster.html#event">View Full Standings</a>'
     : "";
+  var remindBtn = effStatus !== "completed" ? remindBtnHtml(ev.id, ev.name, "event") : "";
   return `<div class="ev-featured${theme ? " " + theme : ""}" data-ev-id="${esc(ev.id)}"${imgStyle}>
     <div class="ev-featured-header"><h3>${esc(cleanName(ev.name))}</h3>${lvTag}${wsTag}${teamBadge}${isLive ? "" : badge}</div>
     <div class="ev-featured-meta">
@@ -968,6 +970,7 @@ function featuredEventHtml(ev) {
       ${partBtn}
       ${lvStandingsBtn}
       ${wsStandingsBtn}
+      ${remindBtn}
     </div>
   </div>`;
 }
@@ -1328,7 +1331,9 @@ function wireEventModals() {
       winnerHtml +
       '<div class="ev-cta" style="margin-top:16px"><a class="btn join" data-discord href="#" aria-label="Join Discord">' +
       '<svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>' +
-      'View on Discord</a>' + partBtn + '</div>';
+      'View on Discord</a>' + partBtn +
+      (effStatus !== "completed" ? remindBtnHtml(ev.id, ev.name, "event") : "") +
+      '</div>';
 
     overlay.classList.add("open");
     document.body.style.overflow = "hidden";
@@ -1927,6 +1932,7 @@ function featuredGiveawayHtml(round) {
     : startsCountdown ? `<div class="ev-countdown" data-countdown="${esc(round.startTime)}">${startsCountdown}</div>` : "";
   var metaText = timeStr ? `${dateStr}${endStr} · ${timeStr}` : `${dateStr}${endStr}`;
 
+  var gaRemindBtn = remindBtnHtml(round.id, round.name, "giveaway");
   return `<div class="ev-featured">
     <div class="ev-featured-header"><h3>${esc(cleanName(round.name))}</h3>${badge}</div>
     <div class="ev-featured-meta">
@@ -1941,6 +1947,7 @@ function featuredGiveawayHtml(round) {
         <svg fill="#1a1305" aria-hidden="true" style="width:16px;height:12px;vertical-align:-1px;margin-right:7px"><use href="#discord"/></svg>
         Enter on Discord
       </a>
+      ${gaRemindBtn}
     </div>
   </div>`;
 }
@@ -1973,6 +1980,7 @@ function giveawayCard(round) {
 let _giveawayLoaded = false;
 
 function renderGiveaways(rounds, { cached } = {}) {
+  _giveawayRounds = rounds;
   var featuredBody = document.getElementById("ga-featured-body");
   var pastBody = document.getElementById("ga-past-body");
   if (!featuredBody) return;
@@ -2180,6 +2188,288 @@ function showDinkFloater() {
   });
 }
 
+/* ---- remind / announce ---- */
+
+function remindBtnHtml(id, name, type) {
+  return '<button class="btn remind-btn" data-remind-id="' + esc(id) +
+    '" data-remind-name="' + esc(name) +
+    '" data-remind-type="' + type + '">' +
+    '<span class="remind-icon">&#128227;</span> Remind</button>';
+}
+
+var _remindCode = null;
+function getRemindCode() {
+  if (_remindCode) return _remindCode;
+  try { _remindCode = localStorage.getItem("mm-remind-code"); } catch (e) {}
+  return _remindCode;
+}
+
+function setRemindCode(code) {
+  _remindCode = code;
+  try { localStorage.setItem("mm-remind-code", code); } catch (e) {}
+}
+
+function clearRemindCode() {
+  _remindCode = null;
+  try { localStorage.removeItem("mm-remind-code"); } catch (e) {}
+}
+
+function buildRemindTemplate(type, item) {
+  if (type === "event") {
+    var status = computeEventStatus(item);
+    if (status === "live") {
+      return "The event is happening NOW @everyone!!\n\n{{link:" + item.id + "}}\n\nJump in!";
+    }
+    var msg = "Don't forget about the event @everyone!\n\n{{link:" + item.id + "}}";
+    msg += "\n\nReact with ✅ on the event channel if you plan to make it!";
+    return msg;
+  }
+  if (type === "giveaway") {
+    var gmsg = "{{link:" + item.id + "}}\n\n";
+    if (item.endTime) {
+      var daysLeft = Math.ceil((new Date(item.endTime) - Date.now()) / 86400000);
+      if (daysLeft > 1) gmsg += daysLeft + " days until the drawing @everyone!!\n\n";
+      else if (daysLeft === 1) gmsg += "Drawing is TOMORROW @everyone!!\n\n";
+      else gmsg += "Drawing time @everyone!!\n\n";
+    } else {
+      gmsg += "Don't miss your chance @everyone!\n\n";
+    }
+    if (item.gpPerEntry && item.gpPerEntry > 0) {
+      gmsg += item.gpPerEntry + "M = 1 Entry\n" + (item.gpPerEntry * 2) + "M = 2 Entries";
+    }
+    return gmsg;
+  }
+  return "";
+}
+
+function getCrossLinkOptions(currentType, currentId) {
+  var options = [];
+  if (currentType === "event") {
+    var activeGa = _giveawayRounds.find(function(r) {
+      return computeEventStatus(r) !== "completed";
+    });
+    if (activeGa && activeGa.id !== currentId) {
+      options.push({ id: activeGa.id, name: activeGa.name, type: "giveaway" });
+    }
+  }
+  if (currentType === "giveaway") {
+    var nextEv = _eventsData.find(function(e) {
+      var s = computeEventStatus(e);
+      return s === "live" || s === "scheduled";
+    });
+    if (nextEv && nextEv.id !== currentId) {
+      options.push({ id: nextEv.id, name: nextEv.name, type: "event" });
+    }
+  }
+  return options;
+}
+
+function showRemindCodePrompt(callback) {
+  var overlay = document.getElementById("remind-overlay");
+  if (!overlay) return;
+  var body = overlay.querySelector(".remind-body");
+  body.innerHTML =
+    '<h3 class="remind-title">Leader Access</h3>' +
+    '<p class="remind-subtitle">Enter the leader access code to post reminders to #announcements.</p>' +
+    '<input type="password" class="remind-input" id="remind-code-input" placeholder="Access code" autocomplete="off">' +
+    '<div class="remind-error" id="remind-code-error"></div>' +
+    '<div class="remind-actions">' +
+      '<button class="btn remind-cancel-btn">Cancel</button>' +
+      '<button class="btn remind-submit-btn">Unlock</button>' +
+    '</div>';
+  overlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+  var inp = document.getElementById("remind-code-input");
+  var errEl = document.getElementById("remind-code-error");
+  inp.focus();
+
+  function close() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  function submit() {
+    var code = inp.value.trim();
+    if (!code) { errEl.textContent = "Enter a code"; return; }
+    var btn = body.querySelector(".remind-submit-btn");
+    btn.textContent = "Checking...";
+    btn.disabled = true;
+    fetch("/api/remind", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: code, action: "validate" })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data.ok) {
+        setRemindCode(code);
+        close();
+        if (callback) callback();
+      } else {
+        errEl.textContent = "Wrong code";
+        btn.textContent = "Unlock";
+        btn.disabled = false;
+        inp.value = "";
+        inp.focus();
+      }
+    }).catch(function() {
+      errEl.textContent = "Connection error";
+      btn.textContent = "Unlock";
+      btn.disabled = false;
+    });
+  }
+
+  body.querySelector(".remind-cancel-btn").addEventListener("click", close);
+  body.querySelector(".remind-submit-btn").addEventListener("click", submit);
+  inp.addEventListener("keydown", function(e) { if (e.key === "Enter") submit(); });
+  overlay.querySelector(".remind-close").onclick = close;
+}
+
+function showRemindComposer(id, name, type) {
+  var code = getRemindCode();
+  if (!code) {
+    showRemindCodePrompt(function() { showRemindComposer(id, name, type); });
+    return;
+  }
+
+  var item = null;
+  if (type === "event") {
+    item = _eventsData.find(function(e) { return e.id === id; });
+  } else {
+    item = _giveawayRounds.find(function(r) { return r.id === id; });
+  }
+  if (!item) return;
+
+  var template = buildRemindTemplate(type, item);
+  var crossOpts = getCrossLinkOptions(type, id);
+
+  var overlay = document.getElementById("remind-overlay");
+  if (!overlay) return;
+  var body = overlay.querySelector(".remind-body");
+
+  var crossHtml = "";
+  if (crossOpts.length) {
+    crossHtml = '<div class="remind-cross">';
+    crossOpts.forEach(function(opt) {
+      var label = opt.type === "giveaway" ? "Include giveaway link" : "Include event link";
+      crossHtml += '<label class="remind-cross-label">' +
+        '<input type="checkbox" class="remind-cross-cb" data-cross-id="' + esc(opt.id) + '" data-cross-name="' + esc(opt.name) + '"> ' +
+        label + ': <strong>' + esc(cleanName(opt.name)) + '</strong></label>';
+    });
+    crossHtml += '</div>';
+  }
+
+  body.innerHTML =
+    '<h3 class="remind-title">Post to #announcements</h3>' +
+    '<div class="remind-thread-chip">' +
+      '<span class="remind-chip-icon">&#128172;</span> ' + esc(cleanName(name)) +
+    '</div>' +
+    '<textarea class="remind-textarea" id="remind-textarea" rows="8" maxlength="2000">' + esc(template) + '</textarea>' +
+    '<div class="remind-footer">' +
+      '<span class="remind-char" id="remind-char">' + template.length + '/2000</span>' +
+      '<span class="remind-hint">Thread links auto-embed in Discord</span>' +
+    '</div>' +
+    crossHtml +
+    '<div class="remind-actions">' +
+      '<button class="btn remind-cancel-btn">Cancel</button>' +
+      '<button class="btn remind-send-btn">Post to #announcements</button>' +
+    '</div>';
+
+  overlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+
+  var textarea = document.getElementById("remind-textarea");
+  var charEl = document.getElementById("remind-char");
+  textarea.focus();
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+  textarea.addEventListener("input", function() {
+    charEl.textContent = textarea.value.length + "/2000";
+    charEl.style.color = textarea.value.length > 1800 ? "#e04040" : "";
+  });
+
+  function close() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  function send() {
+    var message = textarea.value.trim();
+    if (!message) return;
+
+    var crossCbs = body.querySelectorAll(".remind-cross-cb:checked");
+    crossCbs.forEach(function(cb) {
+      var crossId = cb.getAttribute("data-cross-id");
+      message += "\n\n{{link:" + crossId + "}}";
+    });
+
+    if (message.length > 2000) {
+      charEl.textContent = message.length + "/2000";
+      charEl.style.color = "#e04040";
+      return;
+    }
+
+    var btn = body.querySelector(".remind-send-btn");
+    btn.textContent = "Are you sure?";
+    btn.classList.add("remind-confirm");
+    btn.onclick = function() {
+      btn.textContent = "Posting...";
+      btn.disabled = true;
+      fetch("/api/remind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: getRemindCode(), message: message })
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.ok) {
+          close();
+          showRemindToast("Posted to #announcements!");
+        } else if (data.error === "invalid code") {
+          clearRemindCode();
+          close();
+          showRemindCodePrompt(function() { showRemindComposer(id, name, type); });
+        } else {
+          btn.textContent = "Error - Try Again";
+          btn.disabled = false;
+          btn.classList.remove("remind-confirm");
+          btn.onclick = function() { send(); };
+        }
+      }).catch(function() {
+        btn.textContent = "Error - Try Again";
+        btn.disabled = false;
+        btn.classList.remove("remind-confirm");
+        btn.onclick = function() { send(); };
+      });
+    };
+  }
+
+  body.querySelector(".remind-cancel-btn").addEventListener("click", close);
+  body.querySelector(".remind-send-btn").addEventListener("click", send);
+  overlay.querySelector(".remind-close").onclick = close;
+}
+
+function showRemindToast(msg) {
+  var el = document.createElement("div");
+  el.className = "remind-toast";
+  el.innerHTML = '<span class="remind-toast-icon">&#9989;</span> ' + esc(msg);
+  document.body.appendChild(el);
+  requestAnimationFrame(function() { el.classList.add("remind-toast-show"); });
+  setTimeout(function() {
+    el.classList.remove("remind-toast-show");
+    setTimeout(function() { el.remove(); }, 400);
+  }, 3000);
+}
+
+function wireRemindButtons() {
+  document.addEventListener("click", function(e) {
+    var btn = e.target.closest(".remind-btn");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var id = btn.getAttribute("data-remind-id");
+    var name = btn.getAttribute("data-remind-name");
+    var type = btn.getAttribute("data-remind-type");
+    showRemindComposer(id, name, type);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   wireDiscordLinks();
   wireNav();
@@ -2197,4 +2487,5 @@ document.addEventListener("DOMContentLoaded", () => {
   wireRosterTabs();
   showWinnerToast();
   showDinkFloater();
+  wireRemindButtons();
 });
