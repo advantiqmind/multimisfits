@@ -550,6 +550,9 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 
 ### Remind/Announce
 - Megaphone button on featured events, event modals, and featured giveaways (not on completed events).
+- Hidden by default: button only renders when leader code is already in localStorage (mm-remind-code).
+  Activation: triple-tap the "Clan Events" heading on events.html to open the code prompt.
+  Triple-tap again to toggle off (clears code, hides buttons). Both events and giveaways re-render.
 - Leaders enter the EventForge access code once (stored in localStorage as mm-remind-code).
 - Composer overlay with pre-filled template, character counter (2000 max), and cross-link checkboxes
   (e.g. include giveaway link when reminding about an event, or vice versa).
