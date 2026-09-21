@@ -2191,6 +2191,7 @@ function showDinkFloater() {
 /* ---- remind / announce ---- */
 
 function remindBtnHtml(id, name, type) {
+  if (!getRemindCode()) return "";
   return '<button class="btn remind-btn" data-remind-id="' + esc(id) +
     '" data-remind-name="' + esc(name) +
     '" data-remind-type="' + type + '">' +
@@ -2468,6 +2469,29 @@ function wireRemindButtons() {
     var type = btn.getAttribute("data-remind-type");
     showRemindComposer(id, name, type);
   });
+
+  var heroTitle = document.getElementById("ev-hero-title");
+  if (heroTitle) {
+    var _tapCount = 0, _tapTimer = null;
+    heroTitle.addEventListener("click", function() {
+      _tapCount++;
+      clearTimeout(_tapTimer);
+      _tapTimer = setTimeout(function() { _tapCount = 0; }, 800);
+      if (_tapCount >= 3) {
+        _tapCount = 0;
+        if (getRemindCode()) {
+          clearRemindCode();
+          showRemindToast("Remind mode off");
+          loadEvents(); loadGiveaway();
+        } else {
+          showRemindCodePrompt(function() {
+            showRemindToast("Remind mode on");
+            loadEvents(); loadGiveaway();
+          });
+        }
+      }
+    });
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
