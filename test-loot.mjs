@@ -53,6 +53,26 @@ assert(
   "lowercase boss: prefix"
 );
 
+assert(
+  deepEqual(parseBossFilter("**Boss:** Phosani's Nightmare"), ["phosani's nightmare"]),
+  "bold label: **Boss:** value"
+);
+
+assert(
+  deepEqual(parseBossFilter("**Boss: Phosani's Nightmare**"), ["phosani's nightmare"]),
+  "fully bold: **Boss: value**"
+);
+
+assert(
+  deepEqual(parseBossFilter("some text\n**Boss:** Vorkath, Zulrah\nmore text"), ["vorkath", "zulrah"]),
+  "bold Boss amid other content with multiple bosses"
+);
+
+assert(
+  parseBossFilter("**Boss: any**") === null,
+  "bold Boss: any returns null"
+);
+
 /* ---- matchesBoss ---- */
 
 console.log("--- matchesBoss ---");

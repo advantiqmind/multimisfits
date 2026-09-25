@@ -43,9 +43,9 @@ function json(obj, status = 200, extra = {}) {
 }
 
 export function parseBossFilter(content) {
-  const m = content.match(/^Boss:\s*(.+)/im);
+  const m = content.match(/^\*{0,2}Boss:\*{0,2}\s*(.+)/im);
   if (!m) return null;
-  const raw = m[1].trim();
+  const raw = m[1].trim().replace(/\*{1,2}$/,"");
   if (/^any$/i.test(raw)) return null;
   return raw.split(",").map(b => b.trim().toLowerCase()).filter(Boolean);
 }
@@ -385,6 +385,7 @@ async function handleGet(context) {
   await ensureTable(db);
 
   let eventMeta = null;
+  let bossFilter = null;
   const activeEvents = await getActiveLootEvents(context.env);
   const ev = activeEvents.find(e => e.id === eventId);
   if (ev) {
@@ -397,6 +398,7 @@ async function handleGet(context) {
       ended: !!ended,
       started,
     };
+    bossFilter = ev.bossFilter || null;
   }
 
   if (eventMeta && !eventMeta.started) {
@@ -417,22 +419,27 @@ async function handleGet(context) {
     return emptyRes;
   }
 
-  let timeWhere = "";
-  const timeParams = [];
+  let extraWhere = "";
+  const extraParams = [];
   if (eventMeta && eventMeta.startTime) {
-    timeWhere += " AND created_at >= ?";
-    timeParams.push(eventMeta.startTime);
+    extraWhere += " AND created_at >= ?";
+    extraParams.push(eventMeta.startTime);
   }
   if (eventMeta && eventMeta.endTime) {
-    timeWhere += " AND created_at <= ?";
-    timeParams.push(eventMeta.endTime);
+    extraWhere += " AND created_at <= ?";
+    extraParams.push(eventMeta.endTime);
+  }
+  if (bossFilter && bossFilter.length) {
+    const clauses = bossFilter.map(() => "LOWER(source) LIKE ? || '%'");
+    extraWhere += " AND (" + clauses.join(" OR ") + ")";
+    bossFilter.forEach(b => extraParams.push(b));
   }
 
   const lbResult = await db.prepare(
     `SELECT player, SUM(total_value) as total, COUNT(*) as kills
-     FROM loot_entries WHERE event_id = ?${timeWhere}
+     FROM loot_entries WHERE event_id = ?${extraWhere}
      GROUP BY player ORDER BY total DESC LIMIT ?`
-  ).bind(eventId, ...timeParams, LEADERBOARD_LIMIT).all();
+  ).bind(eventId, ...extraParams, LEADERBOARD_LIMIT).all();
 
   const leaderboard = (lbResult.results || []).map((row, i) => ({
     rank: i + 1,
@@ -443,8 +450,8 @@ async function handleGet(context) {
 
   const statsResult = await db.prepare(
     `SELECT COUNT(DISTINCT player) as players, COUNT(*) as kills, SUM(total_value) as value
-     FROM loot_entries WHERE event_id = ?${timeWhere}`
-  ).bind(eventId, ...timeParams).first();
+     FROM loot_entries WHERE event_id = ?${extraWhere}`
+  ).bind(eventId, ...extraParams).first();
 
   const stats = {
     totalPlayers: (statsResult && statsResult.players) || 0,
@@ -454,9 +461,9 @@ async function handleGet(context) {
 
   const topKills = await db.prepare(
     `SELECT player, items, total_value, created_at
-     FROM loot_entries WHERE event_id = ?${timeWhere}
+     FROM loot_entries WHERE event_id = ?${extraWhere}
      ORDER BY total_value DESC LIMIT 30`
-  ).bind(eventId, ...timeParams).all();
+  ).bind(eventId, ...extraParams).all();
 
   const allItems = [];
   for (const row of (topKills.results || [])) {
