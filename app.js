@@ -2098,29 +2098,57 @@ function switchEvTab(target) {
 async function showWinnerToast() {
   if (!document.getElementById("home-events-body")) return;
   try {
-    var r = await fetch("/api/giveaway", { headers: { accept: "application/json" } });
-    if (!r.ok) return;
-    var data = await r.json();
-    if (!data || !data.configured || !Array.isArray(data.rounds) || !data.rounds.length) return;
-    var winner = null;
-    var roundName = "";
-    for (var i = 0; i < data.rounds.length; i++) {
-      if (data.rounds[i].winners && data.rounds[i].winners.length) {
-        winner = data.rounds[i].winners[0].name;
-        roundName = data.rounds[i].name || "";
-        break;
+    var candidates = [];
+    var fetches = await Promise.allSettled([
+      fetch("/api/giveaway", { headers: { accept: "application/json" } }).then(function(r) { return r.ok ? r.json() : null; }),
+      fetch("/api/events", { headers: { accept: "application/json" } }).then(function(r) { return r.ok ? r.json() : null; })
+    ]);
+    var gaData = fetches[0].status === "fulfilled" ? fetches[0].value : null;
+    if (gaData && gaData.configured && Array.isArray(gaData.rounds)) {
+      for (var i = 0; i < gaData.rounds.length; i++) {
+        var rd = gaData.rounds[i];
+        if (rd.winners && rd.winners.length) {
+          candidates.push({
+            winner: rd.winners[0].name,
+            label: rd.name || "",
+            title: "Giveaway Winner!",
+            key: "ga-winner-seen-giveaway-" + rd.id,
+            time: new Date(rd.startTime).getTime() || 0
+          });
+        }
       }
     }
-    if (!winner) return;
-    var key = "ga-winner-seen-" + winner;
-    try { if (localStorage.getItem(key)) return; } catch (e) {}
+    var evData = fetches[1].status === "fulfilled" ? fetches[1].value : null;
+    if (Array.isArray(evData)) {
+      for (var i = 0; i < evData.length; i++) {
+        var ev = evData[i];
+        if (ev.winners && ev.winners.length) {
+          candidates.push({
+            winner: ev.winners[0],
+            label: ev.name || "",
+            title: "Event Winner!",
+            key: "ga-winner-seen-event-" + ev.id,
+            time: new Date(ev.startTime).getTime() || 0
+          });
+        }
+      }
+    }
+    if (!candidates.length) return;
+    candidates.sort(function(a, b) { return b.time - a.time; });
+    var pick = null;
+    for (var i = 0; i < candidates.length; i++) {
+      try { if (localStorage.getItem(candidates[i].key)) continue; } catch (e) {}
+      pick = candidates[i];
+      break;
+    }
+    if (!pick) return;
     var toast = document.createElement("div");
     toast.className = "ga-winner-toast";
     toast.innerHTML = '<span class="ga-winner-toast-icon"><img src="/assets/bracket-trophy-mm.png" alt="Trophy" height="30" width="29"></span>' +
       '<div class="ga-winner-toast-body">' +
-        '<div class="ga-winner-toast-title">Giveaway Winner!</div>' +
-        '<div class="ga-winner-toast-name">' + esc(winner) + '</div>' +
-        (roundName ? '<div class="ga-winner-toast-round">' + esc(roundName) + '</div>' : '') +
+        '<div class="ga-winner-toast-title">' + esc(pick.title) + '</div>' +
+        '<div class="ga-winner-toast-name">' + esc(pick.winner) + '</div>' +
+        (pick.label ? '<div class="ga-winner-toast-round">' + esc(pick.label) + '</div>' : '') +
       '</div>' +
       '<button class="ga-winner-toast-close" aria-label="Close">&times;</button>';
     var hdr = document.querySelector("header");
@@ -2149,7 +2177,7 @@ async function showWinnerToast() {
     });
     toast.querySelector(".ga-winner-toast-close").addEventListener("click", function() {
       toast.classList.remove("ga-winner-toast-show");
-      try { localStorage.setItem(key, "1"); } catch (e) {}
+      try { localStorage.setItem(pick.key, "1"); } catch (e) {}
       setTimeout(function() { toast.remove(); }, 300);
     });
   } catch (e) {}

@@ -197,7 +197,10 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - Auto end-date: active rounds without explicit Ends: line get start + 14 days.
 - Live rounds show "Ends X" countdown. Scheduled rounds count down to start.
 - Previous round winner spotlight always visible on current round card.
-- Winner toast on homepage (dismissable, localStorage per winner).
+- Winner toast on homepage: shows newest winner across events AND giveaways.
+  Only one toast at a time, newest first. Dismissable per source+ID
+  (localStorage key: `ga-winner-seen-event-{threadId}` or `ga-winner-seen-giveaway-{threadId}`).
+  Title reads "Event Winner!" or "Giveaway Winner!" based on source.
 - Giveaway threads filtered from events feed (by name containing "giveaway").
 - Tab state persists via URL hash (#giveaways).
 - Forum tags (Bond, Item, Kit, Random, Goodie Bag, GP) set in Discord for categorization.
