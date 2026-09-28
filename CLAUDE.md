@@ -175,15 +175,15 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - Each round = one forum thread. Leaders react with 1/2 keycap emoji on member
   screenshots to confirm entries (max 2 per person).
 - /giveaway-entry slash command: leaders add or subtract entries (-5 to +5).
-  Optional `gp` parameter (integer, min 0) tracks actual GP donated in millions.
-  When omitted, GP defaults to effective entries * rate. When set, overrides the
-  default (e.g. entries:2 gp:3 = 2 entries, 3M GP; entries:1 gp:0 = free entry).
-  Posts "Entry Added" or "Entry Removed" embed with optional GP field.
+  Required `gp` parameter (integer, min 0) tracks actual GP donated in millions.
+  Always shown on Entry Added/Removed bot embeds. Leaders enter the exact GP amount
+  each time (e.g. entries:2 gp:3 = 2 entries, 3M GP; entries:1 gp:0 = free entry).
+  Posts "Entry Added" or "Entry Removed" embed with GP field always visible.
   Restricted to leader role via Discord Integrations. Accumulation mode: all bot
   embeds for a player are summed, final total clamped to [0, MAX_ENTRIES_PER_PERSON].
 - /giveaway-check slash command: look up a player's entry count in the current
   giveaway. Open to all members (no Discord Integrations override needed).
-- Bot embeds parsed by extractBotEntry(): Player + Entries + optional GP fields,
+- Bot embeds parsed by extractBotEntry(): Player + Entries + GP fields,
   accumulation with sum-then-clamp. "Entry Removed" returns negative count/gp for subtraction.
 - Reaction entries and manual bot entries merge per person by lowercase player
   name (Discord display name vs Player field), one row each, combined total
@@ -572,6 +572,23 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - Discord invite URL is NOT in client-side code. Server returns it only after code validation.
 - POST /api/referral validates code against REFERRAL_CODES env var, returns invite URL on success.
 - Tracking: valid redemptions post an embed to a Discord forum thread (REFERRAL_THREAD_ID).
+
+### Update Dink Settings (repeatable procedure)
+When the owner says "update dink" and provides new settings:
+1. Replace dink-config.txt with the new JSON export from the Dink plugin.
+2. Add back the two webhook placeholders that the raw export won't have:
+   `"lootWebhook":"__LOOT_WEBHOOK__"` and `"discordWebhook":"__DISCORD_WEBHOOK__"`.
+   Place them in the same relative positions as before (lootWebhook near clueEnabled,
+   discordWebhook near threadNameTemplate). These are replaced server-side by
+   functions/api/dink-config.js at download time.
+3. Validate the JSON: `node -e "JSON.parse(require('fs').readFileSync('dink-config.txt','utf8'))"`.
+4. Bump `DINK_FLOATER_VERSION` (integer) in app.js. This resets the localStorage
+   dismiss key so all members see the "Dink Update NEW" floating alert again.
+5. Update the chip labels in the floater HTML (`.dink-fchip` spans in `showDinkFloater()`)
+   to describe what changed in this update.
+6. Run tests, commit, push to main.
+7. After deploy: members visit clandink.html, click "Copy Settings", type `::dinkimport all`
+   in OSRS to apply. No re-registration of slash commands needed for settings-only updates.
 
 ### Offline indicators
 - Amber tint on panel badges when API returns unconfigured/error state.
