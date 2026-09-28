@@ -2174,7 +2174,7 @@ function showDinkFloater() {
       '<div class="dink-fmsg">New Dink settings available. <strong>Re-import</strong> to get the latest fixes and thresholds.</div>' +
       '<div class="dink-chips">' +
         '<span class="dink-fchip chg">Clue settings</span>' +
-        '<span class="dink-fchip fix">Kill count laps</span>' +
+        '<span class="dink-fchip fix">Loot value adjustment</span>' +
       '</div>' +
       '<a class="dink-cta" href="/clandink.html">Update Settings</a>' +
     '</div>';
