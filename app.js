@@ -2155,7 +2155,7 @@ async function showWinnerToast() {
   } catch (e) {}
 }
 
-var DINK_FLOATER_VERSION = 1;
+var DINK_FLOATER_VERSION = 2;
 function showDinkFloater() {
   if (location.pathname.indexOf("clandink") !== -1) return;
   var key = "mm-dink-dismissed-v" + DINK_FLOATER_VERSION;
@@ -2173,8 +2173,8 @@ function showDinkFloater() {
       '</div>' +
       '<div class="dink-fmsg">New Dink settings available. <strong>Re-import</strong> to get the latest fixes and thresholds.</div>' +
       '<div class="dink-chips">' +
-        '<span class="dink-fchip fix">Webhook fix</span>' +
-        '<span class="dink-fchip chg">Level thresholds</span>' +
+        '<span class="dink-fchip chg">Clue settings</span>' +
+        '<span class="dink-fchip fix">Kill count laps</span>' +
       '</div>' +
       '<a class="dink-cta" href="/clandink.html">Update Settings</a>' +
     '</div>';
