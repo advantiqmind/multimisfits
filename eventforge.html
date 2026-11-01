@@ -583,19 +583,19 @@ Common block fields (all blocks have these):
 REMEMBER: Return ONLY the JSON object. No text, no explanation, no code fences.`
 }
 function extractJson(raw){
-let t=raw.trim().replace(/[“”„‟″‶]/g,’”’).replace(/[‘’‚‛′‵]/g,”’”);
+let t=raw.trim().replace(/[“”„‟″‶]/g,'"').replace(/[‘’‚‛′‵]/g,"'");
 const fence=t.match(/```(?:json)?\s*([\s\S]*?)```/);
 if(fence)t=fence[1].trim();
-function fixTrailing(s){return s.replace(/,\s*([}\]])/g,’$1’)}
+function fixTrailing(s){return s.replace(/,\s*([}\]])/g,'$1')}
 try{return{ok:true,data:JSON.parse(t)}}catch{}
 try{return{ok:true,data:JSON.parse(fixTrailing(t))}}catch{}
-const first=t.indexOf(‘{‘);
-const last=t.lastIndexOf(‘}’);
+const first=t.indexOf('{');
+const last=t.lastIndexOf('}');
 if(first!==-1&&last>first){
 const slice=t.slice(first,last+1);
 try{return{ok:true,data:JSON.parse(slice)}}catch{}
 try{return{ok:true,data:JSON.parse(fixTrailing(slice))}}catch(e){return{ok:false,err:e.message}}}
-return{ok:false,err:’No JSON object found in text’};
+return{ok:false,err:'No JSON object found in text'};
 }
 function importAiResult(raw){
 try{
