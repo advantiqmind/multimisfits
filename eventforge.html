@@ -584,6 +584,11 @@ REMEMBER: Return ONLY the JSON object. No text, no explanation, no code fences.`
 }
 function extractJson(raw){
 let t=raw.trim().replace(/[“”„‟″‶]/g,'"').replace(/[‘’‚‛′‵]/g,"'");
+t=t.replace(/&#x([0-9a-fA-F]+);/g,function(m,h){return String.fromCharCode(parseInt(h,16))});
+t=t.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
+t=t.replace(/\r/g,'');
+var i=0,out='';while(i<t.length){if(t[i]==='\\'&&t[i+1]==='\n'){i+=2;continue}out+=t[i++]}t=out;
+t=t.replace(/\\[*]/g,'*');
 const fence=t.match(/```(?:json)?\s*([\s\S]*?)```/);
 if(fence)t=fence[1].trim();
 function fixTrailing(s){return s.replace(/,\s*([}\]])/g,'$1')}
