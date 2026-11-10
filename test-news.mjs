@@ -159,6 +159,34 @@ const checks = [
     var r = transformMessages(msgs, { channels: { 222: "barrows-weekend" } });
     return r[0].bodyHtml.includes('<span class="chan-chip">#barrows-weekend</span>');
   })()],
+  ["comma-separated reaction matches first emoji", (() => {
+    var msgs = [{ id: "cr1", type: 0, timestamp: "2026-08-27T12:00:00Z",
+      author: { id: "555", username: "flash" },
+      content: "Old post with avatar", attachments: [],
+      reactions: [{ emoji: { name: "avatar" }, count: 1 }] }];
+    return transformMessages(msgs, { reaction: "loudspeaker,avatar" }).length === 1;
+  })()],
+  ["comma-separated reaction matches second emoji", (() => {
+    var msgs = [{ id: "cr2", type: 0, timestamp: "2026-08-27T12:00:00Z",
+      author: { id: "555", username: "flash" },
+      content: "New post with megaphone", attachments: [],
+      reactions: [{ emoji: { name: "loudspeaker" }, count: 1 }] }];
+    return transformMessages(msgs, { reaction: "loudspeaker,avatar" }).length === 1;
+  })()],
+  ["comma-separated reaction rejects unmatched emoji", (() => {
+    var msgs = [{ id: "cr3", type: 0, timestamp: "2026-08-27T12:00:00Z",
+      author: { id: "555", username: "flash" },
+      content: "No publish reaction", attachments: [],
+      reactions: [{ emoji: { name: "thumbsup" }, count: 1 }] }];
+    return transformMessages(msgs, { reaction: "loudspeaker,avatar" }).length === 0;
+  })()],
+  ["comma-separated botReaction works", (() => {
+    var msgs = [{ id: "cr4", type: 0, timestamp: "2026-08-27T12:00:00Z",
+      author: { id: "333", username: "SiteBot", bot: true },
+      content: "Bot post", attachments: [],
+      reactions: [{ emoji: { name: "loudspeaker" }, count: 1 }] }];
+    return transformMessages(msgs, { botReaction: "loudspeaker,avatar" }).length === 1;
+  })()],
 ];
 console.log("\nchecks:");
 let pass = true;

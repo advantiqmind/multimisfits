@@ -94,6 +94,8 @@ export function transformMessages(messages, opts = {}) {
   const limit = opts.limit || LIMIT;
   const reaction = opts.reaction || "";
   const botReaction = opts.botReaction || "";
+  const reactionSet = reaction ? new Set(reaction.split(",").map((s) => s.trim()).filter(Boolean)) : null;
+  const botReactionSet = botReaction ? new Set(botReaction.split(",").map((s) => s.trim()).filter(Boolean)) : null;
   const allowBots = !!opts.allowBots;
   const channels = opts.channels || {};
   const out = [];
@@ -102,14 +104,14 @@ export function transformMessages(messages, opts = {}) {
     if (m.type !== 0 && m.type !== 19) continue;            // default + reply only
     const isBot = m.author && m.author.bot;
     if (isBot && !allowBots) {
-      if (!botReaction) continue;                            // no bot gate set -> skip all bots
+      if (!botReactionSet) continue;                         // no bot gate set -> skip all bots
       const hasBotR = Array.isArray(m.reactions) &&
-        m.reactions.some((r) => r && r.emoji && r.emoji.name === botReaction);
+        m.reactions.some((r) => r && r.emoji && botReactionSet.has(r.emoji.name));
       if (!hasBotR) continue;                                // bot without publish reaction -> skip
     }
-    if (reaction) {
+    if (reactionSet) {
       const has = Array.isArray(m.reactions) &&
-        m.reactions.some((r) => r && r.emoji && r.emoji.name === reaction);
+        m.reactions.some((r) => r && r.emoji && reactionSet.has(r.emoji.name));
       if (!has) continue;                                    // safety-valve gate
     }
     let content = (m.content || "").trim();
