@@ -1126,11 +1126,11 @@
             '<p>Post is ' + pubState.charCount + ' chars, over Discord\'s 2,000 limit for bots. Copy the post and paste it manually with Nitro (4,000 char limit), then mark as scheduled.</p>' +
             '<div class="cal-pub-overlimit-actions">' +
               '<button class="cal-pub-copy" id="calPubCopyBtn">Copy Post</button>' +
-              '<button class="cal-pub-schedule" id="calPubScheduleBtn">Schedule Only</button>' +
             '</div>' +
           '</div>' : '') +
         '<div class="cal-pub-actions">' +
           '<button class="cal-pop-btn" id="calPubCancelBtn">Cancel</button>' +
+          '<button class="cal-pub-schedule" id="calPubScheduleBtn">Schedule Only</button>' +
           '<button class="cal-pop-btn gold' + (pubState.charCount > 2000 ? ' disabled' : '') + '" id="calPubPostBtn"' + (pubState.charCount > 2000 ? ' disabled' : '') + '>Post to Discord</button>' +
         '</div>' +
       '</div></div>';
