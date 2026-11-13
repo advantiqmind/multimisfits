@@ -547,7 +547,15 @@ nav.main a[href="/ge.html"]{display:none}
 /* Loot Value Leaderboard */
 .lv-tag{display:inline-block;font-family:"Jersey 15",monospace;font-size:11px;color:var(--gold);background:rgba(255,203,47,.12);border:1px solid rgba(255,203,47,.3);padding:2px 8px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;vertical-align:middle}
 .ws-tag{color:#4ad9e0;background:rgba(74,217,224,.12);border-color:rgba(74,217,224,.3)}
-.lv-container,.ws-container{margin-top:16px}
+.dp-tag{color:#e8a832;background:rgba(232,168,50,.12);border-color:rgba(232,168,50,.3)}
+.lv-container,.ws-container,.dp-container{margin-top:16px}
+.dp-breakdown{display:flex;flex-wrap:wrap;gap:4px 8px;padding:2px 10px 8px 52px}
+.dp-breakdown-item{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted)}
+.dp-breakdown-pts{color:var(--gold);font-size:12px}
+.dp-link{border-color:rgba(232,168,50,.25)!important;color:#e8a832!important;background:rgba(232,168,50,.1)!important}
+.dp-link:hover{background:rgba(232,168,50,.2)!important}
+.dp-standings-btn{color:#e8a832!important;background:rgba(232,168,50,.08)!important;border-color:rgba(232,168,50,.25)!important}
+.dp-standings-btn:hover{background:rgba(232,168,50,.18)!important}
 .lv-loading{font-family:"Jersey 15",monospace;font-size:16px;color:var(--muted)}
 .lv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .lv-stat{text-align:center;background:var(--void);border:2px solid var(--bronze);border-radius:6px;padding:12px 8px}
@@ -669,7 +677,7 @@ nav.main a[href="/ge.html"]{display:none}
 .ev-card.ev-wild .ev-card-date .m{color:#7a5a4a}
 .ev-card.ev-wild .ev-card-info h3{color:#ff8866}
 .ev-card.ev-wild .ev-card-meta{color:#7a5a4a}
-.ev-card.ev-wild .lv-tag{background:rgba(255,85,68,.12);border-color:rgba(255,85,68,.3);color:#ff8866}
+.ev-card.ev-wild .lv-tag,.ev-card.ev-wild .dp-tag{background:rgba(255,85,68,.12);border-color:rgba(255,85,68,.3);color:#ff8866}
 .ev-card.ev-wild.ev-clickable:hover{border-color:#8b2020;box-shadow:0 0 12px rgba(139,32,32,.3)}
 .ev-featured.ev-wild{background:linear-gradient(180deg,#1a0a0a,#120606);border:2px solid #5a1a1a;border-radius:8px;padding:24px 20px;box-shadow:0 0 30px rgba(139,32,32,.25),inset 0 0 40px rgba(139,32,32,.1)}
 .ev-featured.ev-wild .ev-featured-header h3{color:#ff5544}
@@ -687,7 +695,7 @@ nav.main a[href="/ge.html"]{display:none}
 .ev-card.ev-social .ev-card-date .m{color:#6a8a72}
 .ev-card.ev-social .ev-card-info h3{color:#6af0a0}
 .ev-card.ev-social .ev-card-meta{color:#6a8a72}
-.ev-card.ev-social .lv-tag{background:rgba(74,232,138,.12);border-color:rgba(74,232,138,.3);color:#6af0a0}
+.ev-card.ev-social .lv-tag,.ev-card.ev-social .dp-tag{background:rgba(74,232,138,.12);border-color:rgba(74,232,138,.3);color:#6af0a0}
 .ev-card.ev-social.ev-clickable:hover{border-color:#2d6b4f;box-shadow:0 0 12px rgba(45,107,79,.3)}
 .ev-featured.ev-social{background:linear-gradient(180deg,#0a1a14,#060e0a);border:2px solid #1a4a32;border-radius:8px;padding:24px 20px;box-shadow:0 0 30px rgba(45,107,79,.2),inset 0 0 40px rgba(45,107,79,.08)}
 .ev-featured.ev-social .ev-featured-header h3{color:#4ae88a}
@@ -705,7 +713,7 @@ nav.main a[href="/ge.html"]{display:none}
 .ev-card.ev-pvm .ev-card-date .m{color:#8a7aaa}
 .ev-card.ev-pvm .ev-card-info h3{color:#e8d8ff}
 .ev-card.ev-pvm .ev-card-meta{color:#8a7aaa}
-.ev-card.ev-pvm .lv-tag{background:rgba(192,144,255,.12);border-color:rgba(192,144,255,.3);color:#c090ff}
+.ev-card.ev-pvm .lv-tag,.ev-card.ev-pvm .dp-tag{background:rgba(192,144,255,.12);border-color:rgba(192,144,255,.3);color:#c090ff}
 .ev-card.ev-pvm.ev-clickable:hover{border-color:#6b3fa0;box-shadow:0 0 12px rgba(107,63,160,.3)}
 .ev-featured.ev-pvm{background:linear-gradient(180deg,#140e1e,#0e0814);border:2px solid #3a2060;border-radius:8px;padding:24px 20px;box-shadow:0 0 30px rgba(107,63,160,.2),inset 0 0 40px rgba(107,63,160,.08)}
 .ev-featured.ev-pvm .ev-featured-header h3{color:#ffcb2f}

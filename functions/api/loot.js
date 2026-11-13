@@ -18,8 +18,51 @@
 const EVENTS_CACHE_TTL = 300;
 const LEADERBOARD_LIMIT = 20;
 const NOTABLE_DROPS_LIMIT = 5;
+const RECENT_DROPS_LIMIT = 10;
 const LEADERBOARD_CACHE_TTL = 60;
 const DEFAULT_DISCORD_MIN_VALUE = 150000;
+
+const DROP_POINT_PRESETS = {
+  gwd: {
+    "godsword shard 1": 1, "godsword shard 2": 1, "godsword shard 3": 1,
+    "steam battlestaff": 1, "saradomin sword": 1, "saradomin's light": 1,
+    "bandos boots": 2, "armadyl helmet": 2, "zamorakian spear": 2, "staff of the dead": 2,
+    "bandos chestplate": 4, "bandos tassets": 4,
+    "armadyl chestplate": 4, "armadyl chainskirt": 4, "armadyl crossbow": 4,
+    "armadyl hilt": 5, "bandos hilt": 5, "saradomin hilt": 5, "zamorak hilt": 5,
+    "pet general graardor": 10, "pet k'ril tsutsaroth": 10,
+    "pet kree'arra": 10, "pet zilyana": 10,
+  },
+};
+
+export function parsePointsConfig(content) {
+  const m = content.match(/^\*{0,2}Points:\*{0,2}\s*(.+)/im);
+  if (!m) return null;
+  const raw = m[1].trim().replace(/\*{1,2}$/, "");
+  if (!raw) return null;
+  const presetName = raw.toLowerCase();
+  if (DROP_POINT_PRESETS[presetName]) {
+    return { preset: presetName, items: { ...DROP_POINT_PRESETS[presetName] } };
+  }
+  return null;
+}
+
+export function scoreDropPoints(lootItems, pointsConfig) {
+  if (!pointsConfig || !pointsConfig.items) return { totalPoints: 0, scoredItems: [] };
+  const map = pointsConfig.items;
+  let totalPoints = 0;
+  const scoredItems = [];
+  for (const item of lootItems) {
+    const key = (item.name || "").toLowerCase();
+    const pts = map[key];
+    if (pts && pts > 0) {
+      const earned = pts * (item.quantity || 1);
+      totalPoints += earned;
+      scoredItems.push({ name: item.name, quantity: item.quantity || 1, points: pts, earned });
+    }
+  }
+  return { totalPoints, scoredItems };
+}
 
 export function parseEventDateField(content, field) {
   const re = new RegExp("\\b" + field + ":\\s*(.+)", "i");
@@ -104,20 +147,24 @@ async function fetchActiveLootEvents(env) {
     const data = await activeRes.json();
 
     let lootTagId = null;
+    let dropPointsTagId = null;
     if (channelRes.ok) {
       const channelData = await channelRes.json();
-      const lootTag = (channelData.available_tags || []).find(
-        tag => tag.name.toLowerCase() === "loot value"
-      );
-      if (lootTag) lootTagId = lootTag.id;
+      for (const tag of (channelData.available_tags || [])) {
+        const name = tag.name.toLowerCase();
+        if (name === "loot value") lootTagId = tag.id;
+        else if (name === "drop points") dropPointsTagId = tag.id;
+      }
     }
+
+    const validTagIds = [lootTagId, dropPointsTagId].filter(Boolean);
 
     threads = (data.threads || []).filter(
       t => t.parent_id === channelId &&
         !(t.thread_metadata && t.thread_metadata.archived) &&
-        lootTagId &&
+        validTagIds.length &&
         Array.isArray(t.applied_tags) &&
-        t.applied_tags.includes(lootTagId)
+        t.applied_tags.some(id => validTagIds.includes(id))
     );
   } catch {
     return [];
@@ -138,7 +185,10 @@ async function fetchActiveLootEvents(env) {
         const bossFilter = parseBossFilter(content);
         const startTime = parseEventDateField(content, "When") || null;
         const endTime = parseEventDateField(content, "Ends?") || null;
-        return { id: t.id, name: t.name, bossFilter, startTime, endTime };
+        const appliedTags = Array.isArray(t.applied_tags) ? t.applied_tags : [];
+        const isDropPoints = dropPointsTagId && appliedTags.includes(dropPointsTagId);
+        const pointsConfig = isDropPoints ? parsePointsConfig(content) : null;
+        return { id: t.id, name: t.name, bossFilter, startTime, endTime, isDropPoints: !!isDropPoints, pointsConfig };
       } catch {
         return null;
       }
@@ -214,13 +264,25 @@ async function ensureTable(db) {
 }
 
 async function upsertEventMeta(db, event) {
+  try {
+    await db.prepare(
+      "ALTER TABLE loot_event_meta ADD COLUMN is_drop_points INTEGER DEFAULT 0"
+    ).run();
+  } catch { /* column already exists */ }
+  try {
+    await db.prepare(
+      "ALTER TABLE loot_event_meta ADD COLUMN points_config TEXT"
+    ).run();
+  } catch { /* column already exists */ }
   await db.prepare(
-    `INSERT INTO loot_event_meta (event_id, event_name, boss_filter, start_time, end_time, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)
+    `INSERT INTO loot_event_meta (event_id, event_name, boss_filter, start_time, end_time, is_drop_points, points_config, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(event_id) DO UPDATE SET
        boss_filter = excluded.boss_filter,
        start_time = excluded.start_time,
        end_time = excluded.end_time,
+       is_drop_points = excluded.is_drop_points,
+       points_config = excluded.points_config,
        updated_at = excluded.updated_at`
   ).bind(
     event.id,
@@ -228,6 +290,8 @@ async function upsertEventMeta(db, event) {
     event.bossFilter ? JSON.stringify(event.bossFilter) : null,
     event.startTime || null,
     event.endTime || null,
+    event.isDropPoints ? 1 : 0,
+    event.pointsConfig ? JSON.stringify(event.pointsConfig) : null,
     new Date().toISOString()
   ).run();
 }
@@ -243,6 +307,8 @@ async function getEventMeta(db, eventId) {
     bossFilter: row.boss_filter ? JSON.parse(row.boss_filter) : null,
     startTime: row.start_time || null,
     endTime: row.end_time || null,
+    isDropPoints: !!row.is_drop_points,
+    pointsConfig: row.points_config ? JSON.parse(row.points_config) : null,
   };
 }
 
@@ -456,6 +522,8 @@ async function handleGet(context) {
 
   let eventMeta = null;
   let bossFilter = null;
+  let isDropPoints = false;
+  let pointsConfig = null;
   const activeEvents = await getActiveLootEvents(context.env);
   let ev = activeEvents.find(e => e.id === eventId);
   if (!ev) {
@@ -472,6 +540,8 @@ async function handleGet(context) {
       started,
     };
     bossFilter = ev.bossFilter || null;
+    isDropPoints = !!ev.isDropPoints;
+    pointsConfig = ev.pointsConfig || null;
   }
 
   if (eventMeta && !eventMeta.started) {
@@ -506,6 +576,10 @@ async function handleGet(context) {
     const clauses = bossFilter.map(() => "LOWER(source) LIKE ? || '%'");
     extraWhere += " AND (" + clauses.join(" OR ") + ")";
     bossFilter.forEach(b => extraParams.push(b));
+  }
+
+  if (isDropPoints && pointsConfig) {
+    return handleDropPointsGet(db, eventId, eventMeta, pointsConfig, extraWhere, extraParams, cache, cacheKey, context);
   }
 
   const lbResult = await db.prepare(
@@ -559,6 +633,94 @@ async function handleGet(context) {
   const notableDrops = allItems.slice(0, NOTABLE_DROPS_LIMIT);
 
   const payload = { eventId, leaderboard, stats, notableDrops };
+  if (eventMeta) {
+    payload.ended = eventMeta.ended;
+    payload.startTime = eventMeta.startTime;
+    payload.endTime = eventMeta.endTime;
+  }
+  const res = json(payload, 200, {
+    "Cache-Control": `public, max-age=${LEADERBOARD_CACHE_TTL}`,
+  });
+  context.waitUntil(cache.put(cacheKey, res.clone()));
+  return res;
+}
+
+async function handleDropPointsGet(db, eventId, eventMeta, pointsConfig, extraWhere, extraParams, cache, cacheKey, context) {
+  const allRows = await db.prepare(
+    `SELECT player, items, source, created_at
+     FROM loot_entries WHERE event_id = ?${extraWhere}
+     ORDER BY created_at ASC`
+  ).bind(eventId, ...extraParams).all();
+
+  const rows = allRows.results || [];
+  const playerMap = {};
+  const topDrops = [];
+  const recentDrops = [];
+
+  for (const row of rows) {
+    let items;
+    try { items = JSON.parse(row.items || "[]"); } catch { continue; }
+    const { totalPoints, scoredItems } = scoreDropPoints(items, pointsConfig);
+
+    const key = row.player.toLowerCase();
+    if (!playerMap[key]) {
+      playerMap[key] = { player: row.player, points: 0, kills: 0, breakdown: {} };
+    }
+    playerMap[key].points += totalPoints;
+    playerMap[key].kills += 1;
+
+    for (const si of scoredItems) {
+      const itemKey = si.name.toLowerCase();
+      if (!playerMap[key].breakdown[itemKey]) {
+        playerMap[key].breakdown[itemKey] = { name: si.name, count: 0, pointsEach: si.points, total: 0 };
+      }
+      playerMap[key].breakdown[itemKey].count += si.quantity;
+      playerMap[key].breakdown[itemKey].total += si.earned;
+
+      topDrops.push({ player: row.player, name: si.name, points: si.points, earned: si.earned, quantity: si.quantity });
+    }
+
+    if (totalPoints > 0) {
+      recentDrops.push({
+        player: row.player,
+        source: row.source,
+        points: totalPoints,
+        items: scoredItems.map(si => si.name + (si.quantity > 1 ? " x" + si.quantity : "")),
+        time: row.created_at,
+      });
+    }
+  }
+
+  const sorted = Object.values(playerMap)
+    .filter(p => p.points > 0)
+    .sort((a, b) => b.points - a.points || a.player.localeCompare(b.player));
+
+  const leaderboard = sorted.slice(0, LEADERBOARD_LIMIT).map((p, i) => ({
+    rank: i + 1,
+    player: p.player,
+    points: p.points,
+    kills: p.kills,
+    breakdown: Object.values(p.breakdown).sort((a, b) => b.total - a.total),
+  }));
+
+  topDrops.sort((a, b) => b.earned - a.earned);
+  recentDrops.reverse();
+
+  const stats = {
+    totalPlayers: sorted.length,
+    totalKills: rows.length,
+    totalPoints: sorted.reduce((s, p) => s + p.points, 0),
+    preset: pointsConfig.preset || null,
+  };
+
+  const payload = {
+    eventId,
+    type: "drop_points",
+    leaderboard,
+    stats,
+    topDrops: topDrops.slice(0, NOTABLE_DROPS_LIMIT),
+    recentDrops: recentDrops.slice(0, RECENT_DROPS_LIMIT),
+  };
   if (eventMeta) {
     payload.ended = eventMeta.ended;
     payload.startTime = eventMeta.startTime;

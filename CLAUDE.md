@@ -319,6 +319,30 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - Auth key stored in LOOT_WEBHOOK_KEY env var. /api/loot bypasses auth middleware.
 - Leaderboard cached 1min at Cloudflare edge. Active events mapping cached 5min.
 
+### Drop Points
+- Alternative scoring mode for loot events: items earn preset point values instead of GP.
+- Uses the same Dink webhook pipeline and D1 loot_entries table as Loot Value events.
+- Identified by the "Drop Points" Discord forum tag (must be created in channel settings).
+- `Points:` line in event description selects a preset (e.g. `Points: gwd`).
+  Supports bold variants: `**Points:** gwd` or `**Points: gwd**`.
+- `Boss:` and `Points:` are independent lines. Boss filters which kills count, Points sets scoring.
+- Presets defined in `DROP_POINT_PRESETS` constant in loot.js:
+  - `gwd`: God Wars Dungeon items. 1pt (Godsword Shards, Steam Battlestaff, Saradomin Sword,
+    Saradomin's Light), 2pt (Bandos Boots, Armadyl Helmet, Zamorakian Spear, Staff of the Dead),
+    4pt (BCP, Tassets, ACP, Chainskirt, ACB), 5pt (all Hilts), 10pt (GWD Pets). No Nex items.
+- Backend: `parsePointsConfig(content)` parses the Points: line, returns `{ preset, items }` map.
+  `scoreDropPoints(lootItems, pointsConfig)` scores items against the map (case-insensitive match).
+  `handleDropPointsGet` builds per-player leaderboard with breakdown, topDrops, recentDrops.
+- GET /api/loot?event=THREAD_ID auto-detects drop points events via `is_drop_points` column in
+  event_meta. Returns `{ type: "drop_points", leaderboard, stats, topDrops, recentDrops }`.
+- Frontend: `isDropPointsEvent(ev)` checks tags for "drop points" (case-insensitive).
+  Event cards show amber "POINTS" tag. Featured/modal show leaderboard with per-player item breakdown.
+  Appears on Event Leaderboard tab on roster.html alongside Loot Value and WOM Scored events.
+- CSS: `.dp-*` classes (amber/orange theme). `.dp-tag`, `.dp-container`, `.dp-breakdown`.
+- Quantity multiplied: 3x Godsword Shard = 3 points.
+- Items not in the preset earn 0 points (silently excluded from breakdown).
+- test-loot.mjs: 25 tests covering parsePointsConfig and scoreDropPoints.
+
 ### Events
 - Forum threads from events channel, excluding giveaway-named threads.
 - EventForge date parsing: `When:` and `Ends:`/`End:` lines (plain text or Discord timestamps).
