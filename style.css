@@ -1566,3 +1566,40 @@ img.bk-icon-trophy{width:32px;height:auto;display:block}
 .dink-cta:hover{box-shadow:0 4px 16px rgba(255,203,47,.3);transform:translateY(-1px)}
 .dink-cta:active{transform:translateY(0)}
 @media(max-width:400px){.dink-floater{left:12px;right:12px;bottom:12px;width:auto}}
+
+/* ---------- remind / announce ---------- */
+.remind-overlay{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.remind-overlay.open{opacity:1;pointer-events:auto}
+.remind-modal{position:relative;background:linear-gradient(180deg,var(--panel),var(--panel-3));border:2px solid #000;box-shadow:var(--frame),0 0 40px rgba(0,0,0,.6);border-radius:8px;width:92%;max-width:500px;max-height:85vh;overflow-y:auto;padding:24px 22px}
+.remind-close{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--parchment);font-size:28px;cursor:pointer;line-height:1;padding:8px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.remind-close:hover{color:var(--gold)}
+.remind-title{font-family:"Cinzel",serif;font-size:20px;color:var(--gold);margin:0 0 6px;letter-spacing:1px}
+.remind-subtitle{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 16px}
+.remind-input{display:block;width:100%;box-sizing:border-box;background:var(--void);border:2px solid var(--bronze);border-radius:5px;padding:10px 14px;color:var(--parchment);font-family:"Jersey 15",monospace;font-size:18px;letter-spacing:1px;outline:none}
+.remind-input:focus{border-color:var(--gold);box-shadow:0 0 8px rgba(255,203,47,.2)}
+.remind-input::placeholder{color:var(--muted);letter-spacing:0;font-size:14px}
+.remind-error{color:#e04040;font-family:"Jersey 15",monospace;font-size:13px;min-height:18px;margin-top:6px}
+.remind-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.remind-cancel-btn{background:transparent !important;border:1px solid var(--bronze) !important;color:var(--muted) !important;font-size:13px !important;padding:8px 16px !important}
+.remind-cancel-btn:hover{border-color:var(--gold) !important;color:var(--parchment) !important}
+.remind-submit-btn{font-size:13px !important;padding:8px 18px !important}
+.remind-thread-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(88,101,242,.12);border:1px solid rgba(88,101,242,.25);border-radius:5px;padding:6px 12px;margin-bottom:14px;font-family:"Jersey 15",monospace;font-size:14px;color:#a0acf0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.remind-chip-icon{font-size:16px;flex-shrink:0}
+.remind-textarea{display:block;width:100%;box-sizing:border-box;background:var(--void);border:2px solid var(--bronze);border-radius:5px;padding:12px 14px;color:var(--parchment);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.6;resize:vertical;min-height:120px;outline:none}
+.remind-textarea:focus{border-color:var(--gold);box-shadow:0 0 8px rgba(255,203,47,.15)}
+.remind-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px}
+.remind-char{font-family:"Jersey 15",monospace;font-size:12px;color:var(--muted);flex-shrink:0}
+.remind-hint{font-size:11px;color:var(--muted);opacity:.7;text-align:right}
+.remind-cross{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.remind-cross-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--parchment);cursor:pointer}
+.remind-cross-label strong{color:var(--gold)}
+.remind-cross-cb{accent-color:var(--gold);width:16px;height:16px;cursor:pointer}
+.remind-send-btn{font-size:13px !important;padding:8px 18px !important}
+.remind-send-btn.remind-confirm{background:linear-gradient(180deg,#e04040,#a02020) !important;border-color:#c03030 !important;animation:remind-pulse .6s ease-in-out infinite alternate}
+@keyframes remind-pulse{from{box-shadow:0 0 4px rgba(224,64,64,.3)}to{box-shadow:0 0 12px rgba(224,64,64,.5)}}
+.remind-btn{font-size:13px !important;padding:6px 14px !important;gap:6px;display:inline-flex;align-items:center}
+.remind-icon{font-size:15px;line-height:1}
+.remind-toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:linear-gradient(180deg,#1a3a1a,#0e200e);border:1px solid rgba(74,208,74,.35);border-radius:8px;padding:12px 20px;color:#6dd06d;font-family:"Jersey 15",monospace;font-size:15px;display:flex;align-items:center;gap:8px;z-index:200;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.remind-toast-show{opacity:1;transform:translateX(-50%) translateY(0)}
+.remind-toast-icon{font-size:18px}
+@media(max-width:600px){.remind-modal{width:95%;padding:20px 16px}.remind-actions{flex-direction:column}.remind-cancel-btn,.remind-submit-btn,.remind-send-btn{width:100%}}

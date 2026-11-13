@@ -58,6 +58,7 @@ Each content type has exactly ONE source. Never add a second way to edit somethi
 - functions/api/giveaway.js    GET /api/giveaway -> reads giveaway forum channel, cached 1min; supports ?debug=1
 - functions/api/eventforge.js  GET/POST/PUT/DELETE /api/eventforge -> shared EventForge saves CRUD, D1 storage, optimistic locking, cached 30s; writes require EVENTFORGE_ACCESS_CODE
 - functions/api/ideaboard.js   GET/POST /api/ideaboard -> reads Discord thread ideas, D1 column positions + dismiss tracking, two-tier access codes, cached 30s
+- functions/api/remind.js       POST /api/remind -> posts reminder messages to #announcements, replaces {{link:ID}} tokens with Discord URLs server-side, gated by EVENTFORGE_ACCESS_CODE
 - functions/api/announce-dink.js POST /api/announce-dink -> sends Dink update embed to #announcements, gated by DINK_ACCESS_CODE
 - functions/api/dink-auth.js   POST /api/dink-auth -> validates access code against DINK_ACCESS_CODE env var
 - functions/api/dink-config.js POST /api/dink-config -> returns dink-config.txt with secrets injected from env vars, gated by DINK_ACCESS_CODE
@@ -174,15 +175,15 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - Each round = one forum thread. Leaders react with 1/2 keycap emoji on member
   screenshots to confirm entries (max 2 per person).
 - /giveaway-entry slash command: leaders add or subtract entries (-5 to +5).
-  Optional `gp` parameter (integer, min 0) tracks actual GP donated in millions.
-  When omitted, GP defaults to effective entries * rate. When set, overrides the
-  default (e.g. entries:2 gp:3 = 2 entries, 3M GP; entries:1 gp:0 = free entry).
-  Posts "Entry Added" or "Entry Removed" embed with optional GP field.
+  Required `gp` parameter (integer, min 0) tracks actual GP donated in millions.
+  Always shown on Entry Added/Removed bot embeds. Leaders enter the exact GP amount
+  each time (e.g. entries:2 gp:3 = 2 entries, 3M GP; entries:1 gp:0 = free entry).
+  Posts "Entry Added" or "Entry Removed" embed with GP field always visible.
   Restricted to leader role via Discord Integrations. Accumulation mode: all bot
   embeds for a player are summed, final total clamped to [0, MAX_ENTRIES_PER_PERSON].
 - /giveaway-check slash command: look up a player's entry count in the current
   giveaway. Open to all members (no Discord Integrations override needed).
-- Bot embeds parsed by extractBotEntry(): Player + Entries + optional GP fields,
+- Bot embeds parsed by extractBotEntry(): Player + Entries + GP fields,
   accumulation with sum-then-clamp. "Entry Removed" returns negative count/gp for subtraction.
 - Reaction entries and manual bot entries merge per person by lowercase player
   name (Discord display name vs Player field), one row each, combined total
@@ -196,7 +197,10 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - Auto end-date: active rounds without explicit Ends: line get start + 14 days.
 - Live rounds show "Ends X" countdown. Scheduled rounds count down to start.
 - Previous round winner spotlight always visible on current round card.
-- Winner toast on homepage (dismissable, localStorage per winner).
+- Winner toast on homepage: shows newest winner across events AND giveaways.
+  Only one toast at a time, newest first. Dismissable per source+ID
+  (localStorage key: `ga-winner-seen-event-{threadId}` or `ga-winner-seen-giveaway-{threadId}`).
+  Title reads "Event Winner!" or "Giveaway Winner!" based on source.
 - Giveaway threads filtered from events feed (by name containing "giveaway").
 - Tab state persists via URL hash (#giveaways).
 - Forum tags (Bond, Item, Kit, Random, Goodie Bag, GP) set in Discord for categorization.
@@ -547,12 +551,47 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - Star/bookmark in localStorage (mm-filecabinet-stars).
 - Later: R2 for image uploads, Idea Board archive integration, EventForge archive integration.
 
+### Remind/Announce
+- Megaphone button on featured events, event modals, and featured giveaways (not on completed events).
+- Hidden by default: button only renders when leader code is already in localStorage (mm-remind-code).
+  Activation: triple-tap the "Clan Events" heading on events.html to open the code prompt.
+  Triple-tap again to toggle off (clears code, hides buttons). Both events and giveaways re-render.
+- Leaders enter the EventForge access code once (stored in localStorage as mm-remind-code).
+- Composer overlay with pre-filled template, character counter (2000 max), and cross-link checkboxes
+  (e.g. include giveaway link when reminding about an event, or vice versa).
+- Two-step confirmation: button changes to "Are you sure?" before posting.
+- Backend: POST /api/remind validates EVENTFORGE_ACCESS_CODE, replaces `{{link:THREAD_ID}}` tokens
+  with full Discord thread URLs using DISCORD_GUILD_ID from env (no secrets in client code),
+  posts plain text to #announcements via bot token.
+- Templates: live events get "happening NOW" text, upcoming events get "don't forget" with checkmark
+  reminder, giveaways get days-until-drawing countdown with entry rate info.
+- Cross-linking: event reminders can include the active giveaway link, giveaway reminders can
+  include the next upcoming event link. Appended as `{{link:ID}}` which auto-embeds in Discord.
+- HTML: remind overlay in events.html. CSS: .remind-* classes in style.css. JS: in app.js.
+
 ### Discord invite lock
 - Site is fully public (no auth gate). Middleware passes all requests through.
 - All Discord join links (data-discord elements) are locked behind a referral code modal.
 - Discord invite URL is NOT in client-side code. Server returns it only after code validation.
 - POST /api/referral validates code against REFERRAL_CODES env var, returns invite URL on success.
 - Tracking: valid redemptions post an embed to a Discord forum thread (REFERRAL_THREAD_ID).
+
+### Update Dink Settings (repeatable procedure)
+When the owner says "update dink" and provides new settings:
+1. Replace dink-config.txt with the new JSON export from the Dink plugin.
+2. Add back the two webhook placeholders that the raw export won't have:
+   `"lootWebhook":"__LOOT_WEBHOOK__"` and `"discordWebhook":"__DISCORD_WEBHOOK__"`.
+   Place them in the same relative positions as before (lootWebhook near clueEnabled,
+   discordWebhook near threadNameTemplate). These are replaced server-side by
+   functions/api/dink-config.js at download time.
+3. Validate the JSON: `node -e "JSON.parse(require('fs').readFileSync('dink-config.txt','utf8'))"`.
+4. Bump `DINK_FLOATER_VERSION` (integer) in app.js. This resets the localStorage
+   dismiss key so all members see the "Dink Update NEW" floating alert again.
+5. Update the chip labels in the floater HTML (`.dink-fchip` spans in `showDinkFloater()`)
+   to describe what changed in this update.
+6. Run tests, commit, push to main.
+7. After deploy: members visit clandink.html, click "Copy Settings", type `::dinkimport all`
+   in OSRS to apply. No re-registration of slash commands needed for settings-only updates.
 
 ### Offline indicators
 - Amber tint on panel badges when API returns unconfigured/error state.

@@ -152,9 +152,9 @@ const COMMANDS = [
       },
       {
         name: "gp",
-        description: "GP donated in millions (defaults to entries * rate)",
+        description: "GP donated in millions",
         type: 4,
-        required: false,
+        required: true,
         min_value: 0,
       },
     ],
@@ -1346,9 +1346,7 @@ async function handleGiveawayEntry(interaction, token, giveawayChannelId, appId)
     { name: "Entries", value: String(displayCount), inline: true },
     { name: isRemoval ? "Removed by" : "Added by", value: addedBy, inline: true },
   ];
-  if (gpValue !== null) {
-    fields.push({ name: "GP", value: gpValue + "M", inline: true });
-  }
+  fields.push({ name: "GP", value: gpValue + "M", inline: true });
 
   const postRes = await fetch(
     `https://discord.com/api/v10/channels/${interaction.channel_id}/messages`,

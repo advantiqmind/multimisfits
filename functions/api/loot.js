@@ -43,9 +43,9 @@ function json(obj, status = 200, extra = {}) {
 }
 
 export function parseBossFilter(content) {
-  const m = content.match(/^Boss:\s*(.+)/im);
+  const m = content.match(/^\*{0,2}Boss:\*{0,2}\s*(.+)/im);
   if (!m) return null;
-  const raw = m[1].trim();
+  const raw = m[1].trim().replace(/\*{1,2}$/,"");
   if (/^any$/i.test(raw)) return null;
   return raw.split(",").map(b => b.trim().toLowerCase()).filter(Boolean);
 }
@@ -200,7 +200,50 @@ async function ensureTable(db) {
       raw_preview TEXT
     )`
   ).run();
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS loot_event_meta (
+      event_id TEXT PRIMARY KEY,
+      event_name TEXT,
+      boss_filter TEXT,
+      start_time TEXT,
+      end_time TEXT,
+      updated_at TEXT NOT NULL
+    )`
+  ).run();
   _tableCreated = true;
+}
+
+async function upsertEventMeta(db, event) {
+  await db.prepare(
+    `INSERT INTO loot_event_meta (event_id, event_name, boss_filter, start_time, end_time, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(event_id) DO UPDATE SET
+       boss_filter = excluded.boss_filter,
+       start_time = excluded.start_time,
+       end_time = excluded.end_time,
+       updated_at = excluded.updated_at`
+  ).bind(
+    event.id,
+    event.name || null,
+    event.bossFilter ? JSON.stringify(event.bossFilter) : null,
+    event.startTime || null,
+    event.endTime || null,
+    new Date().toISOString()
+  ).run();
+}
+
+async function getEventMeta(db, eventId) {
+  const row = await db.prepare(
+    "SELECT * FROM loot_event_meta WHERE event_id = ?"
+  ).bind(eventId).first();
+  if (!row) return null;
+  return {
+    id: row.event_id,
+    name: row.event_name,
+    bossFilter: row.boss_filter ? JSON.parse(row.boss_filter) : null,
+    startTime: row.start_time || null,
+    endTime: row.end_time || null,
+  };
 }
 
 function maybeForwardToDiscord(context, contentType, rawBody, totalValue) {
@@ -334,12 +377,39 @@ async function handlePost(context) {
 
   const createdAt = new Date().toISOString();
   const itemsJson = JSON.stringify(loot.items);
+  const dupeWindow = new Date(Date.now() - 60000).toISOString();
+  const storedEvents = [];
 
   for (const event of matched) {
+    const dupe = await db.prepare(
+      `SELECT COUNT(*) as c FROM loot_entries
+       WHERE event_id = ? AND LOWER(player) = LOWER(?) AND source = ?
+       AND total_value = ? AND created_at >= ?`
+    ).bind(event.id, loot.player, loot.source, loot.totalValue, dupeWindow).first();
+
+    if (dupe && dupe.c > 0) continue;
+
     await db.prepare(
       `INSERT INTO loot_entries (event_id, player, source, kill_count, items, total_value, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     ).bind(event.id, loot.player, loot.source, loot.killCount, itemsJson, loot.totalValue, createdAt).run();
+    storedEvents.push(event);
+  }
+
+  for (const event of matched) {
+    context.waitUntil(upsertEventMeta(db, event).catch(() => {}));
+  }
+
+  if (!storedEvents.length) {
+    await logDebug(db, {
+      payloadType: "LOOT",
+      player: loot.player,
+      source: loot.source,
+      totalValue: loot.totalValue,
+      result: "duplicate",
+      forwarded: willForward ? 1 : 0,
+    });
+    return json({ stored: false, reason: "duplicate", forwarded: willForward });
   }
 
   await logDebug(db, {
@@ -347,13 +417,13 @@ async function handlePost(context) {
     player: loot.player,
     source: loot.source,
     totalValue: loot.totalValue,
-    result: "stored:" + matched.map(e => e.id).join(","),
+    result: "stored:" + storedEvents.map(e => e.id).join(","),
     forwarded: willForward ? 1 : 0,
   });
 
   return json({
     stored: true,
-    events: matched.map(e => e.id),
+    events: storedEvents.map(e => e.id),
     player: loot.player,
     value: loot.totalValue,
   });
@@ -385,8 +455,12 @@ async function handleGet(context) {
   await ensureTable(db);
 
   let eventMeta = null;
+  let bossFilter = null;
   const activeEvents = await getActiveLootEvents(context.env);
-  const ev = activeEvents.find(e => e.id === eventId);
+  let ev = activeEvents.find(e => e.id === eventId);
+  if (!ev) {
+    ev = await getEventMeta(db, eventId);
+  }
   if (ev) {
     const now = Date.now();
     const started = !ev.startTime || new Date(ev.startTime).getTime() <= now;
@@ -397,6 +471,7 @@ async function handleGet(context) {
       ended: !!ended,
       started,
     };
+    bossFilter = ev.bossFilter || null;
   }
 
   if (eventMeta && !eventMeta.started) {
@@ -417,22 +492,27 @@ async function handleGet(context) {
     return emptyRes;
   }
 
-  let timeWhere = "";
-  const timeParams = [];
+  let extraWhere = "";
+  const extraParams = [];
   if (eventMeta && eventMeta.startTime) {
-    timeWhere += " AND created_at >= ?";
-    timeParams.push(eventMeta.startTime);
+    extraWhere += " AND created_at >= ?";
+    extraParams.push(eventMeta.startTime);
   }
   if (eventMeta && eventMeta.endTime) {
-    timeWhere += " AND created_at <= ?";
-    timeParams.push(eventMeta.endTime);
+    extraWhere += " AND created_at <= ?";
+    extraParams.push(eventMeta.endTime);
+  }
+  if (bossFilter && bossFilter.length) {
+    const clauses = bossFilter.map(() => "LOWER(source) LIKE ? || '%'");
+    extraWhere += " AND (" + clauses.join(" OR ") + ")";
+    bossFilter.forEach(b => extraParams.push(b));
   }
 
   const lbResult = await db.prepare(
     `SELECT player, SUM(total_value) as total, COUNT(*) as kills
-     FROM loot_entries WHERE event_id = ?${timeWhere}
-     GROUP BY player ORDER BY total DESC LIMIT ?`
-  ).bind(eventId, ...timeParams, LEADERBOARD_LIMIT).all();
+     FROM loot_entries WHERE event_id = ?${extraWhere}
+     GROUP BY LOWER(player) ORDER BY total DESC LIMIT ?`
+  ).bind(eventId, ...extraParams, LEADERBOARD_LIMIT).all();
 
   const leaderboard = (lbResult.results || []).map((row, i) => ({
     rank: i + 1,
@@ -442,9 +522,9 @@ async function handleGet(context) {
   }));
 
   const statsResult = await db.prepare(
-    `SELECT COUNT(DISTINCT player) as players, COUNT(*) as kills, SUM(total_value) as value
-     FROM loot_entries WHERE event_id = ?${timeWhere}`
-  ).bind(eventId, ...timeParams).first();
+    `SELECT COUNT(DISTINCT LOWER(player)) as players, COUNT(*) as kills, SUM(total_value) as value
+     FROM loot_entries WHERE event_id = ?${extraWhere}`
+  ).bind(eventId, ...extraParams).first();
 
   const stats = {
     totalPlayers: (statsResult && statsResult.players) || 0,
@@ -454,9 +534,9 @@ async function handleGet(context) {
 
   const topKills = await db.prepare(
     `SELECT player, items, total_value, created_at
-     FROM loot_entries WHERE event_id = ?${timeWhere}
+     FROM loot_entries WHERE event_id = ?${extraWhere}
      ORDER BY total_value DESC LIMIT 30`
-  ).bind(eventId, ...timeParams).all();
+  ).bind(eventId, ...extraParams).all();
 
   const allItems = [];
   for (const row of (topKills.results || [])) {
