@@ -170,21 +170,28 @@
     picker.innerHTML = '<option value="">Pick a source...</option>';
 
     if (events.length) {
-      var evGroup = document.createElement("optgroup");
-      evGroup.label = "Events";
+      var evHeader = document.createElement("option");
+      evHeader.disabled = true;
+      evHeader.value = "";
+      evHeader.textContent = "──  EVENTS  ──";
+      evHeader.setAttribute("data-header", "");
+      picker.appendChild(evHeader);
       for (var i = 0; i < events.length; i++) {
         var ev = events[i];
         var opt = document.createElement("option");
         opt.value = "event:" + ev.id;
-        opt.textContent = ev.name + " (" + ev.participants.length + " joined)";
-        evGroup.appendChild(opt);
+        opt.textContent = "  " + ev.name + " (" + ev.participants.length + " joined)";
+        picker.appendChild(opt);
       }
-      picker.appendChild(evGroup);
     }
 
     if (gaRounds.length) {
-      var gaGroup = document.createElement("optgroup");
-      gaGroup.label = "Giveaways";
+      var gaHeader = document.createElement("option");
+      gaHeader.disabled = true;
+      gaHeader.value = "";
+      gaHeader.textContent = "──  GIVEAWAYS  ──";
+      gaHeader.setAttribute("data-header", "");
+      picker.appendChild(gaHeader);
       for (var j = 0; j < gaRounds.length; j++) {
         var round = gaRounds[j];
         if (!round.entries || !round.entries.length) continue;
@@ -192,10 +199,9 @@
         opt2.value = "giveaway:" + j;
         var total = 0;
         for (var k = 0; k < round.entries.length; k++) total += round.entries[k].count;
-        opt2.textContent = round.name + " (" + round.entries.length + " participants, " + total + " entries)";
-        gaGroup.appendChild(opt2);
+        opt2.textContent = "  " + round.name + " (" + round.entries.length + " participants, " + total + " entries)";
+        picker.appendChild(opt2);
       }
-      picker.appendChild(gaGroup);
     }
 
     // Deep link support

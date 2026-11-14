@@ -1026,6 +1026,10 @@ nav.main a[href="/ge.html"]{display:none}
   outline:none;transition:border-color .15s;
 }
 .bk-source-row select:focus{border-color:var(--gold-dim)}
+.bk-source-row select option[data-header]{
+  color:var(--gold);font-weight:700;letter-spacing:2px;font-size:12px;
+  background:var(--panel-3);
+}
 .bk-panel-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .bk-panel-header h3{font-size:16px}
 .bk-fighter-count{
