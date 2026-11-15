@@ -354,6 +354,37 @@ assert(result10.scoredItems.length === 0, "non-preset = no scored items");
 var nullResult = scoreDropPoints([{ name: "test", quantity: 1, price: 100 }], null);
 assert(nullResult.totalPoints === 0, "null config = 0 points");
 
+/* ---- topDrop in handleDropPointsGet data ---- */
+
+console.log("--- topDrop computation ---");
+
+var topDropItems = [
+  { player: "StWidu93", name: "Pet General Graardor", points: 10, earned: 10, quantity: 1, time: "2026-11-15T10:00:00Z" },
+  { player: "mr flsh", name: "Bandos Hilt", points: 5, earned: 5, quantity: 1, time: "2026-11-15T08:00:00Z" },
+  { player: "Koi ox", name: "Zamorak Hilt", points: 5, earned: 5, quantity: 1, time: "2026-11-14T20:00:00Z" },
+  { player: "Tequila", name: "Armadyl Crossbow", points: 4, earned: 4, quantity: 1, time: "2026-11-15T09:30:00Z" },
+];
+
+topDropItems.sort((a, b) => b.earned - a.earned || new Date(a.time) - new Date(b.time));
+var computedTopDrop = topDropItems.length ? topDropItems[0] : null;
+
+assert(computedTopDrop !== null, "topDrop is not null when drops exist");
+assert(computedTopDrop.earned === 10, "topDrop is the highest earned value");
+assert(computedTopDrop.name === "Pet General Graardor", "topDrop is the pet (10 pts)");
+assert(computedTopDrop.player === "StWidu93", "topDrop player is correct");
+assert(computedTopDrop.time === "2026-11-15T10:00:00Z", "topDrop includes time");
+
+var tieDrops = [
+  { player: "A", name: "Hilt A", points: 5, earned: 5, quantity: 1, time: "2026-11-15T12:00:00Z" },
+  { player: "B", name: "Hilt B", points: 5, earned: 5, quantity: 1, time: "2026-11-15T08:00:00Z" },
+];
+tieDrops.sort((a, b) => b.earned - a.earned || new Date(a.time) - new Date(b.time));
+assert(tieDrops[0].player === "B", "tie broken by earliest time (first to drop it)");
+
+var emptyDrops = [];
+var emptyTopDrop = emptyDrops.length ? emptyDrops[0] : null;
+assert(emptyTopDrop === null, "topDrop is null when no drops");
+
 /* ---- summary ---- */
 
 console.log(`\n${pass} passed, ${fail} failed (${pass + fail} total)`);

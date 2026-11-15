@@ -1689,6 +1689,18 @@ function dpPresetLabel(preset) {
   return "Custom Points";
 }
 
+function dpTimeAgo(iso) {
+  if (!iso) return "";
+  var diff = Math.max(0, Date.now() - new Date(iso).getTime());
+  var mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return mins + (mins === 1 ? " min ago" : " mins ago");
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + (hrs === 1 ? " hour ago" : " hours ago");
+  var days = Math.floor(hrs / 24);
+  return days + (days === 1 ? " day ago" : " days ago");
+}
+
 function dropPointsLeaderboardHtml(data, compact) {
   if (!data || !data.leaderboard || !data.leaderboard.length) {
     return '<p class="lv-loading">No scored drops yet. Waiting for Dink reports...</p>';
@@ -1696,6 +1708,7 @@ function dropPointsLeaderboardHtml(data, compact) {
 
   var lb = data.leaderboard;
   var stats = data.stats || {};
+  var topDrop = data.topDrop || null;
   var topDrops = data.topDrops || [];
   var recentDrops = data.recentDrops || [];
   var limit = compact ? 3 : 10;
@@ -1705,7 +1718,22 @@ function dropPointsLeaderboardHtml(data, compact) {
     '<img src="/assets/lb/medal-3.png" alt="3rd" class="lv-medal">'
   ];
 
-  var html = '<div class="lv-stats">';
+  var html = '';
+
+  if (!compact && topDrop) {
+    var qty = topDrop.quantity > 1 ? " x" + topDrop.quantity : "";
+    html += '<div class="dp-top-drop">';
+    html += '<div class="dp-top-drop-label">&#9733; Top Drop</div>';
+    html += '<div class="dp-top-drop-row">';
+    html += '<div class="dp-top-drop-pts">' + topDrop.earned + '<span class="dp-top-drop-unit">pts</span></div>';
+    html += '<div class="dp-top-drop-info">';
+    html += '<div class="dp-top-drop-item">' + esc(topDrop.name + qty) + '</div>';
+    html += '<div class="dp-top-drop-player">Dropped by <b>' + esc(topDrop.player) + '</b></div>';
+    if (topDrop.time) html += '<div class="dp-top-drop-time">' + dpTimeAgo(topDrop.time) + '</div>';
+    html += '</div></div></div>';
+  }
+
+  html += '<div class="lv-stats">';
   html += '<div class="lv-stat"><img src="/assets/lb/icon-players.png" alt="" class="lv-stat-icon"><div class="lv-stat-value">' + (stats.totalPlayers || 0) + '</div><div class="lv-stat-label">Players</div></div>';
   html += '<div class="lv-stat"><img src="/assets/lb/icon-kc.png" alt="" class="lv-stat-icon"><div class="lv-stat-value">' + (stats.totalKills || 0) + '</div><div class="lv-stat-label">Total KC</div></div>';
   html += '<div class="lv-stat"><img src="/assets/lb/icon-loot.png" alt="" class="lv-stat-icon"><div class="lv-stat-value">' + formatPoints(stats.totalPoints || 0) + '</div><div class="lv-stat-label">Total Pts</div></div>';

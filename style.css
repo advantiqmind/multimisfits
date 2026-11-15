@@ -556,6 +556,17 @@ nav.main a[href="/ge.html"]{display:none}
 .dp-link:hover{background:rgba(232,168,50,.2)!important}
 .dp-standings-btn{color:#e8a832!important;background:rgba(232,168,50,.08)!important;border-color:rgba(232,168,50,.25)!important}
 .dp-standings-btn:hover{background:rgba(232,168,50,.18)!important}
+.dp-top-drop{position:relative;background:linear-gradient(135deg,rgba(232,168,50,.06),rgba(255,203,47,.03));border:1px solid rgba(232,168,50,.3);border-radius:6px;padding:12px 14px;margin-bottom:16px;overflow:hidden}
+.dp-top-drop::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e8a832,transparent)}
+.dp-top-drop-label{font-family:"Cinzel",serif;font-size:10px;color:#e8a832;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.dp-top-drop-row{display:flex;align-items:center;gap:14px}
+.dp-top-drop-pts{font-family:"Jersey 15",monospace;font-size:36px;color:var(--gold);line-height:1;text-shadow:0 0 12px rgba(255,203,47,.2);min-width:44px;text-align:center}
+.dp-top-drop-unit{display:block;font-family:"Jersey 15",monospace;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-shadow:none;margin-top:2px}
+.dp-top-drop-info{flex:1;min-width:0}
+.dp-top-drop-item{font-family:"Jersey 15",monospace;font-size:17px;color:var(--parchment);margin-bottom:2px}
+.dp-top-drop-player{font-family:"Jersey 15",monospace;font-size:13px;color:var(--muted)}
+.dp-top-drop-player b{color:#c4b68a}
+.dp-top-drop-time{font-family:"Jersey 15",monospace;font-size:11px;color:rgba(107,88,54,.7);margin-top:1px}
 .lv-loading{font-family:"Jersey 15",monospace;font-size:16px;color:var(--muted)}
 .lv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .lv-stat{text-align:center;background:var(--void);border:2px solid var(--bronze);border-radius:6px;padding:12px 8px}

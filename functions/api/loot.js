@@ -677,7 +677,7 @@ async function handleDropPointsGet(db, eventId, eventMeta, pointsConfig, extraWh
       playerMap[key].breakdown[itemKey].count += si.quantity;
       playerMap[key].breakdown[itemKey].total += si.earned;
 
-      topDrops.push({ player: row.player, name: si.name, points: si.points, earned: si.earned, quantity: si.quantity });
+      topDrops.push({ player: row.player, name: si.name, points: si.points, earned: si.earned, quantity: si.quantity, time: row.created_at });
     }
 
     if (totalPoints > 0) {
@@ -703,8 +703,10 @@ async function handleDropPointsGet(db, eventId, eventMeta, pointsConfig, extraWh
     breakdown: Object.values(p.breakdown).sort((a, b) => b.total - a.total),
   }));
 
-  topDrops.sort((a, b) => b.earned - a.earned);
+  topDrops.sort((a, b) => b.earned - a.earned || new Date(a.time) - new Date(b.time));
   recentDrops.reverse();
+
+  const topDrop = topDrops.length ? topDrops[0] : null;
 
   const stats = {
     totalPlayers: sorted.length,
@@ -718,6 +720,7 @@ async function handleDropPointsGet(db, eventId, eventMeta, pointsConfig, extraWh
     type: "drop_points",
     leaderboard,
     stats,
+    topDrop,
     topDrops: topDrops.slice(0, NOTABLE_DROPS_LIMIT),
     recentDrops: recentDrops.slice(0, RECENT_DROPS_LIMIT),
   };
