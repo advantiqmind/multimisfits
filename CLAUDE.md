@@ -334,14 +334,20 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
   `scoreDropPoints(lootItems, pointsConfig)` scores items against the map (case-insensitive match).
   `handleDropPointsGet` builds per-player leaderboard with breakdown, topDrops, recentDrops.
 - GET /api/loot?event=THREAD_ID auto-detects drop points events via `is_drop_points` column in
-  event_meta. Returns `{ type: "drop_points", leaderboard, stats, topDrops, recentDrops }`.
+  event_meta. Returns `{ type: "drop_points", leaderboard, stats, topDrop, topDrops, recentDrops }`.
 - Frontend: `isDropPointsEvent(ev)` checks tags for "drop points" (case-insensitive).
   Event cards show amber "POINTS" tag. Featured/modal show leaderboard with per-player item breakdown.
   Appears on Event Leaderboard tab on roster.html alongside Loot Value and WOM Scored events.
-- CSS: `.dp-*` classes (amber/orange theme). `.dp-tag`, `.dp-container`, `.dp-breakdown`.
+- Top Drop spotlight: amber card above the stats row showing the single highest-point
+  individual item drop. Displays point value, item name, player, and relative time.
+  Ties broken by earliest drop (first to land it). Backend `topDrop` field (singular)
+  in response; frontend `dpTimeAgo()` helper for relative timestamps. Only shown in
+  non-compact (full) view. CSS: `.dp-top-drop-*` classes.
+- CSS: `.dp-*` classes (amber/orange theme). `.dp-tag`, `.dp-container`, `.dp-breakdown`,
+  `.dp-top-drop`, `.dp-top-drop-label`, `.dp-top-drop-pts`, `.dp-top-drop-item`, etc.
 - Quantity multiplied: 3x Godsword Shard = 3 points.
 - Items not in the preset earn 0 points (silently excluded from breakdown).
-- test-loot.mjs: 25 tests covering parsePointsConfig and scoreDropPoints.
+- test-loot.mjs: 28 tests covering parsePointsConfig, scoreDropPoints, and topDrop logic.
 
 ### Events
 - Forum threads from events channel, excluding giveaway-named threads.
