@@ -545,6 +545,7 @@ body {
 .tag-teams { background: rgba(106,58,138,0.3); color: #c080f0; border: 1px solid rgba(106,58,138,0.5); }
 .tag-pvp { background: rgba(200,60,20,0.3); color: #f08040; border: 1px solid rgba(200,60,20,0.5); }
 .tag-misc { background: rgba(120,120,120,0.3); color: #b0b0b0; border: 1px solid rgba(120,120,120,0.5); }
+.tag-points { background: rgba(200,50,120,0.3); color: #f070b0; border: 1px solid rgba(200,50,120,0.5); }
 
 /* Main tag card colors */
 .card-weekend { background: rgba(40,160,70,0.15); border-left: 3px solid #60f080; }
@@ -1459,6 +1460,7 @@ body {
   <button class="filter-btn" data-filter="social" onclick="setFilter('social')">Social</button>
   <button class="filter-btn" data-filter="skilling" onclick="setFilter('skilling')">Skilling</button>
   <button class="filter-btn" data-filter="teams" onclick="setFilter('teams')">Teams</button>
+  <button class="filter-btn" data-filter="points" onclick="setFilter('points')">Points</button>
   <button class="filter-btn" data-filter="misc" onclick="setFilter('misc')">Misc</button>
   <span class="filter-sep"></span>
   <button class="filter-btn filter-author" data-filter="author:Mr FISH" onclick="setFilter('author:Mr FISH')">Mr. Fish</button>
@@ -1485,6 +1487,7 @@ body {
     <div class="tag-guide-row"><span class="tag tag-social">#social</span><span class="tag-guide-desc">Hangouts, community</span></div>
     <div class="tag-guide-row"><span class="tag tag-skilling">#skilling</span><span class="tag-guide-desc">Skilling events</span></div>
     <div class="tag-guide-row"><span class="tag tag-teams">#teams</span><span class="tag-guide-desc">Team-based events</span></div>
+    <div class="tag-guide-row"><span class="tag tag-points">#points</span><span class="tag-guide-desc">Drop points events</span></div>
     <div class="tag-guide-row"><span class="tag tag-misc">#misc</span><span class="tag-guide-desc">Everything else</span></div>
   </div>
 </div>
@@ -1572,7 +1575,7 @@ body {
 <div class="ib-toast" id="ibToast"></div>
 
 <script>
-var KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams','misc'];
+var KNOWN_TAGS = ['website','discord','pvm','pvp','wild','social','skilling','weekend','1day','teams','points','misc'];
 var MAIN_TAGS = ['weekend','1day','discord','website'];
 var COLUMNS = ['review','approved','shared','onhold','used'];
 var STALE_DAYS = 7;

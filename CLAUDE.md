@@ -208,10 +208,10 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 ### Idea Board
 - Discord thread (IDEABOARD_THREAD_ID) is the single source of truth for ideas.
 - Leaders post ideas as messages in the thread. First line = title, remaining lines = notes.
-- Hashtags in messages become colored tag chips. Eleven known tags:
+- Hashtags in messages become colored tag chips. Twelve known tags:
   #website (amber), #discord (indigo), #pvm (purple), #pvp (orange-red),
   #wild (red), #social (orange), #skilling (blue), #weekend (green),
-  #1day (blue), #teams (purple), #misc (grey). Unknown tags get default grey.
+  #1day (blue), #teams (purple), #points (pink), #misc (grey). Unknown tags get default grey.
 - Main tags (#weekend, #1day, #discord, #website) color the entire card with
   a tinted background and left accent border for quick visual identification.
   Other tags are sub-category chips that appear on the card but don't color it.
@@ -221,7 +221,7 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
 - Color key bar at top shows "Color Coded:" with visual swatches for each main tag.
   Collapsible hashtag guide shows sub-category tags with descriptions.
 - "Events" meta-filter shows cards tagged with either #1day or #weekend.
-  Filter order: All | Events | 1 Day | Weekend | Website | Discord | PvM | PvP | Wild | Social | Skilling | Teams | Misc.
+  Filter order: All | Events | 1 Day | Weekend | Website | Discord | PvM | PvP | Wild | Social | Skilling | Teams | Points | Misc.
 - Discord channel mentions: when a hashtag like #pvm matches a Discord channel
   name, Discord auto-links it to `<#CHANNEL_ID>`. Backend fetches guild channels
   (fetchChannelMap), resolves channel IDs to names, and adds matching known tags.
