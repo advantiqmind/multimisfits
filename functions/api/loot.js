@@ -35,6 +35,15 @@ const DROP_POINT_PRESETS = {
   },
 };
 
+export const BOSS_GROUPS = {
+  gwd: [
+    "general graardor", "sergeant strongstack", "sergeant steelwill", "sergeant grimspike",
+    "commander zilyana", "starlight", "growler", "bree",
+    "kree'arra", "wingman skree", "flockleader geerin", "flight kilisa",
+    "k'ril tsutsaroth", "tstanon karlak", "zakl'n gritch", "balfrug kreeyath",
+  ],
+};
+
 export function parsePointsConfig(content) {
   const m = content.match(/^\*{0,2}Points:\*{0,2}\s*(.+)/im);
   if (!m) return null;
@@ -90,7 +99,13 @@ export function parseBossFilter(content) {
   if (!m) return null;
   const raw = m[1].trim().replace(/\*{1,2}$/,"");
   if (/^any$/i.test(raw)) return null;
-  return raw.split(",").map(b => b.trim().toLowerCase()).filter(Boolean);
+  const names = raw.split(",").map(b => b.trim().toLowerCase()).filter(Boolean);
+  const expanded = [];
+  for (const n of names) {
+    if (BOSS_GROUPS[n]) expanded.push(...BOSS_GROUPS[n]);
+    else expanded.push(n);
+  }
+  return expanded.length ? expanded : null;
 }
 
 export function matchesBoss(source, bossFilter) {

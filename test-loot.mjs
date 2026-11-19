@@ -5,6 +5,7 @@ import {
   parseEventDateField,
   parsePointsConfig,
   scoreDropPoints,
+  BOSS_GROUPS,
 } from "./functions/api/loot.js";
 
 let pass = 0;
@@ -384,6 +385,84 @@ assert(tieDrops[0].player === "B", "tie broken by earliest time (first to drop i
 var emptyDrops = [];
 var emptyTopDrop = emptyDrops.length ? emptyDrops[0] : null;
 assert(emptyTopDrop === null, "topDrop is null when no drops");
+
+/* ---- BOSS_GROUPS ---- */
+
+console.log("--- BOSS_GROUPS ---");
+
+assert(Array.isArray(BOSS_GROUPS.gwd), "gwd group exists and is an array");
+assert(BOSS_GROUPS.gwd.length === 16, "gwd group has 16 NPCs (4 bosses + 12 minions)");
+assert(BOSS_GROUPS.gwd.includes("general graardor"), "gwd includes Graardor");
+assert(BOSS_GROUPS.gwd.includes("sergeant strongstack"), "gwd includes Strongstack");
+assert(BOSS_GROUPS.gwd.includes("sergeant steelwill"), "gwd includes Steelwill");
+assert(BOSS_GROUPS.gwd.includes("sergeant grimspike"), "gwd includes Grimspike");
+assert(BOSS_GROUPS.gwd.includes("commander zilyana"), "gwd includes Zilyana");
+assert(BOSS_GROUPS.gwd.includes("starlight"), "gwd includes Starlight");
+assert(BOSS_GROUPS.gwd.includes("growler"), "gwd includes Growler");
+assert(BOSS_GROUPS.gwd.includes("bree"), "gwd includes Bree");
+assert(BOSS_GROUPS.gwd.includes("kree'arra"), "gwd includes Kree'arra");
+assert(BOSS_GROUPS.gwd.includes("wingman skree"), "gwd includes Wingman Skree");
+assert(BOSS_GROUPS.gwd.includes("flockleader geerin"), "gwd includes Flockleader Geerin");
+assert(BOSS_GROUPS.gwd.includes("flight kilisa"), "gwd includes Flight Kilisa");
+assert(BOSS_GROUPS.gwd.includes("k'ril tsutsaroth"), "gwd includes K'ril Tsutsaroth");
+assert(BOSS_GROUPS.gwd.includes("tstanon karlak"), "gwd includes Tstanon Karlak");
+assert(BOSS_GROUPS.gwd.includes("zakl'n gritch"), "gwd includes Zakl'n Gritch");
+assert(BOSS_GROUPS.gwd.includes("balfrug kreeyath"), "gwd includes Balfrug Kreeyath");
+
+/* ---- parseBossFilter group expansion ---- */
+
+console.log("--- parseBossFilter group expansion ---");
+
+var gwdFilter = parseBossFilter("Boss: gwd");
+assert(gwdFilter !== null, "Boss: gwd expands to a filter");
+assert(gwdFilter.length === 16, "Boss: gwd expands to 16 NPCs");
+assert(gwdFilter.includes("general graardor"), "expanded gwd includes Graardor");
+assert(gwdFilter.includes("sergeant strongstack"), "expanded gwd includes minion Strongstack");
+assert(gwdFilter.includes("balfrug kreeyath"), "expanded gwd includes minion Balfrug");
+
+var gwdUpper2 = parseBossFilter("Boss: GWD");
+assert(gwdUpper2 !== null, "Boss: GWD (uppercase) expands");
+assert(gwdUpper2.length === 16, "uppercase GWD expands to 16 NPCs");
+
+var gwdBold = parseBossFilter("**Boss:** gwd");
+assert(gwdBold !== null, "bold Boss: gwd expands");
+assert(gwdBold.length === 16, "bold Boss: gwd expands to 16");
+
+var mixedGroupAndBoss = parseBossFilter("Boss: gwd, Zulrah");
+assert(mixedGroupAndBoss !== null, "mixed group + boss expands");
+assert(mixedGroupAndBoss.length === 17, "gwd(16) + Zulrah(1) = 17");
+assert(mixedGroupAndBoss.includes("zulrah"), "mixed includes Zulrah");
+assert(mixedGroupAndBoss.includes("general graardor"), "mixed includes Graardor from group");
+
+var plainBossStillWorks = parseBossFilter("Boss: General Graardor");
+assert(deepEqual(plainBossStillWorks, ["general graardor"]), "plain boss name unchanged");
+
+var anyStillNull = parseBossFilter("Boss: any");
+assert(anyStillNull === null, "Boss: any still returns null after group feature");
+
+/* ---- matchesBoss with group-expanded filter ---- */
+
+console.log("--- matchesBoss with group-expanded filter ---");
+
+var gwdExpanded = parseBossFilter("Boss: gwd");
+assert(matchesBoss("General Graardor", gwdExpanded) === true, "Graardor matches gwd filter");
+assert(matchesBoss("Sergeant Strongstack", gwdExpanded) === true, "Bandos minion matches gwd filter");
+assert(matchesBoss("Sergeant Steelwill", gwdExpanded) === true, "Steelwill matches gwd filter");
+assert(matchesBoss("Sergeant Grimspike", gwdExpanded) === true, "Grimspike matches gwd filter");
+assert(matchesBoss("Commander Zilyana", gwdExpanded) === true, "Zilyana matches gwd filter");
+assert(matchesBoss("Starlight", gwdExpanded) === true, "Starlight matches gwd filter");
+assert(matchesBoss("Growler", gwdExpanded) === true, "Growler matches gwd filter");
+assert(matchesBoss("Bree", gwdExpanded) === true, "Bree matches gwd filter");
+assert(matchesBoss("Kree'arra", gwdExpanded) === true, "Kree'arra matches gwd filter");
+assert(matchesBoss("Wingman Skree", gwdExpanded) === true, "Wingman Skree matches gwd filter");
+assert(matchesBoss("Flockleader Geerin", gwdExpanded) === true, "Flockleader Geerin matches gwd filter");
+assert(matchesBoss("Flight Kilisa", gwdExpanded) === true, "Flight Kilisa matches gwd filter");
+assert(matchesBoss("K'ril Tsutsaroth", gwdExpanded) === true, "K'ril matches gwd filter");
+assert(matchesBoss("Tstanon Karlak", gwdExpanded) === true, "Tstanon matches gwd filter");
+assert(matchesBoss("Zakl'n Gritch", gwdExpanded) === true, "Zakl'n Gritch matches gwd filter");
+assert(matchesBoss("Balfrug Kreeyath", gwdExpanded) === true, "Balfrug matches gwd filter");
+assert(matchesBoss("Zulrah", gwdExpanded) === false, "Zulrah does NOT match gwd filter");
+assert(matchesBoss("Vorkath", gwdExpanded) === false, "Vorkath does NOT match gwd filter");
 
 /* ---- summary ---- */
 
