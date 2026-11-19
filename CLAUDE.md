@@ -290,7 +290,13 @@ yet built. Similar pattern to the Loot Value leaderboard but for GP contribution
   filter "Tombs of Amascut").
   - Single boss: `Boss: Chambers of Xeric`
   - Multiple: `Boss: Chambers of Xeric, Theatre of Blood`
+  - Group alias: `Boss: gwd` expands to all 16 GWD NPCs (4 bosses + 12 minions).
   - All bosses: `Boss: any` or omit the line entirely.
+- Boss group aliases defined in `BOSS_GROUPS` constant in loot.js. `parseBossFilter()` expands
+  group names before returning the filter array. Groups can be mixed with individual boss names
+  (e.g. `Boss: gwd, Zulrah`). Currently supported groups:
+  - `gwd`: General Graardor + 3 minions, Commander Zilyana + 3 minions, Kree'arra + 3 minions,
+    K'ril Tsutsaroth + 3 minions (16 NPCs total).
 - Loot Value events identified by the "Loot Value" Discord forum tag (not thread name).
   Backend fetches channel available_tags to resolve tag IDs. Frontend receives tag names
   in the event's `tags` array from /api/events.
