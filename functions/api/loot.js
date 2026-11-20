@@ -148,9 +148,13 @@ async function fetchActiveLootEvents(env) {
 
   let threads;
   try {
-    const [activeRes, channelRes] = await Promise.all([
+    const [activeRes, archivedRes, channelRes] = await Promise.all([
       fetch(
         `https://discord.com/api/v10/guilds/${guildId}/threads/active`,
+        { headers }
+      ),
+      fetch(
+        `https://discord.com/api/v10/channels/${channelId}/threads/archived/public?limit=10`,
         { headers }
       ),
       fetch(
@@ -158,8 +162,9 @@ async function fetchActiveLootEvents(env) {
         { headers }
       ),
     ]);
-    if (!activeRes.ok) return [];
-    const data = await activeRes.json();
+    if (!activeRes.ok && !archivedRes.ok) return [];
+    const activeData = activeRes.ok ? await activeRes.json() : { threads: [] };
+    const archivedData = archivedRes.ok ? await archivedRes.json() : { threads: [] };
 
     let lootTagId = null;
     let dropPointsTagId = null;
@@ -174,13 +179,17 @@ async function fetchActiveLootEvents(env) {
 
     const validTagIds = [lootTagId, dropPointsTagId].filter(Boolean);
 
-    threads = (data.threads || []).filter(
-      t => t.parent_id === channelId &&
-        !(t.thread_metadata && t.thread_metadata.archived) &&
-        validTagIds.length &&
-        Array.isArray(t.applied_tags) &&
-        t.applied_tags.some(id => validTagIds.includes(id))
-    );
+    const seen = new Set();
+    threads = [];
+    for (const t of [...(activeData.threads || []), ...(archivedData.threads || [])]) {
+      if (seen.has(t.id)) continue;
+      seen.add(t.id);
+      if (t.parent_id !== channelId) continue;
+      if (!validTagIds.length) continue;
+      if (!Array.isArray(t.applied_tags)) continue;
+      if (!t.applied_tags.some(id => validTagIds.includes(id))) continue;
+      threads.push(t);
+    }
   } catch {
     return [];
   }
