@@ -469,10 +469,12 @@ nav.main a[href="/ge.html"]{display:none}
   table.roster.roster-full td{padding:10px 6px}
   table.roster.roster-full .ign,
   table.roster.roster-full .ign a{font-size:17px}
-  .roster-full .rank{font-size:14px;gap:6px}
+  .roster-full .rank-num{width:32px;font-size:15px}
+  .roster-full .rank{font-size:0;gap:0}
   .roster-full .rank-icon{width:20px;height:20px}
-  .roster-full .chev{border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:8px solid var(--gold-dim)}
-  table.roster.roster-full th[data-sort="rank"]{width:120px}
+  .roster-full .chev{display:none}
+  table.roster.roster-full th[data-sort="rank"]{width:36px}
+  table.roster.roster-full th:first-child{width:32px}
   th[data-sort="donated"]{width:70px}
   .donated-cell{font-size:16px;width:70px}
   th[data-sort="xp"]{width:90px}
