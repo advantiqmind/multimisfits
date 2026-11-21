@@ -222,6 +222,29 @@ async function fetchActiveLootEvents(env) {
   return events.filter(Boolean);
 }
 
+async function fetchD1LootEvents(db) {
+  if (!db) return [];
+  try {
+    const { results } = await db.prepare(
+      `SELECT event_id, event_name, boss_filter, start_time, end_time,
+              is_drop_points, points_config
+       FROM loot_event_meta
+       WHERE end_time IS NULL OR end_time > datetime('now')`
+    ).all();
+    return (results || []).map(row => ({
+      id: row.event_id,
+      name: row.event_name,
+      bossFilter: row.boss_filter ? JSON.parse(row.boss_filter) : null,
+      startTime: row.start_time || null,
+      endTime: row.end_time || null,
+      isDropPoints: !!row.is_drop_points,
+      pointsConfig: row.points_config ? JSON.parse(row.points_config) : null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 async function getActiveLootEvents(env) {
   const cache = caches.default;
   const cacheKey = new Request("https://internal/api/_loot_events", { method: "GET" });
@@ -231,7 +254,11 @@ async function getActiveLootEvents(env) {
     try { return await hit.json(); } catch { /* fall through */ }
   }
 
-  const events = await fetchActiveLootEvents(env);
+  const discordEvents = await fetchActiveLootEvents(env);
+  const d1Events = await fetchD1LootEvents(env.DB);
+  const seen = new Set(discordEvents.map(e => e.id));
+  const events = [...discordEvents, ...d1Events.filter(e => !seen.has(e.id))];
+
   const res = new Response(JSON.stringify(events), {
     headers: {
       "content-type": "application/json",
